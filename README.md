@@ -1,0 +1,1 @@
+### Component for ESP IDF of template of device with network connections and settings via web interface
