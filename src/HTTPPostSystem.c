@@ -151,6 +151,7 @@ static HTTP_IO_RESULT HTTPPostIndex(httpd_req_t *req, char *PostData)
 
 static HTTP_IO_RESULT HTTPPostIndex20(httpd_req_t *req, char *PostData)
 {
+#if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
     char tmp[32];
     bool TempIsETHEnabled = false;
     bool TempIsDHCPEnabled = false;
@@ -189,7 +190,7 @@ static HTTP_IO_RESULT HTTPPostIndex20(httpd_req_t *req, char *PostData)
             return HTTP_IO_REDIRECT;
         }
     }
-
+#endif
     return HTTP_IO_DONE;
 }
 

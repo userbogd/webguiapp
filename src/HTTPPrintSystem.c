@@ -248,9 +248,139 @@ static void HTTPPrint_apmacadr(char *VarData, void *arg)
 {
     PrintMACFromInterface(VarData, arg, GetAPNetifAdapter());
 }
+#endif
 
+#if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
+static void HTTPPrint_ethen(char *VarData, void *arg)
+{
+    PrintCheckbox(VarData, arg, GetSysConf()->ethSettings.Flags1.bIsETHEnabled);
+}
+static void HTTPPrint_ecbdh(char *VarData, void *arg)
+{
+    PrintCheckbox(VarData, arg, GetSysConf()->ethSettings.Flags1.bIsDHCPEnabled);
+}
+static void HTTPPrint_ethstat(char *VarData, void *arg)
+{
+    PrintInterfaceState(VarData, arg, GetETHNetifAdapter());
+}
+/*Etherbox IP*/
+static void HTTPPrint_eip(char *VarData, void *arg)
+{
+    if (GetETHNetifAdapter() && esp_netif_is_netif_up(GetETHNetifAdapter()))
+        PrintIPFromInterface(VarData, arg, GetETHNetifAdapter(), IP);
+    else
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ip4addr_ntoa(&GetSysConf()->ethSettings.IPAddr));
+}
+/*Etherbox NETMASK*/
+static void HTTPPrint_emsk(char *VarData, void *arg)
+{
+    if (GetETHNetifAdapter() && esp_netif_is_netif_up(GetETHNetifAdapter()))
+        PrintIPFromInterface(VarData, arg, GetETHNetifAdapter(), NETMASK);
+    else
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ip4addr_ntoa(&GetSysConf()->ethSettings.Mask));
+}
+/*Ethernet GATEWAY*/
+static void HTTPPrint_egate(char *VarData, void *arg)
+{
+    if (GetETHNetifAdapter() && esp_netif_is_netif_up(GetETHNetifAdapter()))
+        PrintIPFromInterface(VarData, arg, GetETHNetifAdapter(), GW);
+    else
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ip4addr_ntoa(&GetSysConf()->ethSettings.Gateway));
+}
+/*Current DNS*/
+static void HTTPPrint_edns(char *VarData, void *arg)
+{
+    if (GetETHNetifAdapter() && esp_netif_is_netif_up(GetETHNetifAdapter()))
+        PrintDNSFromInterface(VarData, arg, GetETHNetifAdapter(), ESP_NETIF_DNS_MAIN);
+    else
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", "0.0.0.0");
+}
+static void HTTPPrint_bkedns(char *VarData, void *arg)
+{
+
+    if (GetETHNetifAdapter() && esp_netif_is_netif_up(GetETHNetifAdapter()))
+        PrintDNSFromInterface(VarData, arg, GetETHNetifAdapter(), ESP_NETIF_DNS_BACKUP);
+    else
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", "0.0.0.0");
+}
+static void HTTPPrint_fledns(char *VarData, void *arg)
+{
+
+    if (GetETHNetifAdapter() && esp_netif_is_netif_up(GetETHNetifAdapter()))
+        PrintDNSFromInterface(VarData, arg, GetETHNetifAdapter(), ESP_NETIF_DNS_FALLBACK);
+    else
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", "0.0.0.0");
+}
+
+static void HTTPPrint_emacadr(char *VarData, void *arg)
+{
+    PrintMACFromInterface(VarData, arg, GetETHNetifAdapter());
+}
 
 #endif
+
+#if CONFIG_WEBGUIAPP_GPRS_ENABLE
+/*GSM MODEM*/
+void HTTPPrint_gsmen(char *VarData, void *arg)
+{
+    PrintCheckbox(VarData, arg, GetSysConf()->gsmSettings.Flags1.bIsGSMEnabled);
+}
+void HTTPPrint_gsmstat(char *VarData, void *arg)
+{
+    PrintInterfaceState(VarData, arg, GetPPPNetifAdapter());
+}
+void HTTPPrint_gsmmod(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, GetPPPModemInfo()->model);
+}
+void HTTPPrint_gsmopr(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, GetPPPModemInfo()->oper);
+}
+void HTTPPrint_gimei(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, GetPPPModemInfo()->imei);
+}
+void HTTPPrint_gimsi(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, GetPPPModemInfo()->imsi);
+}
+
+/*PPP IP*/
+void HTTPPrint_gsmip(char *VarData, void *arg)
+{
+    PrintIPFromInterface(VarData, arg, GetPPPNetifAdapter(), IP);
+}
+/*PPP NETMASK*/
+void HTTPPrint_gsmmsk(char *VarData, void *arg)
+{
+    PrintIPFromInterface(VarData, arg, GetPPPNetifAdapter(), NETMASK);
+}
+/*PPP GATEWAY*/
+void HTTPPrint_gsmgate(char *VarData, void *arg)
+{
+    PrintIPFromInterface(VarData, arg, GetPPPNetifAdapter(), GW);
+}
+/*Current DNS*/
+void HTTPPrint_gsmdns(char *VarData, void *arg)
+{
+    PrintDNSFromInterface(VarData, arg, GetPPPNetifAdapter(), ESP_NETIF_DNS_MAIN);
+}
+void HTTPPrint_bkgsmdns(char *VarData, void *arg)
+{
+    PrintDNSFromInterface(VarData, arg, GetPPPNetifAdapter(), ESP_NETIF_DNS_BACKUP);
+}
+void HTTPPrint_flgsmdns(char *VarData, void *arg)
+{
+    PrintDNSFromInterface(VarData, arg, GetPPPNetifAdapter(), ESP_NETIF_DNS_FALLBACK);
+}
+
+void HTTPPrint_gsmmac(char *VarData, void *arg)
+{
+    PrintMACFromInterface(VarData, arg, GetPPPNetifAdapter());
+}
+#endif
+
 
 dyn_var_handler_t HANDLERS_ARRAY[] = {
         /*Ststem settings*/
@@ -259,6 +389,7 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "pass", sizeof("pass") - 1, &HTTPPrint_pass },
 
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
+        /*WiFi network*/
         { "wfen", sizeof("wfen") - 1, &HTTPPrint_wfen },
         { "wfstat", sizeof("wfstat") - 1, &HTTPPrint_wfstat },
         { "cln", sizeof("cln") - 1, &HTTPPrint_cln },
@@ -279,6 +410,36 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "apmacadr", sizeof("apmacadr") - 1, &HTTPPrint_apmacadr },
 #endif
 
+#if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
+        /*ETHERNET network*/
+        { "ethen", sizeof("ethen") - 1, &HTTPPrint_ethen },
+        { "ecbdh", sizeof("ecbdh") - 1, &HTTPPrint_ecbdh },
+        { "ethstat", sizeof("ethstat") - 1, &HTTPPrint_ethstat },
+        { "eip", sizeof("eip") - 1, &HTTPPrint_eip },
+        { "emsk", sizeof("emsk") - 1, &HTTPPrint_emsk },
+        { "egate", sizeof("egate") - 1, &HTTPPrint_egate },
+        { "edns", sizeof("edns") - 1, &HTTPPrint_edns },
+        { "bkedns", sizeof("bkedns") - 1, &HTTPPrint_bkedns },
+        { "fledns", sizeof("fledns") - 1, &HTTPPrint_fledns },
+        { "emacadr", sizeof("emacadr") - 1, &HTTPPrint_emacadr },
+#endif
+
+#if CONFIG_WEBGUIAPP_GPRS_ENABLE
+        /*GSM modem*/
+        { "gsmen", sizeof("gsmen") - 1, &HTTPPrint_gsmen },
+        { "gsmstat", sizeof("gsmstat") - 1, &HTTPPrint_gsmstat },
+        { "gsmmod", sizeof("gsmmod") - 1, &HTTPPrint_gsmmod },
+        { "gsmopr", sizeof("gsmopr") - 1, &HTTPPrint_gsmopr },
+        { "gimei", sizeof("gimei") - 1, &HTTPPrint_gimei },
+        { "gimsi", sizeof("gimsi") - 1, &HTTPPrint_gimsi },
+        { "gsmip", sizeof("gsmip") - 1, &HTTPPrint_gsmip },
+        { "gsmmsk", sizeof("gsmmsk") - 1, &HTTPPrint_gsmmsk },
+        { "gsmgate", sizeof("gsmgate") - 1, &HTTPPrint_gsmgate },
+        { "gsmdns", sizeof("gsmdns") - 1, &HTTPPrint_gsmdns },
+        { "bkgsmdns", sizeof("bkgsmdns") - 1, &HTTPPrint_bkgsmdns },
+        { "flgsmdns", sizeof("flgsmdns") - 1, &HTTPPrint_flgsmdns },
+        { "gsmmac", sizeof("gsmmac") - 1, &HTTPPrint_gsmmac },
+#endif
 
         /*ERROR report*/
         { "status_fail", sizeof("status_fail") - 1, &HTTPPrint_status_fail },

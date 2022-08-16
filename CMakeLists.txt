@@ -7,6 +7,7 @@ idf_component_register(
     	 "src/Helpers.c"
     	 "src/NetTransport.c"
     	 "src/WiFiTransport.c"
+    	 "src/GSMTransport.c"
     			   
     INCLUDE_DIRS  "." "include"  "src"   
     REQUIRES nvs_flash 
@@ -15,4 +16,6 @@ idf_component_register(
     		 mbedtls
     		 lwip
     		 mqtt
+    		 esp_modem
+    		 
 ) 

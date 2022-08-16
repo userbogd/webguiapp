@@ -153,6 +153,7 @@
             } Flags1;
         } mqttStation[MQTT_CLIENTS_NUM];
 
+#if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
         struct
         {
             ip4_addr_t IPAddr; // IP address
@@ -176,9 +177,9 @@
             } Flags1; // Flag structure
 
         } ethSettings;
+#endif
 
-
-#ifdef CONFIG_WEBGUIAPP_WIFI_ENABLE
+#if CONFIG_WEBGUIAPP_WIFI_ENABLE
         struct
         {
             ip4_addr_t InfIPAddr; // IP address in infrastructure(INF) mode
@@ -212,7 +213,7 @@
         } wifiSettings;
 
 #endif
-
+#if CONFIG_WEBGUIAPP_GPRS_ENABLE
         struct
         {
             ip4_addr_t IPAddr; // IP address
@@ -235,6 +236,7 @@
             } Flags1; // Flag structure
 
         } gsmSettings;
+#endif
 
     } SYS_CONFIG;
 
