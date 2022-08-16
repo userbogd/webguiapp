@@ -8,6 +8,7 @@ idf_component_register(
     	 "src/NetTransport.c"
     	 "src/WiFiTransport.c"
     	 "src/GSMTransport.c"
+    	 "src/ETHTransport.c"
     			   
     INCLUDE_DIRS  "." "include"  "src"   
     REQUIRES nvs_flash 

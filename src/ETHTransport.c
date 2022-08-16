@@ -19,7 +19,7 @@
  * Description:	
  */
 
-#include "AppConfiguration.h"
+#include "SystemConfiguration.h"
 #include <stdio.h>
 #include <string.h>
 #include "freertos/FreeRTOS.h"
@@ -308,7 +308,7 @@ static void eth_init(void *pvParameter)
         ESP_ERROR_CHECK(esp_netif_attach(eth_netif_spi[i], esp_eth_new_netif_glue(eth_handle_spi[i])));
         esp_netif_dns_info_t fldns;
         //esp_netif_str_to_ip4(&GetAppConf()->ethSettings.DNSAddr3, (esp_ip4_addr_t*) (&fldns.ip));
-        memcpy(&fldns.ip, &GetAppConf()->ethSettings.DNSAddr3, sizeof(esp_ip4_addr_t));
+        memcpy(&fldns.ip, &GetSysConf()->ethSettings.DNSAddr3, sizeof(esp_ip4_addr_t));
         esp_netif_set_dns_info(eth_netif_spi[i], ESP_NETIF_DNS_FALLBACK, &fldns);
     }
 #endif // CONFIG_ETH_USE_SPI_ETHERNET
