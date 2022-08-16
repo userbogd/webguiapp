@@ -1,0 +1,194 @@
+menu "WebGuiApp configuration"
+    config WEBGUIAPP_PROJECT_VER
+        string "WebGUIApp Project version"
+        default "0.0.0.0000"
+        help
+            Project version code          
+    config WEBGUIAPP_HOSTNAME
+    	string "Default host name"
+    	default "DEVICE_HOSTNAME"
+    	
+    config WEBGUIAPP_USERNAME
+    	string "Default user name"
+    	default "user"	          
+            
+    config WEBGUIAPP_USERPASS
+    	string "Default user password"
+    	default "password"   
+
+	menu "SPI settings"
+		config WEBGUIAPP_SPI_ENABLE
+		bool "Enabled SPI interface"
+        default y
+             help
+        		Set enabled SPI bus
+        
+        if WEBGUIAPP_SPI_ENABLE	
+			
+			config SPI_HOST
+	            int "SPI Host Number"
+	            range 0 2
+	            default 1
+	            help
+	                Set the SPI host used.
+	
+	        config SPI_SCLK_GPIO
+	            int "SPI SCLK GPIO number"
+	            range 0 33
+	            default 18
+	            help
+	                Set the GPIO number used by SPI SCLK.
+	
+	        config SPI_MOSI_GPIO
+	            int "SPI MOSI GPIO number"
+	            range 0 33
+	            default 23
+	            help
+	                Set the GPIO number used by SPI MOSI.
+	
+	        config SPI_MISO_GPIO
+	            int "SPI MISO GPIO number"
+	            range 0 33
+	            default 19
+	            help
+	                Set the GPIO number used by SPI MISO.
+	                
+		endif
+	endmenu
+
+	menu "I2C settings"
+		config WEBGUIAPP_I2C_ENABLE
+		bool "Enabled I2C interface"
+        default y
+             help
+        		Set enabled I2C bus
+        
+        if WEBGUIAPP_I2C_ENABLE	
+			
+			config I2C_HOST
+	            int "I2C Host Number"
+	            range 0 1
+	            default 0
+	            help
+	                Set the I2C host used.  
+	            
+	        config I2C_SCL_GPIO
+	            int "I2C SCL GPIO number"
+	            range 0 34
+	            default 22   
+	            
+	        config I2C_SDA_GPIO
+	            int "I2C SDA GPIO number"
+	            range 0 34
+	            default 21   
+	            
+	        config I2C_CLOCK
+	            int "I2C clock"
+	            range 400000 1000000
+	            default 400000
+	            
+		endif
+	endmenu
+
+ 
+
+    menu "WiFi settings"
+		config WEBGUIAPP_WIFI_ENABLE
+			bool "Enabled WIFI interface"
+	        default y
+	             help
+	        		Set enabled WiFi
+	        
+	    if WEBGUIAPP_WIFI_ENABLE
+	    	
+	    	config WEBGUIAPP_WIFI_ON
+				bool "Default WiFi switched on"
+	        	default y
+	    	
+	    	config WEBGUIAPP_WIFI_DHCP_ON
+				bool "Default WiFi DHCP switched on"
+	        	default y
+	    	
+			config WEBGUIAPP_WIFI_SSID_AP
+			    string "WiFi SSID AP"
+			    default "YourAP"
+			    help
+					SSID (network name) in AP mode.
+			
+			config WEBGUIAPP_WIFI_KEY_AP
+			    string "WiFi key AP"
+			    default "123456789"
+			    help
+					WiFi key (WPA or WPA2) in AP mode.
+					
+			config WEBGUIAPP_WIFI_SSID_STA
+			    string "WiFi SSID STA"
+			    default "YourSTA"
+			    help
+					SSID (network name) in client mode.
+			
+			config WEBGUIAPP_WIFI_KEY_STA
+			    string "WiFi key STA"
+			    default "123456789"
+			    help
+					WiFi key (WPA or WPA2) in client mode.
+						
+			config WEBGUIAPP_WIFI_IP_AP
+			    string "Default IP address in AP mode"
+			    default "192.168.1.150"
+			
+			config WEBGUIAPP_WIFI_IP_STA
+			    string "Default IP address in STA mode"
+			    default "192.168.1.150"
+			
+			config WEBGUIAPP_WIFI_MASK_STA
+			    string "Default network mask in STA mode"
+			    default "255.255.255.0"    
+			    
+			config WEBGUIAPP_WIFI_GATEWAY_STA
+			    string "Default gateway in STA mode"
+			    default "192.168.1.150"    
+			    
+			     
+		endif
+	endmenu	
+
+
+
+    menu "Ethernet settings"
+		config WEBGUIAPP_ETHERNET_ENABLE
+			bool "Enabled ETHERNET interface"
+	        default n
+	             help
+	        		Set enabled Ethernet adapter
+	        			            
+	    if WEBGUIAPP_ETHERNET_ENABLE
+	        
+	        config WEBGUIAPP_ETHERNET_ON
+				bool "Default Ethernet switched on"
+	        	default y
+	        	
+	    endif
+	endmenu	
+
+
+
+     menu "GPRS settings"
+			config WEBGUIAPP_GPRS_ENABLE
+				bool "Enabled GPRS PPP interface"
+	        	default n
+	             	help
+	        			Set enabled GPRS adapter
+	        				            
+	    if WEBGUIAPP_GPRS_ENABLE
+	        
+	        config WEBGUIAPP_GPRS_ON
+				bool "Default GPRS switched on"
+	        	default n
+	        	    
+	    endif
+    endmenu
+
+
+                           
+endmenu
