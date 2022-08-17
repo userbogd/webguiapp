@@ -106,4 +106,9 @@ void RS485Task(void *pvParameter);
 void PrintNetifs(void);
 void GotEthIF(void);
 
+void GetRFC3339Time(char *t);
+void StartTimeGet(void);
+
+esp_err_t StartOTA(void);
+
 #endif /* MAIN_INCLUDE_NETTRANSPORT_H_ */

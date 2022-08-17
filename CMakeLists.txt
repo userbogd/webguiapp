@@ -9,6 +9,8 @@ idf_component_register(
     	 "src/WiFiTransport.c"
     	 "src/GSMTransport.c"
     	 "src/ETHTransport.c"
+    	 "src/SNTP.c"
+    	 "src/OTA.c"
     			   
     INCLUDE_DIRS  "." "include"  "src"   
     REQUIRES nvs_flash 
@@ -18,5 +20,6 @@ idf_component_register(
     		 lwip
     		 mqtt
     		 esp_modem
-    		 
+    		 esp_https_ota
+    		 app_update
 ) 
