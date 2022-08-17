@@ -10,9 +10,16 @@ idf_component_register(
     	 "src/GSMTransport.c"
     	 "src/ETHTransport.c"
     	 "src/SNTP.c"
+    	 "src/MQTT.c"
     	 "src/OTA.c"
+    	 "extlibs/jRead.c"
+    	 "extlibs/jWrite.c"
     			   
-    INCLUDE_DIRS  "." "include"  "src"   
+    INCLUDE_DIRS  "."
+    			  "include"
+    			  "src"
+    			  "extlibs"
+    			   
     REQUIRES nvs_flash 
     		 libespfs
     		 esp_http_server
