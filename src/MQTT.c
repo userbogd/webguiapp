@@ -42,19 +42,16 @@
 #define MAX_POST_DATA_LENTH 512
 #define MQTT_RECONNECT_CHANGE_ADAPTER   3
 
+#if CONFIG_WEBGUIAPP_MQTT_ENABLE
+
 static SemaphoreHandle_t xSemaphoreMQTTHandle = NULL;
 static StaticSemaphore_t xSemaphoreMQTTBuf;
-
-static const int MQTT1_WAIT_DELIVERY_BIT = BIT0;
-static const int MQTT2_WAIT_DELIVERY_BIT = BIT1;
-
 static StaticQueue_t xStaticMQTT1MessagesQueue;
 static StaticQueue_t xStaticMQTT2MessagesQueue;
 uint8_t MQTT1MessagesQueueStorageArea[CH_MESSAGE_BUFER_LENTH * sizeof(DATA_SEND_STRUCT)];
 uint8_t MQTT2MessagesQueueStorageArea[CH_MESSAGE_BUFER_LENTH * sizeof(DATA_SEND_STRUCT)];
 
-
-mqtt_client_t mqtt[MQTT_CLIENTS_NUM] = { 0 };
+mqtt_client_t mqtt[CONFIG_MQTT_CLIENTS_NUM] = { 0 };
 
 static const char topic_tx[] = "/UPLINK/";  //subtopic for transmit
 static const char topic_rx[] = "/DOWNLINK/";  //subtopic to receive
@@ -274,7 +271,7 @@ static void reconnect_MQTT_handler(void *arg, esp_event_base_t event_base,
                                    int32_t event_id,
                                    void *event_data)
 {
-    for (int i = 0; i < MQTT_CLIENTS_NUM; ++i)
+    for (int i = 0; i < CONFIG_MQTT_CLIENTS_NUM; ++i)
     {
         if (mqtt[i].mqtt)
         {
@@ -569,7 +566,7 @@ api_json_err:
 
 void MQTTStart(void)
 {
-    for (int i = 0; i < MQTT_CLIENTS_NUM; ++i)
+    for (int i = 0; i < CONFIG_MQTT_CLIENTS_NUM; ++i)
     {
         if (mqtt[i].mqtt)
             esp_mqtt_client_reconnect(mqtt[i].mqtt);
@@ -578,7 +575,7 @@ void MQTTStart(void)
 
 void MQTTStop(void)
 {
-    for (int i = 0; i < MQTT_CLIENTS_NUM; ++i)
+    for (int i = 0; i < CONFIG_MQTT_CLIENTS_NUM; ++i)
     {
         if (mqtt[i].mqtt)
             esp_mqtt_client_disconnect(mqtt[i].mqtt);
@@ -587,7 +584,7 @@ void MQTTStop(void)
 
 void MQTTReconnect(void)
 {
-    for (int i = 0; i < MQTT_CLIENTS_NUM; ++i)
+    for (int i = 0; i < CONFIG_MQTT_CLIENTS_NUM; ++i)
     {
         if (mqtt[i].mqtt)
         {
@@ -677,7 +674,7 @@ static void start_mqtt()
     char url[40];
     char tmp[40];
 
-    for (int i = 0; i < MQTT_CLIENTS_NUM; ++i)
+    for (int i = 0; i < CONFIG_MQTT_CLIENTS_NUM; ++i)
     {
         if (GetSysConf()->mqttStation[i].Flags1.bIsGlobalEnabled)
         {
@@ -729,12 +726,11 @@ void MQTTRun(void)
                                                       &xStaticMQTT2MessagesQueue);
 
     mqtt[0].mqtt_queue = MQTT1MessagesQueueHandle;
-    mqtt[0].wait_delivery_bit = MQTT1_WAIT_DELIVERY_BIT;
     mqtt[1].mqtt_queue = MQTT2MessagesQueueHandle;
-    mqtt[1].wait_delivery_bit = MQTT2_WAIT_DELIVERY_BIT;
 
 
 
     start_mqtt();
 }
 
+#endif

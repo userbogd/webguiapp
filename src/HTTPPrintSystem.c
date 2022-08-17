@@ -1,4 +1,4 @@
- /*! Copyright 2022 Bogdan Pilyugin
+/*! Copyright 2022 Bogdan Pilyugin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -108,7 +108,6 @@ static void PrintCheckbox(char *VarData, void *arg, bool checked)
         snprintf(VarData, MAX_DYNVAR_LENGTH, " ");
 }
 
-
 static void HTTPPrint_status_fail(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "none");
@@ -129,14 +128,11 @@ static void HTTPPrint_pass(char *VarData, void *arg)
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", "******");
 }
 
-
-
 //Default string if not found handler
 static void HTTPPrint_DEF(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "#DEF");
 }
-
 
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
 
@@ -381,6 +377,67 @@ void HTTPPrint_gsmmac(char *VarData, void *arg)
 }
 #endif
 
+#if CONFIG_WEBGUIAPP_MQTT_ENABLE
+void HTTPPrint_mqtten1(char *VarData, void *arg)
+{
+    PrintCheckbox(VarData, arg, GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled);
+}
+void HTTPPrint_ipcld1(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->mqttStation[0].ServerAddr);
+}
+void HTTPPrint_mport1(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", GetSysConf()->mqttStation[0].ServerPort);
+}
+void HTTPPrint_idcld1(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->mqttStation[0].ClientID);
+}
+void HTTPPrint_topic1(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->mqttStation[0].RootTopic);
+}
+void HTTPPrint_clname1(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->mqttStation[0].UserName);
+}
+void HTTPPrint_clpass1(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", "******");
+}
+
+#if CONFIG_MQTT_CLIENTS_NUM == 2
+void HTTPPrint_mqtten2(char *VarData, void *arg)
+{
+    PrintCheckbox(VarData, arg, GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled);
+}
+void HTTPPrint_ipcld2(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->mqttStation[1].ServerAddr);
+}
+void HTTPPrint_mport2(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", GetSysConf()->mqttStation[1].ServerPort);
+}
+void HTTPPrint_idcld2(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->mqttStation[1].ClientID);
+}
+void HTTPPrint_topic2(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->mqttStation[1].RootTopic);
+}
+void HTTPPrint_clname2(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->mqttStation[1].UserName);
+}
+void HTTPPrint_clpass2(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", "******");
+}
+#endif
+#endif
 
 dyn_var_handler_t HANDLERS_ARRAY[] = {
         /*Ststem settings*/
@@ -441,67 +498,85 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "gsmmac", sizeof("gsmmac") - 1, &HTTPPrint_gsmmac },
 #endif
 
+#if CONFIG_WEBGUIAPP_MQTT_ENABLE
+        /*MQTT*/
+        { "mqtten1", sizeof("mqtten1") - 1, &HTTPPrint_mqtten1 },
+        { "ipcld1", sizeof("ipcld1") - 1, &HTTPPrint_ipcld1 },
+        { "mport1", sizeof("mport1") - 1, &HTTPPrint_mport1 },
+        { "idcld1", sizeof("idcld1") - 1, &HTTPPrint_idcld1 },
+        { "topic1", sizeof("topic1") - 1, &HTTPPrint_topic1 },
+        { "clname1", sizeof("clname1") - 1, &HTTPPrint_clname1 },
+        { "clpass1", sizeof("clpass1") - 1, &HTTPPrint_clpass1 },
+        #if CONFIG_MQTT_CLIENTS_NUM == 2
+        { "mqtten2", sizeof("mqtten2") - 1, &HTTPPrint_mqtten2 },
+        { "ipcld2", sizeof("ipcld2") - 1, &HTTPPrint_ipcld2 },
+        { "mport2", sizeof("mport2") - 1, &HTTPPrint_mport2 },
+        { "idcld2", sizeof("idcld2") - 1, &HTTPPrint_idcld2 },
+        { "topic2", sizeof("topic2") - 1, &HTTPPrint_topic2 },
+        { "clname2", sizeof("clname2") - 1, &HTTPPrint_clname2 },
+        { "clpass2", sizeof("clpass2") - 1, &HTTPPrint_clpass2 },
+#endif
+#endif
         /*ERROR report*/
         { "status_fail", sizeof("status_fail") - 1, &HTTPPrint_status_fail },
 
 };
 
-
-int HTTPPrint(httpd_req_t *req, char* buf, char* var)
+int HTTPPrint(httpd_req_t *req, char *buf, char *var)
 {
     char VarData[MAX_DYNVAR_LENGTH];
-        const char incPat[] = "inc:";
-        const int incPatLen = sizeof(incPat) - 1;
-        if (!memcmp(var, incPat, incPatLen))
+    const char incPat[] = "inc:";
+    const int incPatLen = sizeof(incPat) - 1;
+    if (!memcmp(var, incPat, incPatLen))
+    {
+        const char rootFS[] = "/";
+        char filename[32];
+        filename[0] = 0x00;
+        var += incPatLen;
+        strcat(filename, rootFS);
+        strcat(filename, var);
+        espfs_file_t *file = espfs_fopen(fs, filename);
+        struct espfs_stat_t stat;
+        if (file)
         {
-            const char rootFS[] = "/";
-            char filename[32];
-            filename[0] = 0x00;
-            var += incPatLen;
-            strcat(filename, rootFS);
-            strcat(filename, var);
-            espfs_file_t *file = espfs_fopen(fs, filename);
-            struct espfs_stat_t stat;
-            if (file)
-            {
-                espfs_fstat(file, &stat);
-                int readBytes = espfs_fread(file, buf, stat.size);
-                espfs_fclose(file);
-                return readBytes;
-            }
+            espfs_fstat(file, &stat);
+            int readBytes = espfs_fread(file, buf, stat.size);
+            espfs_fclose(file);
+            return readBytes;
         }
+    }
 
-        bool fnd = false;
-        char *p2 = var + strlen(var) - 1; //last var symbol
-        int arg = 0;
-        //searching for tag in handles array
-        for (int i = 0; i < (sizeof(HANDLERS_ARRAY) / sizeof(HANDLERS_ARRAY[0])); ++i)
-        {
-            if (*p2 == ')')
-            { //found close brace
-                char *p1 = p2;
-                while ((*p1 != '(') && (p1 > var))
-                    --p1;
-                if (*p1 == '(')
-                { //found open brace
-                    *p1 = 0x00; //trim variable to name part
-                    ++p1; //to begin of argument
-                    *p2 = 0x00; //set end of argument
-                    arg = atoi(p1);
-                }
-            }
-            if (strcmp(var, HANDLERS_ARRAY[i].tag) == 0
-                    && HANDLERS_ARRAY[i].HandlerRoutine != NULL)
-            {
-                HANDLERS_ARRAY[i].HandlerRoutine(VarData, (void*) &arg);
-                fnd = true;
-                break;
+    bool fnd = false;
+    char *p2 = var + strlen(var) - 1; //last var symbol
+    int arg = 0;
+    //searching for tag in handles array
+    for (int i = 0; i < (sizeof(HANDLERS_ARRAY) / sizeof(HANDLERS_ARRAY[0])); ++i)
+    {
+        if (*p2 == ')')
+        { //found close brace
+            char *p1 = p2;
+            while ((*p1 != '(') && (p1 > var))
+                --p1;
+            if (*p1 == '(')
+            { //found open brace
+                *p1 = 0x00; //trim variable to name part
+                ++p1; //to begin of argument
+                *p2 = 0x00; //set end of argument
+                arg = atoi(p1);
             }
         }
-        if (!fnd)
-            HTTPPrint_DEF(VarData, NULL);
-        int dLen = strlen(VarData);
-        memcpy(buf, VarData, dLen);
-        return dLen;
+        if (strcmp(var, HANDLERS_ARRAY[i].tag) == 0
+                && HANDLERS_ARRAY[i].HandlerRoutine != NULL)
+        {
+            HANDLERS_ARRAY[i].HandlerRoutine(VarData, (void*) &arg);
+            fnd = true;
+            break;
+        }
+    }
+    if (!fnd)
+        HTTPPrint_DEF(VarData, NULL);
+    int dLen = strlen(VarData);
+    memcpy(buf, VarData, dLen);
+    return dLen;
 
 }

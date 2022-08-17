@@ -400,6 +400,7 @@ static HTTP_IO_RESULT HTTPPostIndex32(httpd_req_t *req, char *PostData)
 
 static HTTP_IO_RESULT HTTPPostIndex31(httpd_req_t *req, char *PostData)
 {
+#if CONFIG_WEBGUIAPP_MQTT_ENABLE
     char tmp[33];
     bool TempIsMQTT1Enabled = false;
     bool TempIsMQTT2Enabled = false;
@@ -469,6 +470,7 @@ static HTTP_IO_RESULT HTTPPostIndex31(httpd_req_t *req, char *PostData)
             return HTTP_IO_REDIRECT;
         }
     }
+#endif
     return HTTP_IO_DONE;
 }
 

@@ -29,8 +29,6 @@
 #include "esp_netif.h"
 #include <sdkconfig.h>
 
-#define MQTT_CLIENTS_NUM 2
-
 #define DEFAULT_HOST_NAME               "DEVICE_HOSTNAME"     ///<Default host name of device
 
 #define SYSTEM_DEFAULT_USERNAME         "user"
@@ -131,7 +129,7 @@
             } Flags1;
         } sntpClient;
 
-
+#if CONFIG_WEBGUIAPP_MQTT_ENABLE
         struct
         {
             char ServerAddr[32];
@@ -151,7 +149,8 @@
                 char b6 :1;
                 char bIsGlobalEnabled :1;
             } Flags1;
-        } mqttStation[MQTT_CLIENTS_NUM];
+        } mqttStation[CONFIG_MQTT_CLIENTS_NUM];
+#endif
 
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
         struct

@@ -1,4 +1,4 @@
- /*! Copyright 2022 Bogdan Pilyugin
+/*! Copyright 2022 Bogdan Pilyugin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,20 +33,51 @@
 
 static SYS_CONFIG SysConfig;
 
-
 static void ResetSysConfig(SYS_CONFIG *Conf)
 {
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
     Conf->wifiSettings.Flags1.bIsWiFiEnabled = CONFIG_WEBGUIAPP_WIFI_ON;
-    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_WIFI_IP_STA, (esp_ip4_addr_t*)&Conf->wifiSettings.InfIPAddr);
-    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_WIFI_MASK_STA, (esp_ip4_addr_t*)&Conf->wifiSettings.InfMask);
-    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_WIFI_GATEWAY_STA, (esp_ip4_addr_t*)&Conf->wifiSettings.InfGateway);
-    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_WIFI_IP_AP, (esp_ip4_addr_t*)&Conf->wifiSettings.ApIPAddr);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_WIFI_IP_STA, (esp_ip4_addr_t*) &Conf->wifiSettings.InfIPAddr);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_WIFI_MASK_STA, (esp_ip4_addr_t*) &Conf->wifiSettings.InfMask);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_WIFI_GATEWAY_STA, (esp_ip4_addr_t*) &Conf->wifiSettings.InfGateway);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_WIFI_IP_AP, (esp_ip4_addr_t*) &Conf->wifiSettings.ApIPAddr);
     Conf->wifiSettings.Flags1.bIsAP = true;
     memcpy(Conf->wifiSettings.ApSecurityKey, CONFIG_WEBGUIAPP_WIFI_KEY_AP, sizeof(CONFIG_WEBGUIAPP_WIFI_KEY_AP));
     memcpy(Conf->wifiSettings.InfSSID, CONFIG_WEBGUIAPP_WIFI_SSID_STA, sizeof(CONFIG_WEBGUIAPP_WIFI_SSID_STA));
     memcpy(Conf->wifiSettings.InfSecurityKey, CONFIG_WEBGUIAPP_WIFI_KEY_STA, sizeof(CONFIG_WEBGUIAPP_WIFI_KEY_STA));
     Conf->wifiSettings.Flags1.bIsDHCPEnabled = CONFIG_WEBGUIAPP_WIFI_DHCP_ON;
+#endif
+
+#if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
+    Conf->ethSettings.Flags1.bIsETHEnabled = CONFIG_WEBGUIAPP_ETHERNET_ON;
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_ETH_IP_DEFAULT, (esp_ip4_addr_t*) &Conf->ethSettings.IPAddr);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_ETH_MASK_DEFAULT, (esp_ip4_addr_t*) &Conf->ethSettings.Mask);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_ETH_GATEWAY_DEFAULT, (esp_ip4_addr_t*) &Conf->ethSettings.Gateway);
+    Conf->ethSettings.Flags1.bIsDHCPEnabled = CONFIG_WEBGUIAPP_ETHERNET_DHCP_ON ;
+#endif
+
+#if CONFIG_WEBGUIAPP_GPRS_ENABLE
+    Conf->gsmSettings.Flags1.bIsGSMEnabled = true;
+
+#endif
+
+#if CONFIG_WEBGUIAPP_MQTT_ENABLE
+    Conf->mqttStation[0].Flags1.bIsGlobalEnabled = CONFIG_MQTT_ON;
+    memcpy(Conf->mqttStation[0].ServerAddr, CONFIG_MQTT_SERVER_URL, sizeof(CONFIG_MQTT_SERVER_URL));
+    Conf->mqttStation[0].ServerPort = CONFIG_MQTT_SERVER_PORT;
+    memcpy(Conf->mqttStation[0].ClientID, CONFIG_MQTT_CLIENT_ID_1, sizeof(CONFIG_MQTT_CLIENT_ID_1));
+    memcpy(Conf->mqttStation[0].RootTopic, CONFIG_MQTT_ROOT_TOPIC, sizeof(CONFIG_MQTT_ROOT_TOPIC));
+    memcpy(Conf->mqttStation[0].UserName, CONFIG_MQTT_USERNAME, sizeof(CONFIG_MQTT_USERNAME));
+    memcpy(Conf->mqttStation[0].UserPass, CONFIG_MQTT_PASSWORD, sizeof(CONFIG_MQTT_PASSWORD));
+#if CONFIG_MQTT_CLIENTS_NUM == 2
+    Conf->mqttStation[1].Flags1.bIsGlobalEnabled = CONFIG_MQTT_ON;
+    memcpy(Conf->mqttStation[1].ServerAddr, CONFIG_MQTT_SERVER_URL, sizeof(CONFIG_MQTT_SERVER_URL));
+    Conf->mqttStation[1].ServerPort = CONFIG_MQTT_SERVER_PORT;
+    memcpy(Conf->mqttStation[1].ClientID, CONFIG_MQTT_CLIENT_ID_2, sizeof(CONFIG_MQTT_CLIENT_ID_2));
+    memcpy(Conf->mqttStation[1].RootTopic, CONFIG_MQTT_ROOT_TOPIC, sizeof(CONFIG_MQTT_ROOT_TOPIC));
+    memcpy(Conf->mqttStation[1].UserName, CONFIG_MQTT_USERNAME, sizeof(CONFIG_MQTT_USERNAME));
+    memcpy(Conf->mqttStation[1].UserPass, CONFIG_MQTT_PASSWORD, sizeof(CONFIG_MQTT_PASSWORD));
+#endif
 #endif
 
 }
