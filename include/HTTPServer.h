@@ -62,6 +62,7 @@ typedef struct
 } dyn_var_handler_t;
 
 void regHTTPPrintCustom(int (*print_handler));
+void regAfterPostHandlerCustom(HTTP_IO_RESULT (*post_handler));
 
 esp_err_t start_file_server(void);
 HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostData);

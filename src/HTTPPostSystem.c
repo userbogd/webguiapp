@@ -25,6 +25,8 @@
 
 static const char *TAG = "HTTPServerPost";
 
+
+
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
 
 const char pg_11[] = "index.html";
@@ -38,10 +40,6 @@ const char pg_31[] = "index31.html";
 const char pg_32[] = "index32.html";
 const char pg_33[] = "index33.html";
 const char pg_34[] = "index34.html";
-const char pg_40[] = "index40.html";
-const char pg_42[] = "index42.html";
-const char pg_43[] = "index43.html";
-const char pg_44[] = "index44.html";
 const char pg_reboot[] = "reboot.html";
 const char pg_db[] = "dbg.json";
 const char pg_mm[] = "mem.json";
@@ -59,14 +57,17 @@ static HTTP_IO_RESULT HTTPPostIndex31(httpd_req_t *req, char *PostData);
 static HTTP_IO_RESULT HTTPPostIndex32(httpd_req_t *req, char *PostData);
 static HTTP_IO_RESULT HTTPPostIndex33(httpd_req_t *req, char *PostData);
 static HTTP_IO_RESULT HTTPPostIndex34(httpd_req_t *req, char *PostData);
-
-static HTTP_IO_RESULT HTTPPostIndex40(httpd_req_t *req, char *PostData);
-static HTTP_IO_RESULT HTTPPostIndex42(httpd_req_t *req, char *PostData);
-static HTTP_IO_RESULT HTTPPostIndex43(httpd_req_t *req, char *PostData);
-static HTTP_IO_RESULT HTTPPostIndex44(httpd_req_t *req, char *PostData);
 static HTTP_IO_RESULT HTTPPostReboot(httpd_req_t *req, char *PostData);
 static HTTP_IO_RESULT HTTPPostDebug(httpd_req_t *req, char *PostData);
 static HTTP_IO_RESULT HTTPPostMemJson(httpd_req_t *req, char *PostData);
+
+HTTP_IO_RESULT (*AfterPostHandlerCust)(httpd_req_t *req, const char *filename, char *PostData);
+
+void regAfterPostHandlerCustom(HTTP_IO_RESULT (*post_handler))
+{
+    AfterPostHandlerCust = post_handler;
+}
+
 
 HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostData)
 {
@@ -123,14 +124,6 @@ static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, c
     if (!memcmp(filename, pg_34, sizeof(pg_34)))
         return HTTPPostIndex34(req, PostData);
 
-    if (!memcmp(filename, pg_40, sizeof(pg_40)))
-        return HTTPPostIndex40(req, PostData);
-    if (!memcmp(filename, pg_42, sizeof(pg_42)))
-        return HTTPPostIndex42(req, PostData);
-    if (!memcmp(filename, pg_43, sizeof(pg_43)))
-        return HTTPPostIndex43(req, PostData);
-    if (!memcmp(filename, pg_44, sizeof(pg_44)))
-        return HTTPPostIndex44(req, PostData);
 
     if (!memcmp(filename, pg_reboot, sizeof(pg_reboot)))
         return HTTPPostReboot(req, PostData);
@@ -141,6 +134,8 @@ static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, c
     if (!memcmp(filename, pg_mm, sizeof(pg_mm)))
         return HTTPPostMemJson(req, PostData);
 
+    if (AfterPostHandlerCust != NULL)
+        AfterPostHandler(req, filename, PostData);
 
 
     return HTTP_IO_DONE;
@@ -486,78 +481,7 @@ static HTTP_IO_RESULT HTTPPostIndex34(httpd_req_t *req, char *PostData)
     return HTTP_IO_DONE;
 }
 
-static HTTP_IO_RESULT HTTPPostIndex40(httpd_req_t *req, char *PostData)
-{
-    char tmp[8];
-    if (httpd_query_key_value(PostData, "cmd", tmp, 4) == ESP_OK)
-    {
-        if (!strcmp(tmp, (const char*) "1"))
-        {
-           // SetCTRL_BAT(ON);
-        }
-        else if (!strcmp(tmp, (const char*) "2"))
-        {
-           // SetCTRL_BAT(OFF);
-        }
-        else if (!strcmp(tmp, (const char*) "3"))
-        {
-            //MQTTStart();
-        }
-        else if (!strcmp(tmp, (const char*) "4"))
-        {
-            // MQTTStop();
-        }
-        else if (!strcmp(tmp, (const char*) "5"))
-        {
 
-        }
-        else if (!strcmp(tmp, (const char*) "6"))
-        {
-
-        }
-        else if (!strcmp(tmp, (const char*) "7"))
-        {
-            //SetDefaultNetIF(GetETHNetifAdapter());
-        }
-        else if (!strcmp(tmp, (const char*) "8"))
-        {
-            //SetDefaultNetIF(GetSTANetifAdapter());
-        }
-        else if (!strcmp(tmp, (const char*) "9"))
-        {
-            //SetDefaultNetIF(GetPPPNetifAdapter());
-        }
-        else if (!strcmp(tmp, (const char*) "10"))
-        {
-            //NextDefaultNetIF();
-        }
-        else if (!strcmp(tmp, (const char*) "11"))
-        {
-            //PrintNetifs();
-        }
-        else if (!strcmp(tmp, (const char*) "12"))
-        {
-           // SendTestEvent();
-        }
-
-    }
-    return HTTP_IO_DONE;
-}
-
-static HTTP_IO_RESULT HTTPPostIndex42(httpd_req_t *req, char *PostData)
-{
-    return HTTP_IO_DONE;
-}
-
-static HTTP_IO_RESULT HTTPPostIndex43(httpd_req_t *req, char *PostData)
-{
-    return HTTP_IO_DONE;
-}
-
-static HTTP_IO_RESULT HTTPPostIndex44(httpd_req_t *req, char *PostData)
-{
-    return HTTP_IO_DONE;
-}
 
 static HTTP_IO_RESULT HTTPPostReboot(httpd_req_t *req, char *PostData)
 {
