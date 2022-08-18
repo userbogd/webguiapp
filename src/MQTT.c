@@ -212,17 +212,15 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED client %d", ctx->mqtt_index);
             char sub[64];
 
-            ComposeTopicControl(sub, GetSysConf()->mqttStation[ctx->mqtt_index].RootTopic,
-                                GetSysConf()->mqttStation[ctx->mqtt_index].ClientID,
-                                0);
+            char *system_name = GetSysConf()->mqttStation[ctx->mqtt_index].RootTopic;
+            char *client_name = GetSysConf()->mqttStation[ctx->mqtt_index].ClientID;
+            char  direction[] = "DOWNLINK";
+
+            ComposeTopic(sub, system_name, direction, client_name, "CONTROL");
             msg_id = esp_mqtt_client_subscribe(client, (const char*) sub, 0);
             ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
 
-
-
-            ComposeTopicScreen(sub, GetSysConf()->mqttStation[ctx->mqtt_index].RootTopic,
-                                GetSysConf()->mqttStation[ctx->mqtt_index].ClientID,
-                                0);
+            ComposeTopic(sub, system_name, direction, client_name, "DATA");
             msg_id = esp_mqtt_client_subscribe(client, (const char*) sub, 0);
             ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
 
