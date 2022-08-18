@@ -593,5 +593,23 @@ menu "WebGuiApp configuration"
 	   	
 	   	endif
 	endmenu
+	
+	if 	WEBGUIAPP_WIFI_ENABLE || WEBGUIAPP_ETHERNET_ENABLE || WEBGUIAPP_GPRS_ENABLE
+		menu "DNS settings"
+		
+			config WEBGUIAPP_DNS1_ADDRESS_DEFAULT
+			string "DNS1"
+			default "8.8.8.8"
+			
+			config WEBGUIAPP_DNS2_ADDRESS_DEFAULT
+			string "DNS2"
+			default "8.8.4.4"
+			
+			config WEBGUIAPP_DNS3_ADDRESS_DEFAULT
+			string "DNS3"
+			default "1.1.1.1"
+			
+		endmenu
+	endif
                            
 endmenu

@@ -46,6 +46,10 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
     memcpy(Conf->wifiSettings.InfSSID, CONFIG_WEBGUIAPP_WIFI_SSID_STA, sizeof(CONFIG_WEBGUIAPP_WIFI_SSID_STA));
     memcpy(Conf->wifiSettings.InfSecurityKey, CONFIG_WEBGUIAPP_WIFI_KEY_STA, sizeof(CONFIG_WEBGUIAPP_WIFI_KEY_STA));
     Conf->wifiSettings.Flags1.bIsDHCPEnabled = CONFIG_WEBGUIAPP_WIFI_DHCP_ON;
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS1_ADDRESS_DEFAULT, (esp_ip4_addr_t*)&Conf->wifiSettings.DNSAddr1);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS2_ADDRESS_DEFAULT, (esp_ip4_addr_t*)&Conf->wifiSettings.DNSAddr2);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*)&Conf->wifiSettings.DNSAddr3);
+
 #endif
 
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
@@ -53,13 +57,20 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
     esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_ETH_IP_DEFAULT, (esp_ip4_addr_t*) &Conf->ethSettings.IPAddr);
     esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_ETH_MASK_DEFAULT, (esp_ip4_addr_t*) &Conf->ethSettings.Mask);
     esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_ETH_GATEWAY_DEFAULT, (esp_ip4_addr_t*) &Conf->ethSettings.Gateway);
-    Conf->ethSettings.Flags1.bIsDHCPEnabled = CONFIG_WEBGUIAPP_ETHERNET_DHCP_ON ;
+    //Conf->ethSettings.Flags1.bIsDHCPEnabled = CONFIG_WEBGUIAPP_ETHERNET_DHCP_ON ;
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS1_ADDRESS_DEFAULT, (esp_ip4_addr_t*)&Conf->ethSettings.DNSAddr1);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS2_ADDRESS_DEFAULT, (esp_ip4_addr_t*)&Conf->ethSettings.DNSAddr2);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*)&Conf->ethSettings.DNSAddr3);
 #endif
 
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
     Conf->gsmSettings.Flags1.bIsGSMEnabled = true;
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS1_ADDRESS_DEFAULT, (esp_ip4_addr_t*)&Conf->gsmSettings.DNSAddr1);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS2_ADDRESS_DEFAULT, (esp_ip4_addr_t*)&Conf->gsmSettings.DNSAddr2);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*)&Conf->gsmSettings.DNSAddr3);
 
 #endif
+
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
     Conf->mqttStation[0].Flags1.bIsGlobalEnabled = CONFIG_MQTT_ON;
