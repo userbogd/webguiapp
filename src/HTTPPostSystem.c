@@ -25,8 +25,6 @@
 
 static const char *TAG = "HTTPServerPost";
 
-
-
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
 
 const char pg_11[] = "index.html";

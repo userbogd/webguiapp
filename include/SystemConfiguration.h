@@ -245,4 +245,7 @@
     esp_err_t ResetInitSysConfig(void);
     SYS_CONFIG* GetSysConf(void);
 
+    esp_err_t WebGuiAppInit(void);
+
+
 #endif /* COMPONENTS_WEB_GUI_APPLICATION_INCLUDE_SYSTEMCONFIGURATION_H_ */
