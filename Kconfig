@@ -135,11 +135,11 @@ menu "WebGuiApp configuration"
 						
 			config WEBGUIAPP_WIFI_IP_AP
 			    string "Default IP address in AP mode"
-			    default "192.168.1.150"
+			    default "192.168.150.1"
 			
 			config WEBGUIAPP_WIFI_IP_STA
 			    string "Default IP address in STA mode"
-			    default "192.168.1.150"
+			    default "192.168.150.1"
 			
 			config WEBGUIAPP_WIFI_MASK_STA
 			    string "Default network mask in STA mode"
@@ -147,7 +147,7 @@ menu "WebGuiApp configuration"
 			    
 			config WEBGUIAPP_WIFI_GATEWAY_STA
 			    string "Default gateway in STA mode"
-			    default "192.168.1.150"    
+			    default "192.168.150.1"    
 			    
 			     
 		endif
@@ -170,7 +170,7 @@ menu "WebGuiApp configuration"
 	        
 	        config WEBGUIAPP_ETH_IP_DEFAULT
 			    string "Default IP address"
-			    default "192.168.1.150"
+			    default "192.168.160.1"
 			
 			config WEBGUIAPP_ETH_MASK_DEFAULT
 			    string "Default network mask"
@@ -178,7 +178,7 @@ menu "WebGuiApp configuration"
 			    
 			config WEBGUIAPP_ETH_GATEWAY_DEFAULT
 			    string "Default gateway"
-			    default "192.168.1.150" 
+			    default "192.168.160.1" 
 			     
 	        config WEBGUIAPP_ETHERNET_DHCP_DEFAULT
 				bool "Default Ethernet DHCP client on"

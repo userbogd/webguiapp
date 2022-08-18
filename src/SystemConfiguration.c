@@ -40,11 +40,12 @@
 #include "romfs.h"
 #include "NetTransport.h"
 #include "Helpers.h"
+#include "HTTPServer.h"
 
 #define STORAGE_NAMESPACE "storage"
 #define TAG "SystemConfiguration"
 
-#define MANUAL_RESET 1
+#define MANUAL_RESET 0
 
 static SYS_CONFIG SysConfig;
 
@@ -108,19 +109,28 @@ esp_err_t WebGuiAppInit(void)
     }
 #endif
 
+    bool WiFiApOnly = false;
+#if   !CONFIG_WEBGUIAPP_GPRS_ENABLE && !CONFIG_WEBGUIAPP_ETHERNET_ENABLE && CONFIG_WEBGUIAPP_WIFI_ENABLE
+if(GetSysConf()->wifiSettings.Flags1.bIsAP)
+    WiFiApOnly = true;
+#endif
+
     /*Start services depends on client connection*/
-    if (CONFIG_WEBGUIAPP_GPRS_ENABLE ||
-    CONFIG_WEBGUIAPP_ETHERNET_ENABLE ||
-            (CONFIG_WEBGUIAPP_WIFI_ENABLE && !GetSysConf()->wifiSettings.Flags1.bIsAP))
+#if CONFIG_WEBGUIAPP_GPRS_ENABLE || CONFIG_WEBGUIAPP_ETHERNET_ENABLE || CONFIG_WEBGUIAPP_WIFI_ENABLE
     {
-        //StartTimeGet();
+        if (!WiFiApOnly)
+        {
+            StartTimeGet();
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
-        if (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled
-                || GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled)
-        {
-            //  MQTTRun();
+            if (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled
+                    || GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled)
+            {
+                //  MQTTRun();
+            }
+#endif
         }
+        ESP_ERROR_CHECK(start_file_server());
 #endif
 
     }
@@ -250,6 +260,12 @@ static void InitSysI2C(void)
 
 static void ResetSysConfig(SYS_CONFIG *Conf)
 {
+    memcpy(Conf->NetBIOSName, CONFIG_WEBGUIAPP_HOSTNAME, sizeof(CONFIG_WEBGUIAPP_HOSTNAME));
+    memcpy(Conf->SysName, CONFIG_WEBGUIAPP_USERNAME, sizeof(CONFIG_WEBGUIAPP_USERNAME));
+    memcpy(Conf->SysPass, CONFIG_WEBGUIAPP_USERPASS, sizeof(CONFIG_WEBGUIAPP_USERPASS));
+    //memcpy(Conf->OTAURL, CONFIG_WEBGUIAPP_, sizeof(SYSTEM_DEFAULT_OTAURL));
+
+    memcpy(Conf->OTAURL, SYSTEM_DEFAULT_OTAURL, sizeof(SYSTEM_DEFAULT_OTAURL));
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
     Conf->wifiSettings.Flags1.bIsWiFiEnabled = CONFIG_WEBGUIAPP_WIFI_ON;
 
