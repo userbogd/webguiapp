@@ -23,18 +23,12 @@
 
 #include "HTTPServer.h"
 
-#define MAX_DYNVAR_LENGTH 64
-#define MAX_INCFILE_LENGTH 1024
-// uint32_t UpTime;
+
+
 
 static const char *TAG = "HTTPServerPrint";
 
-typedef struct
-{
-    const char tag[16];
-    const int taglen;
-    void (*HandlerRoutine)(char *VarData, void *arg);
-} dyn_var_handler_t;
+
 
 typedef enum
 {
@@ -42,6 +36,14 @@ typedef enum
     NETMASK,
     GW
 } IP_PRINT_TYPE;
+
+//Pointer to extend user implemented print handler
+static int (*HTTPPrintCust)(httpd_req_t *req, char *buf, char *var);
+
+void regHTTPPrintCustom(int (*print_handler))
+{
+   HTTPPrintCust = print_handler;
+}
 
 static void PrintInterfaceState(char *VarData, void *arg, esp_netif_t *netif)
 {
@@ -465,7 +467,7 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "dns3", sizeof("dns3") - 1, &HTTPPrint_dns3 },
         { "macadr", sizeof("macadr") - 1, &HTTPPrint_macadr },
         { "apmacadr", sizeof("apmacadr") - 1, &HTTPPrint_apmacadr },
-#endif
+        #endif
 
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
         /*ETHERNET network*/
@@ -479,7 +481,7 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "bkedns", sizeof("bkedns") - 1, &HTTPPrint_bkedns },
         { "fledns", sizeof("fledns") - 1, &HTTPPrint_fledns },
         { "emacadr", sizeof("emacadr") - 1, &HTTPPrint_emacadr },
-#endif
+        #endif
 
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
         /*GSM modem*/
@@ -496,7 +498,7 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "bkgsmdns", sizeof("bkgsmdns") - 1, &HTTPPrint_bkgsmdns },
         { "flgsmdns", sizeof("flgsmdns") - 1, &HTTPPrint_flgsmdns },
         { "gsmmac", sizeof("gsmmac") - 1, &HTTPPrint_gsmmac },
-#endif
+        #endif
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
         /*MQTT*/
@@ -574,7 +576,12 @@ int HTTPPrint(httpd_req_t *req, char *buf, char *var)
         }
     }
     if (!fnd)
-        HTTPPrint_DEF(VarData, NULL);
+    {
+        if (HTTPPrintCust != NULL)
+            HTTPPrintCust(req, buf, var);
+        else
+            HTTPPrint_DEF(VarData, NULL);
+    }
     int dLen = strlen(VarData);
     memcpy(buf, VarData, dLen);
     return dLen;

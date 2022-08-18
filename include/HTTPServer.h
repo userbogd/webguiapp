@@ -43,6 +43,9 @@
 #include "esp_eth.h"
 #include "mbedtls/base64.h"
 
+#define MAX_DYNVAR_LENGTH 64
+#define MAX_INCFILE_LENGTH 1024
+
 typedef enum
 {
     HTTP_IO_DONE = 0u,  // Finished with procedure
@@ -50,6 +53,15 @@ typedef enum
     HTTP_IO_WAITING,     // Waiting for asynchronous process to complete, call again later
     HTTP_IO_REDIRECT
 } HTTP_IO_RESULT;
+
+typedef struct
+{
+    const char tag[16];
+    const int taglen;
+    void (*HandlerRoutine)(char *VarData, void *arg);
+} dyn_var_handler_t;
+
+void regHTTPPrintCustom(int (*print_handler));
 
 esp_err_t start_file_server(void);
 HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostData);
