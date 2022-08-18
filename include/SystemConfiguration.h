@@ -27,7 +27,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "esp_netif.h"
-#include <sdkconfig.h>
+#include "sdkconfig.h"
 
 #define DEFAULT_HOST_NAME               "DEVICE_HOSTNAME"     ///<Default host name of device
 

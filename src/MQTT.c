@@ -53,8 +53,7 @@ uint8_t MQTT2MessagesQueueStorageArea[CH_MESSAGE_BUFER_LENTH * sizeof(DATA_SEND_
 
 mqtt_client_t mqtt[CONFIG_MQTT_CLIENTS_NUM] = { 0 };
 
-static const char topic_tx[] = "/UPLINK/";  //subtopic for transmit
-static const char topic_rx[] = "/DOWNLINK/";  //subtopic to receive
+
 
 const char apiver[] = "2.0";
 const char tagGet[] = "GET";
@@ -133,6 +132,27 @@ static void log_error_if_nonzero(const char *message, int error_code)
     }
 }
 
+static const char topic_tx[] = "/UPLINK/";  //subtopic for transmit
+static const char topic_rx[] = "/DOWNLINK/";  //subtopic to receive
+
+static void ComposeTopic(char *topic, char *system_name, char* direct, char *client_name, char *service_name)
+{
+    char tmp[4];
+    char dev_rom_id[8];
+    GetChipId((uint8_t*) tmp);
+    BytesToStr((unsigned char*) tmp, (unsigned char*) dev_rom_id, 4);
+    strcpy((char*) topic, system_name);    // Global system name
+    strcat((char*) topic, "/");
+    strcpy((char*) topic, direct);    // Data direction UPLINK or DOWNLINK
+    strcat((char*) topic, "/");
+    strcat((char*) topic, (const char*) dev_rom_id);   // Unique device ID (based on ROM chip id)
+    strcat((char*) topic, "/");
+    strcat((char*) topic, client_name);               // Device client name  (for multiclient devices)
+    strcat((char*) topic, "/");
+    strcat((char*) topic, (const char*) service_name); // Device service name
+}
+
+
 static void ComposeTopicControl(char *topic, char *roottopic, char *ident, uint8_t dir)
 {
     char id[4];
@@ -191,11 +211,15 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             MQTTReconnectCounter = 0;
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED client %d", ctx->mqtt_index);
             char sub[64];
+
             ComposeTopicControl(sub, GetSysConf()->mqttStation[ctx->mqtt_index].RootTopic,
                                 GetSysConf()->mqttStation[ctx->mqtt_index].ClientID,
                                 0);
             msg_id = esp_mqtt_client_subscribe(client, (const char*) sub, 0);
             ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
+
+
+
             ComposeTopicScreen(sub, GetSysConf()->mqttStation[ctx->mqtt_index].RootTopic,
                                 GetSysConf()->mqttStation[ctx->mqtt_index].ClientID,
                                 0);
