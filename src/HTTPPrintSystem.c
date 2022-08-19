@@ -22,13 +22,7 @@
  */
 
 #include "HTTPServer.h"
-
-
-
-
 static const char *TAG = "HTTPServerPrint";
-
-
 
 typedef enum
 {

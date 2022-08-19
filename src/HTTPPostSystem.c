@@ -27,37 +27,24 @@ static const char *TAG = "HTTPServerPost";
 
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
 
-const char pg_11[] = "index.html";
-const char pg_20[] = "index20.html";
-const char pg_21[] = "index21.html";
-const char pg_22[] = "index22.html";
-const char pg_23[] = "index23.html";
-const char pg_24[] = "index24.html";
-const char pg_30[] = "index30.html";
-const char pg_31[] = "index31.html";
-const char pg_32[] = "index32.html";
-const char pg_33[] = "index33.html";
-const char pg_34[] = "index34.html";
-const char pg_reboot[] = "reboot.html";
-const char pg_db[] = "dbg.json";
-const char pg_mm[] = "mem.json";
+const char url_eth_settings[] = "set_eth.html";
+const char url_wifi_settings[] = "set_wifi.html";
+const char url_gprs_settings[] = "set_gprs.html";
+const char url_mqtt_settings[] = "set_mqtt.html";
+const char url_sys_settings[] = "set_sys.html";
+const char url_time_settings[] = "set_time.html";
+const char url_reboot[] = "reboot.html";
 
 static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, char *PostData);
 
-static HTTP_IO_RESULT HTTPPostIndex(httpd_req_t *req, char *PostData);
-static HTTP_IO_RESULT HTTPPostIndex21(httpd_req_t *req, char *PostData);
-static HTTP_IO_RESULT HTTPPostIndex20(httpd_req_t *req, char *PostData);
-static HTTP_IO_RESULT HTTPPostIndex22(httpd_req_t *req, char *PostData);
-static HTTP_IO_RESULT HTTPPostIndex23(httpd_req_t *req, char *PostData);
-static HTTP_IO_RESULT HTTPPostIndex24(httpd_req_t *req, char *PostData);
-static HTTP_IO_RESULT HTTPPostIndex30(httpd_req_t *req, char *PostData);
-static HTTP_IO_RESULT HTTPPostIndex31(httpd_req_t *req, char *PostData);
-static HTTP_IO_RESULT HTTPPostIndex32(httpd_req_t *req, char *PostData);
-static HTTP_IO_RESULT HTTPPostIndex33(httpd_req_t *req, char *PostData);
-static HTTP_IO_RESULT HTTPPostIndex34(httpd_req_t *req, char *PostData);
+static HTTP_IO_RESULT HTTPPostEthernetSettings(httpd_req_t *req, char *PostData);
+static HTTP_IO_RESULT HTTPPostWiFiSettings(httpd_req_t *req, char *PostData);
+static HTTP_IO_RESULT HTTPPostGPRSSettings(httpd_req_t *req, char *PostData);
+static HTTP_IO_RESULT HTTPPostMQTTSettings(httpd_req_t *req, char *PostData);
+static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData);
+static HTTP_IO_RESULT HTTPPostTimeSettings(httpd_req_t *req, char *PostData);
 static HTTP_IO_RESULT HTTPPostReboot(httpd_req_t *req, char *PostData);
-static HTTP_IO_RESULT HTTPPostDebug(httpd_req_t *req, char *PostData);
-static HTTP_IO_RESULT HTTPPostMemJson(httpd_req_t *req, char *PostData);
+
 
 HTTP_IO_RESULT (*AfterPostHandlerCust)(httpd_req_t *req, const char *filename, char *PostData);
 
@@ -87,7 +74,7 @@ HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostDat
         case HTTP_IO_NEED_DATA:
             break;
         case HTTP_IO_REDIRECT:
-            strcpy(filename, PostData);
+            strcpy((char*)filename, PostData);
         break;
     }
     return res;
@@ -95,54 +82,29 @@ HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostDat
 
 static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, char *PostData)
 {
-    if (!memcmp(filename, pg_11, sizeof(pg_11)))
-        return HTTPPostIndex(req, PostData);
-
-    if (!memcmp(filename, pg_20, sizeof(pg_20)))
-        return HTTPPostIndex20(req, PostData);
-    if (!memcmp(filename, pg_21, sizeof(pg_21)))
-        return HTTPPostIndex21(req, PostData);
-    if (!memcmp(filename, pg_22, sizeof(pg_22)))
-        return HTTPPostIndex22(req, PostData);
-    if (!memcmp(filename, pg_23, sizeof(pg_23)))
-        return HTTPPostIndex23(req, PostData);
-    if (!memcmp(filename, pg_24, sizeof(pg_24)))
-        return HTTPPostIndex24(req, PostData);
-
-    if (!memcmp(filename, pg_30, sizeof(pg_30)))
-        return HTTPPostIndex30(req, PostData);
-
-    if (!memcmp(filename, pg_31, sizeof(pg_31)))
-        return HTTPPostIndex31(req, PostData);
-    if (!memcmp(filename, pg_32, sizeof(pg_32)))
-        return HTTPPostIndex32(req, PostData);
-    if (!memcmp(filename, pg_33, sizeof(pg_33)))
-        return HTTPPostIndex33(req, PostData);
-    if (!memcmp(filename, pg_34, sizeof(pg_34)))
-        return HTTPPostIndex34(req, PostData);
-
-    if (!memcmp(filename, pg_reboot, sizeof(pg_reboot)))
+    if (!memcmp(filename, url_eth_settings, sizeof(url_eth_settings)))
+        return HTTPPostEthernetSettings(req, PostData);
+    if (!memcmp(filename, url_wifi_settings, sizeof(url_wifi_settings)))
+        return HTTPPostWiFiSettings(req, PostData);
+    if (!memcmp(filename, url_gprs_settings, sizeof(url_gprs_settings)))
+        return HTTPPostGPRSSettings(req, PostData);
+    if (!memcmp(filename, url_mqtt_settings, sizeof(url_mqtt_settings)))
+        return HTTPPostMQTTSettings(req, PostData);
+    if (!memcmp(filename, url_sys_settings, sizeof(url_sys_settings)))
+        return HTTPPostSystemSettings(req, PostData);
+    if (!memcmp(filename, url_time_settings, sizeof(url_time_settings)))
+        return HTTPPostTimeSettings(req, PostData);
+    if (!memcmp(filename, url_reboot, sizeof(url_reboot)))
         return HTTPPostReboot(req, PostData);
 
-    if (!memcmp(filename, pg_db, sizeof(pg_db)))
-        return HTTPPostDebug(req, PostData);
-
-    if (!memcmp(filename, pg_mm, sizeof(pg_mm)))
-        return HTTPPostMemJson(req, PostData);
-
+    // If not found target URL here, try to call custom code
      if (AfterPostHandlerCust != NULL)
      AfterPostHandlerCust(req, filename, PostData);
 
-
     return HTTP_IO_DONE;
 }
 
-static HTTP_IO_RESULT HTTPPostIndex(httpd_req_t *req, char *PostData)
-{
-    return HTTP_IO_DONE;
-}
-
-static HTTP_IO_RESULT HTTPPostIndex20(httpd_req_t *req, char *PostData)
+static HTTP_IO_RESULT HTTPPostEthernetSettings(httpd_req_t *req, char *PostData)
 {
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
     char tmp[32];
@@ -187,7 +149,7 @@ static HTTP_IO_RESULT HTTPPostIndex20(httpd_req_t *req, char *PostData)
     return HTTP_IO_DONE;
 }
 
-static HTTP_IO_RESULT HTTPPostIndex21(httpd_req_t *req, char *PostData)
+static HTTP_IO_RESULT HTTPPostWiFiSettings(httpd_req_t *req, char *PostData)
 {
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
     char tmp[32];
@@ -251,14 +213,13 @@ static HTTP_IO_RESULT HTTPPostIndex21(httpd_req_t *req, char *PostData)
             WriteNVSSysConfig(GetSysConf());
             memcpy(PostData, "/reboot.html", sizeof "/reboot.html");
             return HTTP_IO_REDIRECT;
-
         }
     }
 #endif
     return HTTP_IO_DONE;
 }
 
-static HTTP_IO_RESULT HTTPPostIndex22(httpd_req_t *req, char *PostData)
+static HTTP_IO_RESULT HTTPPostGPRSSettings(httpd_req_t *req, char *PostData)
 {
 #if    CONFIG_WEBGUIAPP_GPRS_ENABLE
     char tmp[32];
@@ -297,107 +258,14 @@ static HTTP_IO_RESULT HTTPPostIndex22(httpd_req_t *req, char *PostData)
     return HTTP_IO_DONE;
 }
 
-static HTTP_IO_RESULT HTTPPostIndex23(httpd_req_t *req, char *PostData)
-{
-
-    return HTTP_IO_DONE;
-}
-
-static HTTP_IO_RESULT HTTPPostIndex24(httpd_req_t *req, char *PostData)
-{
-    return HTTP_IO_DONE;
-}
-
-static HTTP_IO_RESULT HTTPPostIndex30(httpd_req_t *req, char *PostData)
-{
-
-    return HTTP_IO_DONE;
-}
-
-static HTTP_IO_RESULT HTTPPostIndex32(httpd_req_t *req, char *PostData)
-{
-    char tmp[64];
-    bool TempIsTCPConfirm = false;
-    bool TempIsLoRaConfirm = false;
-    bool TempIsOTAEnabled = false;
-
-    if (httpd_query_key_value(PostData, "nam", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        UnencodeURL(tmp);
-        strcpy(GetSysConf()->NetBIOSName, tmp);
-    }
-    if (httpd_query_key_value(PostData, "otaurl", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        UnencodeURL(tmp);
-        strcpy(GetSysConf()->OTAURL, tmp);
-    }
-
-    httpd_query_key_value(PostData, "lgn", GetSysConf()->SysName, sizeof(GetSysConf()->SysName));
-
-    if (httpd_query_key_value(PostData, "psn", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        if (strcmp(tmp, (const char*) "******"))
-            strcpy(GetSysConf()->SysPass, tmp);
-    }
-
-    if (httpd_query_key_value(PostData, "lrdel", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        if (!strcmp((const char*) tmp, (const char*) "1"))
-            TempIsLoRaConfirm = true;
-    }
-
-    if (httpd_query_key_value(PostData, "tcpdel", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        if (!strcmp((const char*) tmp, (const char*) "1"))
-            TempIsTCPConfirm = true;
-    }
-
-    if (httpd_query_key_value(PostData, "ota", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        if (!strcmp((const char*) tmp, (const char*) "1"))
-            TempIsOTAEnabled = true;
-    }
-
-    if (httpd_query_key_value(PostData, "upd", tmp, sizeof(tmp)) == ESP_OK)
-    {
-
-        if (!strcmp(tmp, (const char*) "prs"))
-        {
-            //StartOTA();
-        }
-
-    }
-    if (httpd_query_key_value(PostData, "rst", tmp, sizeof(tmp)) == ESP_OK)
-    {
-
-        if (!strcmp(tmp, (const char*) "prs"))
-        {
-            memcpy(PostData, "/reboot.html", sizeof "/reboot.html");
-            return HTTP_IO_REDIRECT;
-        }
-    }
-    if (httpd_query_key_value(PostData, "sav", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        if (!strcmp(tmp, (const char*) "prs"))
-        {
-            GetSysConf()->Flags1.bIsTCPConfirm = TempIsTCPConfirm;
-            GetSysConf()->Flags1.bIsLoRaConfirm = TempIsLoRaConfirm;
-            GetSysConf()->Flags1.bIsOTAEnabled = TempIsOTAEnabled;
-
-            WriteNVSSysConfig(GetSysConf());
-            memcpy(PostData, "/reboot.html", sizeof "/reboot.html");
-            return HTTP_IO_REDIRECT;
-        }
-    }
-    return HTTP_IO_DONE;
-}
-
-static HTTP_IO_RESULT HTTPPostIndex31(httpd_req_t *req, char *PostData)
+static HTTP_IO_RESULT HTTPPostMQTTSettings(httpd_req_t *req, char *PostData)
 {
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
     char tmp[33];
     bool TempIsMQTT1Enabled = false;
+#if CONFIG_MQTT_CLIENTS_NUM == 2
     bool TempIsMQTT2Enabled = false;
+#endif
     httpd_query_key_value(PostData, "cld1", GetSysConf()->mqttStation[0].ServerAddr,
                           sizeof(GetSysConf()->mqttStation[0].ServerAddr));
     httpd_query_key_value(PostData, "idd1", GetSysConf()->mqttStation[0].ClientID,
@@ -476,12 +344,85 @@ static HTTP_IO_RESULT HTTPPostIndex31(httpd_req_t *req, char *PostData)
     return HTTP_IO_DONE;
 }
 
-static HTTP_IO_RESULT HTTPPostIndex33(httpd_req_t *req, char *PostData)
+static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
 {
+    char tmp[64];
+    bool TempIsTCPConfirm = false;
+    bool TempIsLoRaConfirm = false;
+    bool TempIsOTAEnabled = false;
+
+    if (httpd_query_key_value(PostData, "nam", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        UnencodeURL(tmp);
+        strcpy(GetSysConf()->NetBIOSName, tmp);
+    }
+    if (httpd_query_key_value(PostData, "otaurl", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        UnencodeURL(tmp);
+        strcpy(GetSysConf()->OTAURL, tmp);
+    }
+
+    httpd_query_key_value(PostData, "lgn", GetSysConf()->SysName, sizeof(GetSysConf()->SysName));
+
+    if (httpd_query_key_value(PostData, "psn", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (strcmp(tmp, (const char*) "******"))
+            strcpy(GetSysConf()->SysPass, tmp);
+    }
+
+    if (httpd_query_key_value(PostData, "lrdel", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (!strcmp((const char*) tmp, (const char*) "1"))
+            TempIsLoRaConfirm = true;
+    }
+
+    if (httpd_query_key_value(PostData, "tcpdel", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (!strcmp((const char*) tmp, (const char*) "1"))
+            TempIsTCPConfirm = true;
+    }
+
+    if (httpd_query_key_value(PostData, "ota", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (!strcmp((const char*) tmp, (const char*) "1"))
+            TempIsOTAEnabled = true;
+    }
+
+    if (httpd_query_key_value(PostData, "upd", tmp, sizeof(tmp)) == ESP_OK)
+    {
+
+        if (!strcmp(tmp, (const char*) "prs"))
+        {
+            //StartOTA();
+        }
+
+    }
+    if (httpd_query_key_value(PostData, "rst", tmp, sizeof(tmp)) == ESP_OK)
+    {
+
+        if (!strcmp(tmp, (const char*) "prs"))
+        {
+            memcpy(PostData, "/reboot.html", sizeof "/reboot.html");
+            return HTTP_IO_REDIRECT;
+        }
+    }
+    if (httpd_query_key_value(PostData, "sav", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (!strcmp(tmp, (const char*) "prs"))
+        {
+            GetSysConf()->Flags1.bIsTCPConfirm = TempIsTCPConfirm;
+            GetSysConf()->Flags1.bIsLoRaConfirm = TempIsLoRaConfirm;
+            GetSysConf()->Flags1.bIsOTAEnabled = TempIsOTAEnabled;
+
+            WriteNVSSysConfig(GetSysConf());
+            memcpy(PostData, "/reboot.html", sizeof "/reboot.html");
+            return HTTP_IO_REDIRECT;
+        }
+    }
     return HTTP_IO_DONE;
 }
 
-static HTTP_IO_RESULT HTTPPostIndex34(httpd_req_t *req, char *PostData)
+static HTTP_IO_RESULT HTTPPostTimeSettings(httpd_req_t *req, char *PostData)
 {
     return HTTP_IO_DONE;
 }
@@ -499,13 +440,4 @@ static HTTP_IO_RESULT HTTPPostReboot(httpd_req_t *req, char *PostData)
     return HTTP_IO_DONE;
 }
 
-static HTTP_IO_RESULT HTTPPostDebug(httpd_req_t *req, char *PostData)
-{
-    return HTTP_IO_DONE;
-}
-
-static HTTP_IO_RESULT HTTPPostMemJson(httpd_req_t *req, char *PostData)
-{
-    return HTTP_IO_DONE;
-}
 
