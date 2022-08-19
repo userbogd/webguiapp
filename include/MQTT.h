@@ -52,8 +52,8 @@ typedef int mqtt_app_err_t;
 
 typedef enum
 {
-    PUBLISH_CONTROL_DATA,
-    PUBLISH_SCREEN_DATA
+    PUBLISH_SYS_DATA,
+    PUBLISH_USER_DATA
 } publish_data_type;
 
 
