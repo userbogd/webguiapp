@@ -223,7 +223,7 @@ file_send_err:
     return api_err;
 }
 
-void ControlDataHandler(char *data, uint32_t len, int idx)
+void SystemDataHandler(char *data, uint32_t len, int idx)
 {
     struct jReadElement result;
     char URL[MAX_FILENAME_LENTH + 1];

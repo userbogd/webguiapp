@@ -61,7 +61,7 @@ static HTTP_IO_RESULT HTTPPostMemJson(httpd_req_t *req, char *PostData);
 
 HTTP_IO_RESULT (*AfterPostHandlerCust)(httpd_req_t *req, const char *filename, char *PostData);
 
-void regAfterPostHandlerCustom(HTTP_IO_RESULT (*post_handler))
+void regAfterPostHandlerCustom(HTTP_IO_RESULT (*post_handler)(httpd_req_t *req, const char *filename, char *PostData))
 {
     AfterPostHandlerCust = post_handler;
 }

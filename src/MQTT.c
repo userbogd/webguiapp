@@ -26,7 +26,6 @@
 #include "MQTT.h"
 
 #define CH_MESSAGE_BUFER_LENTH 32  //size of mqtt queue
-
 #define MQTT_RECONNECT_CHANGE_ADAPTER   3
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
@@ -43,6 +42,13 @@ mqtt_client_t mqtt[CONFIG_MQTT_CLIENTS_NUM] = { 0 };
 #define TAG "MQTTApp"
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
+
+void (*UserDataHandler)(char *data, uint32_t len, int idx);
+
+void regUserDataHandler(void (*data_handler)(char *data, uint32_t len, int idx))
+{
+    UserDataHandler = data_handler;
+}
 
 mqtt_client_t* GetMQTTHandlesPool(int idx)
 {
@@ -152,7 +158,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                          "SYSTEM");
             if (!memcmp(topic, event->topic, event->topic_len))
             {
-                ControlDataHandler(event->data, event->data_len, ctx->mqtt_index);
+                SystemDataHandler(event->data, event->data_len, ctx->mqtt_index);
                 ESP_LOGI(TAG, "Control data handler on client %d", ctx->mqtt_index);
             }
             //Check if topic is USER and pass data to handler
@@ -163,7 +169,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                          "USER");
             if (!memcmp(topic, event->topic, event->topic_len))
             {
-                //Here TODO registered user define received data handler
+                if (UserDataHandler != NULL)
+                    UserDataHandler(event->data, event->data_len, ctx->mqtt_index);
                 ESP_LOGI(TAG, "Screen data handler on client %d", ctx->mqtt_index);
             }
         break;

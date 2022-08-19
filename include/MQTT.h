@@ -80,6 +80,7 @@ typedef struct
 mqtt_client_t* GetMQTTHandlesPool(int idx);
 QueueHandle_t GetMQTTSendQueue(int idx);
 
-void ControlDataHandler(char *data, uint32_t len, int idx);
+void regUserDataHandler(void (*data_handler)(char *data, uint32_t len, int idx));
+void SystemDataHandler(char *data, uint32_t len, int idx);
 
 #endif /* MAIN_INCLUDE_MQTT_H_ */

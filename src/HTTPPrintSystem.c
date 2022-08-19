@@ -40,7 +40,7 @@ typedef enum
 //Pointer to extend user implemented print handler
 static int (*HTTPPrintCust)(httpd_req_t *req, char *buf, char *var);
 
-void regHTTPPrintCustom(int (*print_handler))
+void regHTTPPrintCustom(int (*print_handler)(httpd_req_t *req, char *buf, char *var))
 {
    HTTPPrintCust = print_handler;
 }
