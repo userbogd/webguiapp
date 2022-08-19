@@ -71,7 +71,7 @@ esp_err_t WebGuiAppInit(void)
     esp_err_t err = nvs_flash_init();
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
-    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND || MANUAL_RESET == 1)
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND || MANUAL_RESET == 1 || gpio_get_level(GPIO_NUM_34) == 0)
     {
         // 1.OTA app partition table has a smaller NVS partition size than the non-OTA
         // partition table. This size mismatch may cause NVS initialization to fail.
@@ -126,7 +126,7 @@ if(GetSysConf()->wifiSettings.Flags1.bIsAP)
             if (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled
                     || GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled)
             {
-                //  MQTTRun();
+                MQTTRun();
             }
 #endif
         }
@@ -331,7 +331,7 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
     memcpy(Conf->mqttStation[1].UserPass, CONFIG_MQTT_PASSWORD, sizeof(CONFIG_MQTT_PASSWORD));
 #endif
 #endif
-
+    GetChipId(Conf->imei);
 }
 
 esp_err_t ReadNVSSysConfig(SYS_CONFIG *SysConf)
@@ -410,3 +410,13 @@ esp_err_t ResetInitSysConfig(void)
     return WriteNVSSysConfig(&SysConfig);
 }
 
+
+void DelayedRestartTask(void *pvParameter)
+{
+    vTaskDelay(pdMS_TO_TICKS(3000));
+    esp_restart();
+}
+void DelayedRestart(void)
+{
+    xTaskCreate(DelayedRestartTask, "RestartTask", 1024 * 4, (void*) 0, 3, NULL);
+}

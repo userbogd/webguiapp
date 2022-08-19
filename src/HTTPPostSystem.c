@@ -1,4 +1,4 @@
- /*! Copyright 2022 Bogdan Pilyugin
+/*! Copyright 2022 Bogdan Pilyugin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,7 +66,6 @@ void regAfterPostHandlerCustom(HTTP_IO_RESULT (*post_handler)(httpd_req_t *req, 
     AfterPostHandlerCust = post_handler;
 }
 
-
 HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostData)
 {
     const char *pt = filename + 1;
@@ -122,7 +121,6 @@ static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, c
     if (!memcmp(filename, pg_34, sizeof(pg_34)))
         return HTTPPostIndex34(req, PostData);
 
-
     if (!memcmp(filename, pg_reboot, sizeof(pg_reboot)))
         return HTTPPostReboot(req, PostData);
 
@@ -132,8 +130,8 @@ static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, c
     if (!memcmp(filename, pg_mm, sizeof(pg_mm)))
         return HTTPPostMemJson(req, PostData);
 
-    if (AfterPostHandlerCust != NULL)
-        AfterPostHandler(req, filename, PostData);
+     if (AfterPostHandlerCust != NULL)
+     AfterPostHandlerCust(req, filename, PostData);
 
 
     return HTTP_IO_DONE;
@@ -409,6 +407,26 @@ static HTTP_IO_RESULT HTTPPostIndex31(httpd_req_t *req, char *PostData)
     httpd_query_key_value(PostData, "clnm1", GetSysConf()->mqttStation[0].UserName,
                           sizeof(GetSysConf()->mqttStation[0].UserName));
 
+    if (httpd_query_key_value(PostData, "mqttenb1", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (!strcmp((const char*) tmp, (const char*) "1"))
+            TempIsMQTT1Enabled = true;
+    }
+    if (httpd_query_key_value(PostData, "mprt1", tmp, sizeof(tmp)) == ESP_OK)
+        if (httpd_query_key_value(PostData, "mprt1", tmp, sizeof(tmp)) == ESP_OK)
+        {
+            uint16_t tp = atoi((const char*) tmp);
+            if (tp < 65535 && tp >= 1000)
+                GetSysConf()->mqttStation[0].ServerPort = tp;
+        }
+
+    if (httpd_query_key_value(PostData, "clps1", tmp, sizeof(tmp)) == ESP_OK &&
+            strcmp(tmp, (const char*) "******"))
+    {
+        strcpy(GetSysConf()->mqttStation[0].UserPass, tmp);
+    }
+
+#if CONFIG_MQTT_CLIENTS_NUM == 2
     httpd_query_key_value(PostData, "cld2", GetSysConf()->mqttStation[1].ServerAddr,
                           sizeof(GetSysConf()->mqttStation[1].ServerAddr));
     httpd_query_key_value(PostData, "idd2", GetSysConf()->mqttStation[1].ClientID,
@@ -418,24 +436,13 @@ static HTTP_IO_RESULT HTTPPostIndex31(httpd_req_t *req, char *PostData)
     httpd_query_key_value(PostData, "clnm2", GetSysConf()->mqttStation[1].UserName,
                           sizeof(GetSysConf()->mqttStation[1].UserName));
 
-    if (httpd_query_key_value(PostData, "mqttenb1", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        if (!strcmp((const char*) tmp, (const char*) "1"))
-            TempIsMQTT1Enabled = true;
-    }
+
     if (httpd_query_key_value(PostData, "mqttenb2", tmp, sizeof(tmp)) == ESP_OK)
     {
         if (!strcmp((const char*) tmp, (const char*) "1"))
             TempIsMQTT2Enabled = true;
     }
 
-    if (httpd_query_key_value(PostData, "mprt1", tmp, sizeof(tmp)) == ESP_OK)
-        if (httpd_query_key_value(PostData, "mprt1", tmp, sizeof(tmp)) == ESP_OK)
-        {
-            uint16_t tp = atoi((const char*) tmp);
-            if (tp < 65535 && tp >= 1000)
-                GetSysConf()->mqttStation[0].ServerPort = tp;
-        }
     if (httpd_query_key_value(PostData, "mprt2", tmp, sizeof(tmp)) == ESP_OK)
         if (httpd_query_key_value(PostData, "mprt2", tmp, sizeof(tmp)) == ESP_OK)
         {
@@ -444,23 +451,22 @@ static HTTP_IO_RESULT HTTPPostIndex31(httpd_req_t *req, char *PostData)
                 GetSysConf()->mqttStation[1].ServerPort = tp;
         }
 
-    if (httpd_query_key_value(PostData, "clps1", tmp, sizeof(tmp)) == ESP_OK &&
-            strcmp(tmp, (const char*) "******"))
-    {
-        strcpy(GetSysConf()->mqttStation[0].UserPass, tmp);
-    }
     if (httpd_query_key_value(PostData, "clps2", tmp, sizeof(tmp)) == ESP_OK &&
             strcmp(tmp, (const char*) "******"))
     {
         strcpy(GetSysConf()->mqttStation[1].UserPass, tmp);
     }
 
+#endif
+
     if (httpd_query_key_value(PostData, "sav", tmp, 4) == ESP_OK)
     {
         if (!strcmp(tmp, (const char*) "prs"))
         {
             GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled = TempIsMQTT1Enabled;
+#if CONFIG_MQTT_CLIENTS_NUM == 2
             GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled = TempIsMQTT2Enabled;
+#endif
             WriteNVSSysConfig(GetSysConf());
             memcpy(PostData, "/reboot.html", sizeof "/reboot.html");
             return HTTP_IO_REDIRECT;
@@ -480,8 +486,6 @@ static HTTP_IO_RESULT HTTPPostIndex34(httpd_req_t *req, char *PostData)
     return HTTP_IO_DONE;
 }
 
-
-
 static HTTP_IO_RESULT HTTPPostReboot(httpd_req_t *req, char *PostData)
 {
     char tmp[33];
@@ -489,7 +493,7 @@ static HTTP_IO_RESULT HTTPPostReboot(httpd_req_t *req, char *PostData)
     {
         if (!strcmp(tmp, (const char*) "prs"))
         {
-            //DelayedRestart();
+            DelayedRestart();
         }
     }
     return HTTP_IO_DONE;

@@ -86,7 +86,7 @@ static void ComposeTopic(char *topic, char *system_name, char *direct, char *cli
     BytesToStr((unsigned char*) tmp, (unsigned char*) dev_rom_id, 4);
     strcpy((char*) topic, system_name);    // Global system name
     strcat((char*) topic, "/");
-    strcpy((char*) topic, direct);    // Data direction UPLINK or DOWNLINK
+    strcat((char*) topic, direct);    // Data direction UPLINK or DOWNLINK
     strcat((char*) topic, "/");
     strcat((char*) topic, (const char*) dev_rom_id);   // Unique device ID (based on ROM chip id)
     strcat((char*) topic, "/");

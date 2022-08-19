@@ -46,6 +46,8 @@
 #define MAX_DYNVAR_LENGTH 64
 #define MAX_INCFILE_LENGTH 1024
 
+#define HTTP_SERVER_DEBUG_LEVEL 1
+
 typedef enum
 {
     HTTP_IO_DONE = 0u,  // Finished with procedure
