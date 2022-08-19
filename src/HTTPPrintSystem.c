@@ -22,6 +22,14 @@
  */
 
 #include "HTTPServer.h"
+#include "esp_sntp.h"
+#include "esp_netif.h"
+#include "esp_wifi.h"
+#include "NetTransport.h"
+#include "esp_ota_ops.h"
+#include "ROMFS.h"
+#include "esp_idf_version.h"
+
 static const char *TAG = "HTTPServerPrint";
 
 typedef enum
@@ -36,7 +44,7 @@ static int (*HTTPPrintCust)(httpd_req_t *req, char *buf, char *var);
 
 void regHTTPPrintCustom(int (*print_handler)(httpd_req_t *req, char *buf, char *var))
 {
-   HTTPPrintCust = print_handler;
+    HTTPPrintCust = print_handler;
 }
 
 static void PrintInterfaceState(char *VarData, void *arg, esp_netif_t *netif)
@@ -104,6 +112,17 @@ static void PrintCheckbox(char *VarData, void *arg, bool checked)
         snprintf(VarData, MAX_DYNVAR_LENGTH, " ");
 }
 
+static void HTTPPrint_time(char *VarData, void *arg)
+{
+    time_t now;
+    time(&now);
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", (uint32_t) now);
+}
+static void HTTPPrint_uptime(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", "-");
+}
+
 static void HTTPPrint_status_fail(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "none");
@@ -124,11 +143,75 @@ static void HTTPPrint_pass(char *VarData, void *arg)
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", "******");
 }
 
-//Default string if not found handler
-static void HTTPPrint_DEF(char *VarData, void *arg)
+static void HTTPPrint_ota(char *VarData, void *arg)
 {
-    snprintf(VarData, MAX_DYNVAR_LENGTH, "#DEF");
+    PrintCheckbox(VarData, arg, GetSysConf()->Flags1.bIsOTAEnabled);
 }
+
+static void HTTPPrint_serial(char *VarData, void *arg)
+{
+    char ser1[4], ser2[9];
+    GetChipId((uint8_t*) ser1);
+    BytesToStr((unsigned char*) ser1, (unsigned char*) ser2, 4);
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ser2);
+}
+static void HTTPPrint_serial10(char *VarData, void *arg)
+{
+    UINT32_VAL d;
+    GetChipId((uint8_t*) d.v);
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%010u", swap(d.Val));
+}
+
+static void HTTPPrint_fver(char *VarData, void *arg)
+{
+    esp_app_desc_t cur_app_info;
+    if (esp_ota_get_partition_description(esp_ota_get_running_partition(), &cur_app_info) == ESP_OK)
+    {
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", cur_app_info.version);
+    }
+}
+static void HTTPPrint_idfver(char *VarData, void *arg)
+{
+    esp_app_desc_t cur_app_info;
+    if (esp_ota_get_partition_description(esp_ota_get_running_partition(), &cur_app_info) == ESP_OK)
+    {
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", cur_app_info.idf_ver);
+    }
+}
+static void HTTPPrint_builddate(char *VarData, void *arg)
+{
+    esp_app_desc_t cur_app_info;
+    if (esp_ota_get_partition_description(esp_ota_get_running_partition(), &cur_app_info) == ESP_OK)
+    {
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s %s", cur_app_info.date, cur_app_info.time);
+    }
+}
+
+static void HTTPPrint_otaurl(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->OTAURL);
+}
+
+
+static void HTTPPrint_tshift(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "7200");
+}
+
+static void HTTPPrint_tz(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", GetSysConf()->sntpClient.TimeZone);
+}
+
+static void HTTPPrint_wlev(char *VarData, void *arg)
+{
+    wifi_ap_record_t wifi;
+    if (esp_wifi_sta_get_ap_info(&wifi) == ESP_OK)
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%ddBm", wifi.rssi);
+    else
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "--");
+}
+
 
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
 
@@ -435,11 +518,65 @@ void HTTPPrint_clpass2(char *VarData, void *arg)
 #endif
 #endif
 
+/*SNTP*/
+void HTTPPrint_sntpen(char *VarData, void *arg)
+{
+    PrintCheckbox(VarData, arg, GetSysConf()->sntpClient.Flags1.bIsGlobalEnabled);
+}
+void HTTPPrint_tmsrv(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->sntpClient.SntpServerAdr);
+}
+
+static void HTTPPrint_freeram(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", (int) esp_get_free_heap_size());
+}
+static void HTTPPrint_minram(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", (int) esp_get_minimum_free_heap_size());
+}
+static void HTTPPrint_mqtt1st(char *VarData, void *arg)
+{
+    if (GetMQTT1Connected())
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "CONNECTED");
+    else
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "DISCONNECTED");
+}
+static void HTTPPrint_mqtt2st(char *VarData, void *arg)
+{
+    if (GetMQTT2Connected())
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "CONNECTED");
+    else
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "DISCONNECTED");
+}
+
+
+//Default string if not found handler
+static void HTTPPrint_DEF(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "#DEF");
+}
+
+
 dyn_var_handler_t HANDLERS_ARRAY[] = {
         /*Ststem settings*/
         { "dname", sizeof("dname") - 1, &HTTPPrint_dname },
         { "login", sizeof("login") - 1, &HTTPPrint_login },
         { "pass", sizeof("pass") - 1, &HTTPPrint_pass },
+        { "ota", sizeof("ota") - 1, &HTTPPrint_ota },
+        { "fver", sizeof("fver") - 1, &HTTPPrint_fver },
+        { "idfver", sizeof("idfver") - 1, &HTTPPrint_idfver },
+        { "builddate", sizeof("builddate") - 1, &HTTPPrint_builddate },
+        { "serial", sizeof("serial") - 1, &HTTPPrint_serial },
+        { "serial10", sizeof("serial10") - 1, &HTTPPrint_serial10 },
+        { "otaurl", sizeof("otaurl") - 1, &HTTPPrint_otaurl },
+
+        { "time", sizeof("time") - 1, &HTTPPrint_time },
+        { "uptime", sizeof("uptime") - 1, &HTTPPrint_uptime },
+        { "tshift", sizeof("tshift") - 1, &HTTPPrint_tshift },
+        { "tz", sizeof("tz") - 1, &HTTPPrint_tz },
+        { "wlev", sizeof("wlev") - 1, &HTTPPrint_wlev },
 
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
         /*WiFi network*/
@@ -513,6 +650,15 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "clpass2", sizeof("clpass2") - 1, &HTTPPrint_clpass2 },
 #endif
 #endif
+        /*SNTP*/
+        { "sntpen", sizeof("sntpen") - 1, &HTTPPrint_sntpen },
+        { "tmsrv", sizeof("tmsrv") - 1, &HTTPPrint_tmsrv },
+
+        { "freeram", sizeof("freeram") - 1, &HTTPPrint_freeram },
+        { "minram", sizeof("minram") - 1, &HTTPPrint_minram },
+        { "mqtt1st", sizeof("mqtt1st") - 1, &HTTPPrint_mqtt1st },
+        { "mqtt2st", sizeof("mqtt2st") - 1, &HTTPPrint_mqtt2st },
+
         /*ERROR report*/
         { "status_fail", sizeof("status_fail") - 1, &HTTPPrint_status_fail },
 

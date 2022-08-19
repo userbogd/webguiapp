@@ -332,6 +332,12 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
 #endif
 #endif
     GetChipId(Conf->imei);
+
+    memcpy(Conf->sntpClient.SntpServerAdr, DEFAULT_SNTP_SERVERNAME, sizeof(DEFAULT_SNTP_SERVERNAME));
+    Conf->sntpClient.Flags1.bIsEthEnabled = DEFAULT_SNTP_ETH_IS_ENABLED;
+    Conf->sntpClient.Flags1.bIsWifiEnabled = DEFAULT_SNTP_WIFI_IS_ENABLED;
+    Conf->sntpClient.Flags1.bIsGlobalEnabled = DEFAULT_SNTP_GLOBAL_ENABLED;
+    Conf->sntpClient.TimeZone = DEFAULT_SNTP_TIMEZONE;
 }
 
 esp_err_t ReadNVSSysConfig(SYS_CONFIG *SysConf)
