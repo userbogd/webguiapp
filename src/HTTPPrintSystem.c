@@ -578,7 +578,7 @@ int HTTPPrint(httpd_req_t *req, char *buf, char *var)
     if (!fnd)
     {
         if (HTTPPrintCust != NULL)
-            HTTPPrintCust(req, buf, var);
+            return HTTPPrintCust(req, buf, var);
         else
             HTTPPrint_DEF(VarData, NULL);
 
