@@ -11,6 +11,7 @@ idf_component_register(
     	 "src/ETHTransport.c"
     	 "src/SNTP.c"
     	 "src/MQTT.c"
+    	 "src/MQTTSysHandler.c"
     	 "src/OTA.c"
     	 "extlibs/jRead.c"
     	 "extlibs/jWrite.c"

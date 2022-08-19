@@ -24,6 +24,7 @@
 
 #include "mqtt_client.h"
 
+
 typedef int mqtt_app_err_t;
 
 #define API_OK                          0       /*!< success (no error) */
@@ -78,5 +79,7 @@ typedef struct
 
 mqtt_client_t* GetMQTTHandlesPool(int idx);
 QueueHandle_t GetMQTTSendQueue(int idx);
+
+void ControlDataHandler(char *data, uint32_t len, int idx);
 
 #endif /* MAIN_INCLUDE_MQTT_H_ */
