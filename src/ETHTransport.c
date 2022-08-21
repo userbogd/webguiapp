@@ -29,7 +29,6 @@
 #include "esp_netif.h"
 #include "esp_eth.h"
 #include "esp_event.h"
-#include "esp_log.h"
 #include "driver/gpio.h"
 #include "NetTransport.h"
 #include "sdkconfig.h"
@@ -37,12 +36,13 @@
 #include "driver/spi_master.h"
 #endif
 
-
 static const char *TAG = "EthTransport";
-esp_netif_t *eth_netif_spi[CONFIG_SPI_ETHERNETS_NUM] = { NULL };
+
 static bool isEthConn = false;
 
 #if CONFIG_USE_SPI_ETHERNET
+esp_netif_t *eth_netif_spi[CONFIG_SPI_ETHERNETS_NUM] = { NULL };
+
 #define INIT_SPI_ETH_MODULE_CONFIG(eth_module_config, num)                                      \
     do {                                                                                        \
         eth_module_config[num].spi_cs_gpio = CONFIG_ETH_SPI_CS ##num## _GPIO;           \
@@ -58,12 +58,15 @@ typedef struct
     int8_t phy_reset_gpio;
     uint8_t phy_addr;
 } spi_eth_module_config_t;
-#endif
 
 esp_netif_t* GetETHNetifAdapter(void)
 {
     return eth_netif_spi[0];
 }
+
+#endif
+
+
 
 bool isETHConnected(void)
 {
@@ -91,7 +94,6 @@ static void eth_event_handler(void *arg, esp_event_base_t event_base,
         case ETHERNET_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "Ethernet Link Down");
             isEthConn = false;
-
         break;
         case ETHERNET_EVENT_START:
             ESP_LOGI(TAG, "Ethernet Started");
@@ -120,20 +122,9 @@ static void got_ip_event_handler(void *arg, esp_event_base_t event_base,
     isEthConn = true;
 }
 
-static void on_ethernet_got_ip(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
-{
-
-}
 
 static void eth_init(void *pvParameter)
 {
-    //SetETH_RST(0);
-    gpio_set_level(CONFIG_ETH_SPI_PHY_RST0_GPIO, 0);
-    vTaskDelay(pdMS_TO_TICKS(10));
-    //SetETH_RST(1);
-    gpio_set_level(CONFIG_ETH_SPI_PHY_RST0_GPIO, 1);
-    vTaskDelay(pdMS_TO_TICKS(10));
-
 #if CONFIG_USE_INTERNAL_ETHERNET
     // Create new default instance of esp-netif for Ethernet
     esp_netif_config_t cfg = ESP_NETIF_DEFAULT_ETH();
@@ -169,6 +160,12 @@ static void eth_init(void *pvParameter)
 #endif //CONFIG_USE_INTERNAL_ETHERNET
 
 #if CONFIG_USE_SPI_ETHERNET
+    //Reset ethernet SPI device
+    gpio_set_level(CONFIG_ETH_SPI_PHY_RST0_GPIO, 0);
+    vTaskDelay(pdMS_TO_TICKS(10));
+    gpio_set_level(CONFIG_ETH_SPI_PHY_RST0_GPIO, 1);
+    vTaskDelay(pdMS_TO_TICKS(10));
+
     // Create instance(s) of esp-netif for SPI Ethernet(s)
     esp_netif_inherent_config_t esp_netif_config = ESP_NETIF_INHERENT_DEFAULT_ETH();
     esp_netif_config_t cfg_spi = {
@@ -318,7 +315,6 @@ static void eth_init(void *pvParameter)
     // Register user defined event handers
     ESP_ERROR_CHECK(esp_event_handler_register(ETH_EVENT, ESP_EVENT_ANY_ID, &eth_event_handler, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_ETH_GOT_IP, &got_ip_event_handler, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_ETH_GOT_IP, &on_ethernet_got_ip, NULL));
 
     /* start Ethernet driver state machine */
 #if CONFIG_USE_INTERNAL_ETHERNET

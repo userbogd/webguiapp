@@ -30,7 +30,7 @@
 #include "esp_system.h"
 #include "driver/spi_master.h"
 
-esp_err_t spi_device_polling_transmit_custom(spi_device_handle_t handle, spi_transaction_t *trans_desc);
+esp_err_t spi_device_polling_transmit_synchronized(spi_device_handle_t handle, spi_transaction_t *trans_desc);
 
 
 #endif /* COMPONENTS_WEBGUIAPPCOMPONENT_INCLUDE_WEBGUIAPP_H_ */

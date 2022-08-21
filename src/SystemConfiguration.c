@@ -206,7 +206,7 @@ void spi_device_init_custom(void)
     xSemaphoreGive(xSemaphoreSPIHandle);
 }
 
-esp_err_t spi_device_polling_transmit_custom(spi_device_handle_t handle, spi_transaction_t *trans_desc)
+esp_err_t spi_device_polling_transmit_synchronized(spi_device_handle_t handle, spi_transaction_t *trans_desc)
 {
     esp_err_t res;
     if (xSemaphoreTake(xSemaphoreSPIHandle,pdMS_TO_TICKS(SPI_LOCK_TIMEOUT_MS)) == pdTRUE)
