@@ -13,13 +13,10 @@ idf_component_register(
     	 "src/MQTT.c"
     	 "src/MQTTSysHandler.c"
     	 "src/OTA.c"
-    	 "extlibs/jRead.c"
-    	 "extlibs/jWrite.c"
     			   
     INCLUDE_DIRS  "."
     			  "include"
     			  "src"
-    			  "extlibs"
     			   
     REQUIRES nvs_flash 
     		 libespfs
@@ -30,4 +27,5 @@ idf_component_register(
     		 esp_modem
     		 esp_https_ota
     		 app_update
+    		 jReadWrite
 ) 
