@@ -21,26 +21,26 @@
  *	\copyright Apache License, Version 2.0
  */
 
+#include "WebGUIApp.h"
+
 #include "stdlib.h"
 #include "string.h"
 #include "nvs_flash.h"
 #include "nvs.h"
 
-#include "esp_log.h"
-#include "esp_event.h"
-#include "esp_netif.h"
-#include "esp_system.h"
+
 
 #include "driver/gpio.h"
 #include "driver/adc.h"
 #include "driver/i2c.h"
-#include "driver/spi_master.h"
+
 
 #include "SystemConfiguration.h"
 #include "romfs.h"
 #include "NetTransport.h"
 #include "Helpers.h"
 #include "HTTPServer.h"
+
 
 #define STORAGE_NAMESPACE "storage"
 #define TAG "SystemConfiguration"
