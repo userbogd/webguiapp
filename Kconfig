@@ -279,7 +279,7 @@ menu "WebGuiApp configuration"
 		    config USE_SPI_ETHERNET
 		        bool "SPI Ethernet"
 		        default y
-		        select ETH_USE_SPI_ETHERNET
+		        select WEBGUIAPP_SPI_ENABLE
 		        help
 		            Use external SPI-Ethernet module(s).
 		

@@ -19,6 +19,8 @@
  * Description:	
  */
 
+
+
 #include "SystemConfiguration.h"
 #include <stdio.h>
 #include <string.h>
@@ -33,8 +35,8 @@
 #include "sdkconfig.h"
 #if CONFIG_ETH_USE_SPI_ETHERNET
 #include "driver/spi_master.h"
-#endif // CONFIG_ETH_USE_SPI_ETHERNET
-//#include "PortExtender.h"
+#endif
+
 
 static const char *TAG = "EthTransport";
 esp_netif_t *eth_netif_spi[CONFIG_SPI_ETHERNETS_NUM] = { NULL };
