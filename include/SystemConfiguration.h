@@ -149,7 +149,7 @@
                 char b6 :1;
                 char bIsGlobalEnabled :1;
             } Flags1;
-        } mqttStation[CONFIG_MQTT_CLIENTS_NUM];
+        } mqttStation[CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM];
 #endif
 
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE

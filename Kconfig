@@ -551,43 +551,48 @@ menu "WebGuiApp configuration"
 	        default y
 
 	   	if WEBGUIAPP_MQTT_ENABLE
-	   		config MQTT_CLIENTS_NUM
+	   		config WEBGUIAPP_MQTT_CLIENTS_NUM
 	        	int "Number of MQTT clients"
 	            range 1 2
 	            default 2
 	    
-	    	config MQTT_ON
+	    	config WEBGUIAPP_MQTT_ON
 	    		bool "Enable MQTT client"
-	    		default y	
+	    		default y
 	    		
-	    	config MQTT_SERVER_URL
+	    	config WEBGUIAPP_MQTT_MAX_TOPIC_LENGTH
+	    		int "Max topic length"
+	    		range 32 512
+	    		default 64		
+	    		
+	    	config WEBGUIAPP_MQTT_SERVER_URL
 	    		string "MQTT server URL"
 	    		default "myfirstmqttserver.com"
 	    	
-	    	config MQTT_SERVER_PORT
+	    	config WEBGUIAPP_MQTT_SERVER_PORT
 	    		int "MQTT server port"
 	    		range 1 65535
 	    		default 1883
 	    	
-	    	config MQTT_CLIENT_ID_1
+	    	config WEBGUIAPP_MQTT_CLIENT_ID_1
 	    		string "MQTT_1 client ID"
 	    		default "DEVID1"	
 	    	
-	    	if MQTT_CLIENTS_NUM > 1
-	    		config MQTT_CLIENT_ID_2
+	    	if WEBGUIAPP_MQTT_CLIENTS_NUM > 1
+	    		config WEBGUIAPP_MQTT_CLIENT_ID_2
 	    			string "MQTT_2 client ID"
 	    			default "DEVID2"
 	    	endif	
 	    		
-	    	config MQTT_ROOT_TOPIC
+	    	config WEBGUIAPP_MQTT_ROOT_TOPIC
 	    		string "MQTT root topic"
 	    		default "ROOTTOPIC"
 	    	
-	    	config MQTT_USERNAME
+	    	config WEBGUIAPP_MQTT_USERNAME
 	    		string "MQTT user name"
 	    		default "username"
 	    	
-	    	config MQTT_PASSWORD
+	    	config WEBGUIAPP_MQTT_PASSWORD
 	    		string "MQTT user password"
 	    		default "password"			 			        
 	   	
