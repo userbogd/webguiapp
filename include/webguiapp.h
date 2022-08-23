@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *  	 \file WebGUIApp.h
+ *  	 \file webguiapp.h
  *    \version 1.0
  * 		 \date 2022-08-21
  *     \author Bogdan Pilyugin
@@ -23,6 +23,9 @@
 
 #ifndef COMPONENTS_WEBGUIAPPCOMPONENT_INCLUDE_WEBGUIAPP_H_
 #define COMPONENTS_WEBGUIAPPCOMPONENT_INCLUDE_WEBGUIAPP_H_
+
+#include "HTTPServer.h"
+#include "MQTT.h"
 
 #include "esp_log.h"
 #include "esp_event.h"

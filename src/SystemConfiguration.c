@@ -21,8 +21,7 @@
  *	\copyright Apache License, Version 2.0
  */
 
-#include "WebGUIApp.h"
-
+#include <webguiapp.h>
 #include "stdlib.h"
 #include "string.h"
 #include "nvs_flash.h"
