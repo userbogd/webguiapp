@@ -1,6 +1,6 @@
-menu "WebGuiApp configuration"
+menu "webguiapp configuration"
     config WEBGUIAPP_PROJECT_VER
-        string "WebGUIApp Project version"
+        string "webguiapp Project version"
         default "0.0.0.0000"
         help
             Project version code          
