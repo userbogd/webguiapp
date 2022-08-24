@@ -27,13 +27,13 @@ static const char *TAG = "HTTPServerPost";
 
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
 
-const char url_eth_settings[] = "set_eth.html";
-const char url_wifi_settings[] = "set_wifi.html";
-const char url_gprs_settings[] = "set_gprs.html";
-const char url_mqtt_settings[] = "set_mqtt.html";
-const char url_sys_settings[] = "set_sys.html";
-const char url_time_settings[] = "set_time.html";
-const char url_reboot[] = "reboot.html";
+const char url_eth_settings[] = "sys/set_eth.html";
+const char url_wifi_settings[] = "sys/set_wifi.html";
+const char url_gprs_settings[] = "sys/set_gprs.html";
+const char url_mqtt_settings[] = "sys/set_mqtt.html";
+const char url_sys_settings[] = "sys/set_sys.html";
+const char url_time_settings[] = "sys/set_time.html";
+const char url_reboot[] = "sys/reboot.html";
 
 static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, char *PostData);
 
