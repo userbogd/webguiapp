@@ -119,9 +119,13 @@ static mqtt_app_err_t ResponceWithError(int idx,
     {
         memcpy(buf, JSONErrorMess, strlen(JSONErrorMess));
         DATA_SEND_STRUCT DSS;
-        DSS.dt = PUBLISH_SYS_DATA;
+        ComposeTopic(DSS.topic,
+                     GetSysConf()->mqttStation[idx].RootTopic,
+                     "UPLINK",
+                     GetSysConf()->mqttStation[idx].ClientID,
+                     "SYSTEM");
         DSS.raw_data_ptr = buf;
-        DSS.data_lenth = strlen(JSONErrorMess);
+        DSS.data_length = strlen(JSONErrorMess);
         if (xQueueSend(GetMQTTHandlesPool(idx)->mqtt_queue, &DSS, pdMS_TO_TICKS(1000)) == pdPASS)
             return API_OK;
         else
@@ -206,9 +210,13 @@ static mqtt_app_err_t ResponceWithFile(int idx, espfs_file_t *file,
     strcat((fdata + readBytes), tail);
     free(filebuf);
     DATA_SEND_STRUCT DSS;
-    DSS.dt = PUBLISH_SYS_DATA;
+    ComposeTopic(DSS.topic,
+                 GetSysConf()->mqttStation[idx].RootTopic,
+                 "UPLINK",
+                 GetSysConf()->mqttStation[idx].ClientID,
+                 "SYSTEM");
     DSS.raw_data_ptr = outbuf;
-    DSS.data_lenth = (fdata - outbuf) + readBytes + strlen(tail);
+    DSS.data_length = (fdata - outbuf) + readBytes + strlen(tail);
     if (xQueueSend(GetMQTTHandlesPool(idx)->mqtt_queue, &DSS, pdMS_TO_TICKS(1000)) == pdPASS)
         return API_OK;
     else

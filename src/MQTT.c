@@ -214,45 +214,6 @@ void MQTTReconnect(void)
     }
 }
 
-static void MQTTPublish(mqtt_client_t *mqtt, DATA_SEND_STRUCT *DSS)
-{
-    char topic[64]; //TODO need to define max topic length
-    switch (DSS->dt)
-    {
-    case PUBLISH_SYS_DATA:
-        ComposeTopic(topic,
-                     GetSysConf()->mqttStation[mqtt->mqtt_index].RootTopic,
-                     "UPLINK",
-                     GetSysConf()->mqttStation[mqtt->mqtt_index].ClientID,
-                     "SYSTEM");
-        if (mqtt)
-        {
-            esp_mqtt_client_publish(mqtt->mqtt, (const char*) topic, (const char*) DSS->raw_data_ptr, DSS->data_lenth, 0,
-                                    0);
-            ESP_LOGI(TAG, "TOPIC=%.*s", strlen(topic), topic);
-        }
-        else
-            ESP_LOGE(TAG, "MQTT client not initialized");
-    break;
-
-    case PUBLISH_USER_DATA:
-        ComposeTopic(topic,
-                     GetSysConf()->mqttStation[mqtt->mqtt_index].RootTopic,
-                     "UPLINK",
-                     GetSysConf()->mqttStation[mqtt->mqtt_index].ClientID,
-                     "USER");
-        if (mqtt)
-        {
-            esp_mqtt_client_publish(mqtt->mqtt, (const char*) topic, (const char*) DSS->raw_data_ptr, DSS->data_lenth, 0,
-                                    0);
-            ESP_LOGI(TAG, "TOPIC=%.*s", strlen(topic), topic);
-        }
-        else
-            ESP_LOGE(TAG, "MQTT client not initialized");
-    break;
-    }
-}
-
 void MQTTTaskTransmit(void *pvParameter)
 {
     DATA_SEND_STRUCT DSS;
@@ -264,19 +225,21 @@ void MQTTTaskTransmit(void *pvParameter)
         while (!mqtt[idx].is_connected)
             vTaskDelay(pdMS_TO_TICKS(1000));
         xQueuePeek(mqtt[idx].mqtt_queue, &DSS, portMAX_DELAY);
-        MQTTPublish(&mqtt[idx], &DSS);
-        switch (DSS.dt)
+        if (mqtt[idx].mqtt)
         {
-            case PUBLISH_USER_DATA:
-                xQueueReceive(mqtt[idx].mqtt_queue, &DSS, 0);
-                free(DSS.raw_data_ptr);
-            break;
-
-            case PUBLISH_SYS_DATA:
-                xQueueReceive(mqtt[idx].mqtt_queue, &DSS, 0);
-                free(DSS.raw_data_ptr);
-            break;
+            esp_mqtt_client_publish(mqtt[idx].mqtt,
+                                    (const char*) DSS.topic,
+                                    (const char*) DSS.raw_data_ptr,
+                                    DSS.data_length, 0, 0);
         }
+        else
+            ESP_LOGE(TAG, "MQTT client not initialized");
+
+        //Here, if need, can be added repeat transmission after delivery timeout.
+        //In this case, follow code must be skipped here and executed on delivery confirm or on exceeded retry attempts
+        xQueueReceive(mqtt[idx].mqtt_queue, &DSS, 0);
+        free(DSS.raw_data_ptr);
+
     }
 }
 

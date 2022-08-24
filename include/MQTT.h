@@ -47,22 +47,12 @@ typedef int mqtt_app_err_t;
 #define API_FILE_EMPTY_ERR              15
 #define API_UNKNOWN_ERR                 16
 
-
-
-
-typedef enum
-{
-    PUBLISH_SYS_DATA,
-    PUBLISH_USER_DATA
-} publish_data_type;
-
-
 typedef struct
 {
-    publish_data_type dt;
+    char topic[CONFIG_WEBGUIAPP_MQTT_MAX_TOPIC_LENGTH];
     char *raw_data_ptr;
-    uint32_t data_lenth;
-} DATA_SEND_STRUCT;
+    int data_length;
+}DATA_SEND_STRUCT;
 
 /**
  * @brief wrapper around esp_mqtt_client_handle_t with additional info
