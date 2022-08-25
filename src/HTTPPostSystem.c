@@ -27,6 +27,8 @@ static const char *TAG = "HTTPServerPost";
 
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
 
+const char url_network_settings[] = "set_network.html";
+
 const char url_eth_settings[] = "set_eth.html";
 const char url_wifi_settings[] = "set_wifi.html";
 const char url_gprs_settings[] = "set_gprs.html";
@@ -36,7 +38,7 @@ const char url_time_settings[] = "set_time.html";
 const char url_reboot[] = "reboot.html";
 
 static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, char *PostData);
-
+static HTTP_IO_RESULT HTTPPostNetworkSettings(httpd_req_t *req, char *PostData);
 static HTTP_IO_RESULT HTTPPostEthernetSettings(httpd_req_t *req, char *PostData);
 static HTTP_IO_RESULT HTTPPostWiFiSettings(httpd_req_t *req, char *PostData);
 static HTTP_IO_RESULT HTTPPostGPRSSettings(httpd_req_t *req, char *PostData);
@@ -82,8 +84,12 @@ HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostDat
 
 static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, char *PostData)
 {
+    if (!memcmp(filename, url_network_settings, sizeof(url_network_settings)))
+        return HTTPPostNetworkSettings(req, PostData);
+
     if (!memcmp(filename, url_eth_settings, sizeof(url_eth_settings)))
         return HTTPPostEthernetSettings(req, PostData);
+
     if (!memcmp(filename, url_wifi_settings, sizeof(url_wifi_settings)))
         return HTTPPostWiFiSettings(req, PostData);
     if (!memcmp(filename, url_gprs_settings, sizeof(url_gprs_settings)))
@@ -102,6 +108,155 @@ static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, c
      AfterPostHandlerCust(req, filename, PostData);
 
     return HTTP_IO_DONE;
+}
+
+
+static HTTP_IO_RESULT HTTPPostNetworkSettings(httpd_req_t *req, char *PostData)
+{
+char tmp[32];
+#if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
+
+    bool TempIsETHEnabled = false;
+    bool TempIsETHDHCPEnabled = false;
+    if (httpd_query_key_value(PostData, "ethen", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (!strcmp((const char*) tmp, (const char*) "1"))
+            TempIsETHEnabled = true;
+    }
+    if (httpd_query_key_value(PostData, "dhcp", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (!strcmp((const char*) tmp, (const char*) "1"))
+            TempIsETHDHCPEnabled = true;
+    }
+
+    if (httpd_query_key_value(PostData, "ipa", tmp, 15) == ESP_OK)
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.IPAddr);
+    if (httpd_query_key_value(PostData, "mas", tmp, 15) == ESP_OK)
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Mask);
+    if (httpd_query_key_value(PostData, "gte", tmp, 15) == ESP_OK)
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Gateway);
+    if (httpd_query_key_value(PostData, "dns1", tmp, 15) == ESP_OK)
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr1);
+    if (httpd_query_key_value(PostData, "dns2", tmp, 15) == ESP_OK)
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr2);
+    if (httpd_query_key_value(PostData, "dns3", tmp, 15) == ESP_OK)
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr3);
+
+    if (httpd_query_key_value(PostData, "sav", tmp, 4) == ESP_OK)
+    {
+        if (!strcmp(tmp, (const char*) "prs"))
+        {
+            GetSysConf()->ethSettings.Flags1.bIsETHEnabled = TempIsETHEnabled;
+            GetSysConf()->ethSettings.Flags1.bIsDHCPEnabled = TempIsETHDHCPEnabled;
+            WriteNVSSysConfig(GetSysConf());
+            memcpy(PostData, "/reboot.html", sizeof "/reboot.html");
+            return HTTP_IO_REDIRECT;
+        }
+    }
+#endif
+
+#if CONFIG_WEBGUIAPP_WIFI_ENABLE
+
+    bool TempIsWiFiEnabled = false;
+    bool TempIsWIFIDHCPEnabled = false;
+    if (httpd_query_key_value(PostData, "wifien", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (!strcmp((const char*) tmp, (const char*) "1"))
+            TempIsWiFiEnabled = true;
+    }
+    if (httpd_query_key_value(PostData, "netm", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (!strcmp((const char*) tmp, (const char*) "1"))
+            GetSysConf()->wifiSettings.Flags1.bIsAP = true;
+        else if (!strcmp((const char*) tmp, (const char*) "2"))
+            GetSysConf()->wifiSettings.Flags1.bIsAP = false;
+    }
+    /*AP section*/
+    httpd_query_key_value(PostData, "wfiap", GetSysConf()->wifiSettings.ApSSID,
+                          sizeof(GetSysConf()->wifiSettings.ApSSID));
+    if (httpd_query_key_value(PostData, "wfpap", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (strcmp(tmp, (const char*) "********"))
+            strcpy(GetSysConf()->wifiSettings.ApSecurityKey, tmp);
+    }
+    if (httpd_query_key_value(PostData, "ipaap", tmp, sizeof(tmp)) == ESP_OK)
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->wifiSettings.ApIPAddr);
+
+    httpd_query_key_value(PostData, "wfi", GetSysConf()->wifiSettings.InfSSID,
+                          sizeof(GetSysConf()->wifiSettings.InfSSID));
+    if (httpd_query_key_value(PostData, "wfp", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (strcmp(tmp, (const char*) "********"))
+            strcpy(GetSysConf()->wifiSettings.InfSecurityKey, tmp);
+    }
+    /*STATION section*/
+    if (httpd_query_key_value(PostData, "dhcp", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (!strcmp((const char*) tmp, (const char*) "1"))
+            TempIsWIFIDHCPEnabled = true;
+    }
+    if (httpd_query_key_value(PostData, "ipa", tmp, 15) == ESP_OK)
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->wifiSettings.InfIPAddr);
+    if (httpd_query_key_value(PostData, "mas", tmp, 15) == ESP_OK)
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->wifiSettings.InfMask);
+    if (httpd_query_key_value(PostData, "gte", tmp, 15) == ESP_OK)
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->wifiSettings.InfGateway);
+    if (httpd_query_key_value(PostData, "dns", tmp, 15) == ESP_OK)
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->wifiSettings.DNSAddr1);
+    if (httpd_query_key_value(PostData, "dns2", tmp, 15) == ESP_OK)
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->wifiSettings.DNSAddr2);
+    if (httpd_query_key_value(PostData, "dns3", tmp, 15) == ESP_OK)
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->wifiSettings.DNSAddr3);
+
+    if (httpd_query_key_value(PostData, "sav", tmp, 4) == ESP_OK)
+    {
+        if (!strcmp(tmp, (const char*) "prs"))
+        {
+            GetSysConf()->wifiSettings.Flags1.bIsWiFiEnabled = TempIsWiFiEnabled;
+            GetSysConf()->wifiSettings.Flags1.bIsDHCPEnabled = TempIsWIFIDHCPEnabled;
+            WriteNVSSysConfig(GetSysConf());
+            memcpy(PostData, "/reboot.html", sizeof "/reboot.html");
+            return HTTP_IO_REDIRECT;
+        }
+    }
+#endif
+#if    CONFIG_WEBGUIAPP_GPRS_ENABLE
+    char tmp[32];
+    bool TempIsGSMEnabled = false;
+    if (httpd_query_key_value(PostData, "gsmen", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (!strcmp((const char*) tmp, (const char*) "1"))
+            TempIsGSMEnabled = true;
+    }
+
+    if (httpd_query_key_value(PostData, "sav", tmp, 4) == ESP_OK)
+    {
+        if (!strcmp(tmp, (const char*) "prs"))
+        {
+            GetSysConf()->gsmSettings.Flags1.bIsGSMEnabled = TempIsGSMEnabled;
+            WriteNVSSysConfig(GetSysConf());
+            memcpy(PostData, "/reboot.html", sizeof "/reboot.html");
+            return HTTP_IO_REDIRECT;
+        }
+    }
+    if (httpd_query_key_value(PostData, "restart", tmp, 4) == ESP_OK)
+    {
+        if (!strcmp(tmp, (const char*) "prs"))
+        {
+            //PPPModemSoftRestart();
+        }
+    }
+    if (httpd_query_key_value(PostData, "hdrst", tmp, 4) == ESP_OK)
+    {
+        if (!strcmp(tmp, (const char*) "prs"))
+        {
+            //PPPModemColdStart();
+        }
+    }
+#endif
+    return HTTP_IO_DONE;
+
+
 }
 
 static HTTP_IO_RESULT HTTPPostEthernetSettings(httpd_req_t *req, char *PostData)
@@ -147,6 +302,8 @@ static HTTP_IO_RESULT HTTPPostEthernetSettings(httpd_req_t *req, char *PostData)
     }
 #endif
     return HTTP_IO_DONE;
+
+
 }
 
 static HTTP_IO_RESULT HTTPPostWiFiSettings(httpd_req_t *req, char *PostData)
