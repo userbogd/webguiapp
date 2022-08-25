@@ -124,6 +124,10 @@ static esp_err_t set_content_type_from_file(httpd_req_t *req,
     {
         return httpd_resp_set_type(req, "text/css");
     }
+    else if (IS_FILE_EXT(filename, ".woff2"))
+    {
+        return httpd_resp_set_type(req, "font/woff2");
+    }
     /* This is a limited set only */
     /* For any other type always set as plain text */
     return httpd_resp_set_type(req, "text/plain");
@@ -305,12 +309,18 @@ static esp_err_t GETHandler(httpd_req_t *req)
         espfs_fclose(file);
         return ESP_FAIL;
     }
+
     if (memmem(buf, 3, GZIP_SIGN, 3))
     {
         httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
         httpd_resp_set_hdr(req, "Cache-Control", "max-age=600");
         isCompressed = true;
     }
+
+    //prevent mangle compressed font files
+    if (IS_FILE_EXT(filename, ".woff2"))
+        isCompressed = true;
+
     int pt = 0;
     do
     {

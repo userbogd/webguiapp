@@ -210,14 +210,14 @@ static void OTATask(void *pvParameter)
     struct espfs_stat_t stat;
 
     //open file
-    file = espfs_fopen(fs, "ca_cert.pem");
+    file = espfs_fopen(fs, "res/ca_cert.pem");
     if (!file)
     {
         ESP_LOGE(TAG, "Failed to read certificate file");
         goto update_error;
     }
     //get file info
-    espfs_stat(fs, "ca_cert.pem", &stat);
+    espfs_stat(fs, "res/ca_cert.pem", &stat);
     uint32_t  fileSize;
     fileSize = stat.size;
     char *certbuf = (char*) malloc(fileSize);
