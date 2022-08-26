@@ -27,33 +27,16 @@ static const char *TAG = "HTTPServerPost";
 
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
 
-const char url_adapters_settings[] = "set_adapters.html";
-const char url_services_settings[] = "set_services.html";
-const char url_system_settings[] = "set_system.html";
-
-
-const char url_eth_settings[] = "set_eth.html";
-const char url_wifi_settings[] = "set_wifi.html";
-const char url_gprs_settings[] = "set_gprs.html";
-const char url_mqtt_settings[] = "set_mqtt.html";
-const char url_sys_settings[] = "set_sys.html";
-const char url_time_settings[] = "set_time.html";
+const char url_adapters[] = "adapters.html";
+const char url_services[] = "services.html";
+const char url_system[] = "system.html";
 const char url_reboot[] = "reboot.html";
 
 static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, char *PostData);
 static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData);
 static HTTP_IO_RESULT HTTPPostServicesSettings(httpd_req_t *req, char *PostData);
 static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData);
-
-
-static HTTP_IO_RESULT HTTPPostEthernetSettings(httpd_req_t *req, char *PostData);
-static HTTP_IO_RESULT HTTPPostWiFiSettings(httpd_req_t *req, char *PostData);
-static HTTP_IO_RESULT HTTPPostGPRSSettings(httpd_req_t *req, char *PostData);
-static HTTP_IO_RESULT HTTPPostMQTTSettings(httpd_req_t *req, char *PostData);
-static HTTP_IO_RESULT HTTPPostSystemOldSettings(httpd_req_t *req, char *PostData);
-static HTTP_IO_RESULT HTTPPostTimeSettings(httpd_req_t *req, char *PostData);
 static HTTP_IO_RESULT HTTPPostReboot(httpd_req_t *req, char *PostData);
-
 
 HTTP_IO_RESULT (*AfterPostHandlerCust)(httpd_req_t *req, const char *filename, char *PostData);
 
@@ -83,7 +66,7 @@ HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostDat
         case HTTP_IO_NEED_DATA:
             break;
         case HTTP_IO_REDIRECT:
-            strcpy((char*)filename, PostData);
+            strcpy((char*) filename, PostData);
         break;
     }
     return res;
@@ -91,27 +74,26 @@ HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostDat
 
 static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, char *PostData)
 {
-    if (!memcmp(filename, url_adapters_settings, sizeof(url_adapters_settings)))
+    if (!memcmp(filename, url_adapters, sizeof(url_adapters)))
         return HTTPPostAdaptersSettings(req, PostData);
-    if (!memcmp(filename, url_services_settings, sizeof(url_services_settings)))
-        return HTTPPostAdaptersSettings(req, PostData);
-    if (!memcmp(filename, url_system_settings, sizeof(url_system_settings)))
-        return HTTPPostAdaptersSettings(req, PostData);
+    if (!memcmp(filename, url_services, sizeof(url_services)))
+        return HTTPPostServicesSettings(req, PostData);
+    if (!memcmp(filename, url_system, sizeof(url_system)))
+        return HTTPPostSystemSettings(req, PostData);
 
     if (!memcmp(filename, url_reboot, sizeof(url_reboot)))
         return HTTPPostReboot(req, PostData);
 
     // If not found target URL here, try to call custom code
-     if (AfterPostHandlerCust != NULL)
-     AfterPostHandlerCust(req, filename, PostData);
+    if (AfterPostHandlerCust != NULL)
+        AfterPostHandlerCust(req, filename, PostData);
 
     return HTTP_IO_DONE;
 }
 
-
 static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
 {
-char tmp[32];
+    char tmp[32];
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
 
     bool TempIsETHEnabled = false;
@@ -257,174 +239,8 @@ char tmp[32];
 
 static HTTP_IO_RESULT HTTPPostServicesSettings(httpd_req_t *req, char *PostData)
 {
-    return HTTP_IO_DONE;
-}
-
-static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
-{
-    return HTTP_IO_DONE;
-}
-
-static HTTP_IO_RESULT HTTPPostEthernetSettings(httpd_req_t *req, char *PostData)
-{
-#if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
-    char tmp[32];
-    bool TempIsETHEnabled = false;
-    bool TempIsDHCPEnabled = false;
-    if (httpd_query_key_value(PostData, "ethen", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        if (!strcmp((const char*) tmp, (const char*) "1"))
-            TempIsETHEnabled = true;
-    }
-    if (httpd_query_key_value(PostData, "dhcp", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        if (!strcmp((const char*) tmp, (const char*) "1"))
-            TempIsDHCPEnabled = true;
-    }
-
-    if (httpd_query_key_value(PostData, "ipa", tmp, 15) == ESP_OK)
-        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.IPAddr);
-    if (httpd_query_key_value(PostData, "mas", tmp, 15) == ESP_OK)
-        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Mask);
-    if (httpd_query_key_value(PostData, "gte", tmp, 15) == ESP_OK)
-        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Gateway);
-    if (httpd_query_key_value(PostData, "dns1", tmp, 15) == ESP_OK)
-        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr1);
-    if (httpd_query_key_value(PostData, "dns2", tmp, 15) == ESP_OK)
-        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr2);
-    if (httpd_query_key_value(PostData, "dns3", tmp, 15) == ESP_OK)
-        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr3);
-
-    if (httpd_query_key_value(PostData, "sav", tmp, 4) == ESP_OK)
-    {
-        if (!strcmp(tmp, (const char*) "prs"))
-        {
-            GetSysConf()->ethSettings.Flags1.bIsETHEnabled = TempIsETHEnabled;
-            GetSysConf()->ethSettings.Flags1.bIsDHCPEnabled = TempIsDHCPEnabled;
-            WriteNVSSysConfig(GetSysConf());
-            memcpy(PostData, "/reboot.html", sizeof "/reboot.html");
-            return HTTP_IO_REDIRECT;
-        }
-    }
-#endif
-    return HTTP_IO_DONE;
-
-
-}
-
-static HTTP_IO_RESULT HTTPPostWiFiSettings(httpd_req_t *req, char *PostData)
-{
-#if CONFIG_WEBGUIAPP_WIFI_ENABLE
-    char tmp[32];
-    bool TempIsWiFiEnabled = false;
-    bool TempIsDHCPEnabled = false;
-    if (httpd_query_key_value(PostData, "wifien", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        if (!strcmp((const char*) tmp, (const char*) "1"))
-            TempIsWiFiEnabled = true;
-    }
-    if (httpd_query_key_value(PostData, "netm", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        if (!strcmp((const char*) tmp, (const char*) "1"))
-            GetSysConf()->wifiSettings.Flags1.bIsAP = true;
-        else if (!strcmp((const char*) tmp, (const char*) "2"))
-            GetSysConf()->wifiSettings.Flags1.bIsAP = false;
-    }
-    /*AP section*/
-    httpd_query_key_value(PostData, "wfiap", GetSysConf()->wifiSettings.ApSSID,
-                          sizeof(GetSysConf()->wifiSettings.ApSSID));
-    if (httpd_query_key_value(PostData, "wfpap", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        if (strcmp(tmp, (const char*) "********"))
-            strcpy(GetSysConf()->wifiSettings.ApSecurityKey, tmp);
-    }
-    if (httpd_query_key_value(PostData, "ipaap", tmp, sizeof(tmp)) == ESP_OK)
-        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->wifiSettings.ApIPAddr);
-
-    httpd_query_key_value(PostData, "wfi", GetSysConf()->wifiSettings.InfSSID,
-                          sizeof(GetSysConf()->wifiSettings.InfSSID));
-    if (httpd_query_key_value(PostData, "wfp", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        if (strcmp(tmp, (const char*) "********"))
-            strcpy(GetSysConf()->wifiSettings.InfSecurityKey, tmp);
-    }
-    /*STATION section*/
-    if (httpd_query_key_value(PostData, "dhcp", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        if (!strcmp((const char*) tmp, (const char*) "1"))
-            TempIsDHCPEnabled = true;
-    }
-    if (httpd_query_key_value(PostData, "ipa", tmp, 15) == ESP_OK)
-        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->wifiSettings.InfIPAddr);
-    if (httpd_query_key_value(PostData, "mas", tmp, 15) == ESP_OK)
-        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->wifiSettings.InfMask);
-    if (httpd_query_key_value(PostData, "gte", tmp, 15) == ESP_OK)
-        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->wifiSettings.InfGateway);
-    if (httpd_query_key_value(PostData, "dns", tmp, 15) == ESP_OK)
-        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->wifiSettings.DNSAddr1);
-    if (httpd_query_key_value(PostData, "dns2", tmp, 15) == ESP_OK)
-        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->wifiSettings.DNSAddr2);
-    if (httpd_query_key_value(PostData, "dns3", tmp, 15) == ESP_OK)
-        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->wifiSettings.DNSAddr3);
-
-    if (httpd_query_key_value(PostData, "sav", tmp, 4) == ESP_OK)
-    {
-        if (!strcmp(tmp, (const char*) "prs"))
-        {
-            GetSysConf()->wifiSettings.Flags1.bIsWiFiEnabled = TempIsWiFiEnabled;
-            GetSysConf()->wifiSettings.Flags1.bIsDHCPEnabled = TempIsDHCPEnabled;
-            WriteNVSSysConfig(GetSysConf());
-            memcpy(PostData, "/reboot.html", sizeof "/reboot.html");
-            return HTTP_IO_REDIRECT;
-        }
-    }
-#endif
-    return HTTP_IO_DONE;
-}
-
-static HTTP_IO_RESULT HTTPPostGPRSSettings(httpd_req_t *req, char *PostData)
-{
-#if    CONFIG_WEBGUIAPP_GPRS_ENABLE
-    char tmp[32];
-    bool TempIsGSMEnabled = false;
-    if (httpd_query_key_value(PostData, "gsmen", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        if (!strcmp((const char*) tmp, (const char*) "1"))
-            TempIsGSMEnabled = true;
-    }
-
-    if (httpd_query_key_value(PostData, "sav", tmp, 4) == ESP_OK)
-    {
-        if (!strcmp(tmp, (const char*) "prs"))
-        {
-            GetSysConf()->gsmSettings.Flags1.bIsGSMEnabled = TempIsGSMEnabled;
-            WriteNVSSysConfig(GetSysConf());
-            memcpy(PostData, "/reboot.html", sizeof "/reboot.html");
-            return HTTP_IO_REDIRECT;
-        }
-    }
-    if (httpd_query_key_value(PostData, "restart", tmp, 4) == ESP_OK)
-    {
-        if (!strcmp(tmp, (const char*) "prs"))
-        {
-            //PPPModemSoftRestart();
-        }
-    }
-    if (httpd_query_key_value(PostData, "hdrst", tmp, 4) == ESP_OK)
-    {
-        if (!strcmp(tmp, (const char*) "prs"))
-        {
-            //PPPModemColdStart();
-        }
-    }
-#endif
-    return HTTP_IO_DONE;
-}
-
-static HTTP_IO_RESULT HTTPPostMQTTSettings(httpd_req_t *req, char *PostData)
-{
-#if CONFIG_WEBGUIAPP_MQTT_ENABLE
     char tmp[33];
+#if CONFIG_WEBGUIAPP_MQTT_ENABLE
     bool TempIsMQTT1Enabled = false;
 #if CONFIG_MQTT_CLIENTS_NUM == 2
     bool TempIsMQTT2Enabled = false;
@@ -507,7 +323,7 @@ static HTTP_IO_RESULT HTTPPostMQTTSettings(httpd_req_t *req, char *PostData)
     return HTTP_IO_DONE;
 }
 
-static HTTP_IO_RESULT HTTPPostSystemOldSettings(httpd_req_t *req, char *PostData)
+static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
 {
     char tmp[64];
     bool TempIsTCPConfirm = false;
@@ -585,11 +401,6 @@ static HTTP_IO_RESULT HTTPPostSystemOldSettings(httpd_req_t *req, char *PostData
     return HTTP_IO_DONE;
 }
 
-static HTTP_IO_RESULT HTTPPostTimeSettings(httpd_req_t *req, char *PostData)
-{
-    return HTTP_IO_DONE;
-}
-
 static HTTP_IO_RESULT HTTPPostReboot(httpd_req_t *req, char *PostData)
 {
     char tmp[33];
@@ -602,5 +413,4 @@ static HTTP_IO_RESULT HTTPPostReboot(httpd_req_t *req, char *PostData)
     }
     return HTTP_IO_DONE;
 }
-
 
