@@ -27,7 +27,10 @@ static const char *TAG = "HTTPServerPost";
 
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
 
-const char url_network_settings[] = "set_network.html";
+const char url_adapters_settings[] = "set_adapters.html";
+const char url_services_settings[] = "set_services.html";
+const char url_system_settings[] = "set_system.html";
+
 
 const char url_eth_settings[] = "set_eth.html";
 const char url_wifi_settings[] = "set_wifi.html";
@@ -38,12 +41,16 @@ const char url_time_settings[] = "set_time.html";
 const char url_reboot[] = "reboot.html";
 
 static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, char *PostData);
-static HTTP_IO_RESULT HTTPPostNetworkSettings(httpd_req_t *req, char *PostData);
+static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData);
+static HTTP_IO_RESULT HTTPPostServicesSettings(httpd_req_t *req, char *PostData);
+static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData);
+
+
 static HTTP_IO_RESULT HTTPPostEthernetSettings(httpd_req_t *req, char *PostData);
 static HTTP_IO_RESULT HTTPPostWiFiSettings(httpd_req_t *req, char *PostData);
 static HTTP_IO_RESULT HTTPPostGPRSSettings(httpd_req_t *req, char *PostData);
 static HTTP_IO_RESULT HTTPPostMQTTSettings(httpd_req_t *req, char *PostData);
-static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData);
+static HTTP_IO_RESULT HTTPPostSystemOldSettings(httpd_req_t *req, char *PostData);
 static HTTP_IO_RESULT HTTPPostTimeSettings(httpd_req_t *req, char *PostData);
 static HTTP_IO_RESULT HTTPPostReboot(httpd_req_t *req, char *PostData);
 
@@ -84,22 +91,13 @@ HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostDat
 
 static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, char *PostData)
 {
-    if (!memcmp(filename, url_network_settings, sizeof(url_network_settings)))
-        return HTTPPostNetworkSettings(req, PostData);
+    if (!memcmp(filename, url_adapters_settings, sizeof(url_adapters_settings)))
+        return HTTPPostAdaptersSettings(req, PostData);
+    if (!memcmp(filename, url_services_settings, sizeof(url_services_settings)))
+        return HTTPPostAdaptersSettings(req, PostData);
+    if (!memcmp(filename, url_system_settings, sizeof(url_system_settings)))
+        return HTTPPostAdaptersSettings(req, PostData);
 
-    if (!memcmp(filename, url_eth_settings, sizeof(url_eth_settings)))
-        return HTTPPostEthernetSettings(req, PostData);
-
-    if (!memcmp(filename, url_wifi_settings, sizeof(url_wifi_settings)))
-        return HTTPPostWiFiSettings(req, PostData);
-    if (!memcmp(filename, url_gprs_settings, sizeof(url_gprs_settings)))
-        return HTTPPostGPRSSettings(req, PostData);
-    if (!memcmp(filename, url_mqtt_settings, sizeof(url_mqtt_settings)))
-        return HTTPPostMQTTSettings(req, PostData);
-    if (!memcmp(filename, url_sys_settings, sizeof(url_sys_settings)))
-        return HTTPPostSystemSettings(req, PostData);
-    if (!memcmp(filename, url_time_settings, sizeof(url_time_settings)))
-        return HTTPPostTimeSettings(req, PostData);
     if (!memcmp(filename, url_reboot, sizeof(url_reboot)))
         return HTTPPostReboot(req, PostData);
 
@@ -111,7 +109,7 @@ static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, c
 }
 
 
-static HTTP_IO_RESULT HTTPPostNetworkSettings(httpd_req_t *req, char *PostData)
+static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
 {
 char tmp[32];
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
@@ -255,8 +253,16 @@ char tmp[32];
     }
 #endif
     return HTTP_IO_DONE;
+}
 
+static HTTP_IO_RESULT HTTPPostServicesSettings(httpd_req_t *req, char *PostData)
+{
+    return HTTP_IO_DONE;
+}
 
+static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
+{
+    return HTTP_IO_DONE;
 }
 
 static HTTP_IO_RESULT HTTPPostEthernetSettings(httpd_req_t *req, char *PostData)
@@ -501,7 +507,7 @@ static HTTP_IO_RESULT HTTPPostMQTTSettings(httpd_req_t *req, char *PostData)
     return HTTP_IO_DONE;
 }
 
-static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
+static HTTP_IO_RESULT HTTPPostSystemOldSettings(httpd_req_t *req, char *PostData)
 {
     char tmp[64];
     bool TempIsTCPConfirm = false;
