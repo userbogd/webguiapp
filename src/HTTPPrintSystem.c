@@ -212,6 +212,11 @@ static void HTTPPrint_wlev(char *VarData, void *arg)
         snprintf(VarData, MAX_DYNVAR_LENGTH, "--");
 }
 
+static void HTTPPrint_defadp(char *VarData, void *arg)
+{
+    GetDefaultNetIFName(VarData);
+}
+
 
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
 
@@ -394,16 +399,20 @@ static void HTTPPrint_emacadr(char *VarData, void *arg)
 
 #endif
 
+
+void HTTPPrint_gsmstat(char *VarData, void *arg)
+{
+    PrintInterfaceState(VarData, arg, GetPPPNetifAdapter());
+}
+
+
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
 /*GSM MODEM*/
 void HTTPPrint_gsmen(char *VarData, void *arg)
 {
     PrintCheckbox(VarData, arg, GetSysConf()->gsmSettings.Flags1.bIsGSMEnabled);
 }
-void HTTPPrint_gsmstat(char *VarData, void *arg)
-{
-    PrintInterfaceState(VarData, arg, GetPPPNetifAdapter());
-}
+
 void HTTPPrint_gsmmod(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, GetPPPModemInfo()->model);
@@ -576,6 +585,8 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "uptime", sizeof("uptime") - 1, &HTTPPrint_uptime },
         { "tshift", sizeof("tshift") - 1, &HTTPPrint_tshift },
         { "tz", sizeof("tz") - 1, &HTTPPrint_tz },
+
+        { "defadp", sizeof("defadp") - 1, &HTTPPrint_defadp },
         { "wlev", sizeof("wlev") - 1, &HTTPPrint_wlev },
 
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
@@ -614,10 +625,12 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "emacadr", sizeof("emacadr") - 1, &HTTPPrint_emacadr },
         #endif
 
+        { "gsmstat", sizeof("gsmstat") - 1, &HTTPPrint_gsmstat },
+
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
         /*GSM modem*/
         { "gsmen", sizeof("gsmen") - 1, &HTTPPrint_gsmen },
-        { "gsmstat", sizeof("gsmstat") - 1, &HTTPPrint_gsmstat },
+
         { "gsmmod", sizeof("gsmmod") - 1, &HTTPPrint_gsmmod },
         { "gsmopr", sizeof("gsmopr") - 1, &HTTPPrint_gsmopr },
         { "gimei", sizeof("gimei") - 1, &HTTPPrint_gimei },

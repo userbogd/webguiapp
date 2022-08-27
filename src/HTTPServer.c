@@ -116,6 +116,10 @@ static esp_err_t set_content_type_from_file(httpd_req_t *req,
     {
         return httpd_resp_set_type(req, "image/jpeg");
     }
+    else if (IS_FILE_EXT(filename, ".png"))
+    {
+        return httpd_resp_set_type(req, "image/png");
+    }
     else if (IS_FILE_EXT(filename, ".ico"))
     {
         return httpd_resp_set_type(req, "image/x-icon");
@@ -236,7 +240,7 @@ static esp_err_t GETHandler(httpd_req_t *req)
     char filepath[FILE_PATH_MAX];
     espfs_file_t *file;
     struct espfs_stat_t stat;
-    bool isCompressed = false;
+    bool isDynamicVars = false;
 
     const char *filename = get_path_from_uri(filepath,
                                              ((struct file_server_data*) req->user_ctx)->base_path,
@@ -314,12 +318,10 @@ static esp_err_t GETHandler(httpd_req_t *req)
     {
         httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
         httpd_resp_set_hdr(req, "Cache-Control", "max-age=600");
-        isCompressed = true;
     }
 
-    //prevent mangle compressed font files
-    if (IS_FILE_EXT(filename, ".woff2"))
-        isCompressed = true;
+    if (IS_FILE_EXT(filename, ".html") || IS_FILE_EXT(filename, ".json"))
+        isDynamicVars = true;
 
     int pt = 0;
     do
@@ -327,7 +329,7 @@ static esp_err_t GETHandler(httpd_req_t *req)
         readBytes = 0;
         while (pt < fileSize && readBytes < (SCRATCH_BUFSIZE - 64))
         {
-            if (buf[pt] == '~' && !isCompressed)
+            if (buf[pt] == '~' && isDynamicVars)
             {
                 int k = 0;
                 char DynVarName[16];
