@@ -1,4 +1,4 @@
- /*! Copyright 2022 Bogdan Pilyugin
+/*! Copyright 2022 Bogdan Pilyugin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,6 @@
 
 #include "HTTPServer.h"
 #include "sdkconfig.h"
-
-
 
 const char GZIP_SIGN[] = { 0x1f, 0x8b, 0x08 };
 
@@ -180,7 +178,7 @@ static esp_err_t POSTHandler(httpd_req_t *req)
     int received;
     int remaining = req->content_len;
     buf[req->content_len] = 0x00;
-
+    HTTP_IO_RESULT http_res;
     while (remaining > 0)
     {
 #if HTTP_SERVER_DEBUG_LEVEL > 0
@@ -212,16 +210,29 @@ static esp_err_t POSTHandler(httpd_req_t *req)
                                                      ((struct file_server_data*) req->user_ctx)->base_path,
                                                      req->uri,
                                                      sizeof(filepath));
-            if (HTTPPostApp(req, filename, buf) == HTTP_IO_REDIRECT)
+            http_res = HTTPPostApp(req, filename, buf);
+
+            if (http_res == HTTP_IO_DONE)
+                return GETHandler(req);
+
+            else if (http_res == HTTP_IO_REDIRECT)
             {
                 httpd_resp_set_status(req, "307 Temporary Redirect");
                 httpd_resp_set_hdr(req, "Location", filename);
                 httpd_resp_send(req, NULL, 0);  // Response body can be empty
 #if HTTP_SERVER_DEBUG_LEVEL > 0
-                     ESP_LOGI(TAG, "Redirect request from POST");
-             #endif
+             ESP_LOGI(TAG, "Redirect request from POST");
+     #endif
                 return ESP_OK;
             }
+
+            else if (http_res == HTTP_IO_DONE_NOREFRESH)
+            {
+                httpd_resp_set_status(req, HTTPD_204);
+                httpd_resp_send(req, NULL, 0);  // Response body can be empty
+                return ESP_OK;
+            }
+
         }
 
         /* Keep track of remaining size of
@@ -229,7 +240,7 @@ static esp_err_t POSTHandler(httpd_req_t *req)
         remaining -= received;
     }
 
-    return GETHandler(req);
+    return ESP_OK;
 }
 
 static esp_err_t GETHandler(httpd_req_t *req)

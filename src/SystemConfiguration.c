@@ -82,6 +82,9 @@ esp_err_t WebGuiAppInit(void)
     }
     ESP_ERROR_CHECK(InitSysConfig());
 
+    GetSysConf()->wifiSettings.Flags1.bIsWiFiEnabled = true;
+    GetSysConf()->wifiSettings.Flags1.bIsAP = false;
+
     //init rom file system
     init_rom_fs("/espfs");
 

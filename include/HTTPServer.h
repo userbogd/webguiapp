@@ -53,7 +53,8 @@ typedef enum
     HTTP_IO_DONE = 0u,  // Finished with procedure
     HTTP_IO_NEED_DATA,  // More data needed to continue, call again later
     HTTP_IO_WAITING,     // Waiting for asynchronous process to complete, call again later
-    HTTP_IO_REDIRECT
+    HTTP_IO_REDIRECT,
+    HTTP_IO_DONE_NOREFRESH
 } HTTP_IO_RESULT;
 
 typedef struct

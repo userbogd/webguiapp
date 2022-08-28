@@ -68,6 +68,9 @@ HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostDat
         case HTTP_IO_REDIRECT:
             strcpy((char*) filename, PostData);
         break;
+        case HTTP_IO_DONE_NOREFRESH:
+            break;
+        break;
     }
     return res;
 }
@@ -122,17 +125,6 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
     if (httpd_query_key_value(PostData, "dns3", tmp, 15) == ESP_OK)
         esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr3);
 
-    if (httpd_query_key_value(PostData, "sav", tmp, 4) == ESP_OK)
-    {
-        if (!strcmp(tmp, (const char*) "prs"))
-        {
-            GetSysConf()->ethSettings.Flags1.bIsETHEnabled = TempIsETHEnabled;
-            GetSysConf()->ethSettings.Flags1.bIsDHCPEnabled = TempIsETHDHCPEnabled;
-            WriteNVSSysConfig(GetSysConf());
-            memcpy(PostData, "/reboot.html", sizeof "/reboot.html");
-            return HTTP_IO_REDIRECT;
-        }
-    }
 #endif
 
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
@@ -188,17 +180,6 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
     if (httpd_query_key_value(PostData, "dns3", tmp, 15) == ESP_OK)
         esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->wifiSettings.DNSAddr3);
 
-    if (httpd_query_key_value(PostData, "sav", tmp, 4) == ESP_OK)
-    {
-        if (!strcmp(tmp, (const char*) "prs"))
-        {
-            GetSysConf()->wifiSettings.Flags1.bIsWiFiEnabled = TempIsWiFiEnabled;
-            GetSysConf()->wifiSettings.Flags1.bIsDHCPEnabled = TempIsWIFIDHCPEnabled;
-            WriteNVSSysConfig(GetSysConf());
-            memcpy(PostData, "/reboot.html", sizeof "/reboot.html");
-            return HTTP_IO_REDIRECT;
-        }
-    }
 #endif
 #if    CONFIG_WEBGUIAPP_GPRS_ENABLE
     char tmp[32];
@@ -234,6 +215,45 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
         }
     }
 #endif
+
+    if (httpd_query_key_value(PostData, "save", tmp, 5) == ESP_OK ||
+            httpd_query_key_value(PostData, "apply", tmp, 5) == ESP_OK)
+    {
+        if (!strcmp(tmp, (const char*) "eth"))
+        {
+#if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
+            GetSysConf()->ethSettings.Flags1.bIsETHEnabled = TempIsETHEnabled;
+            GetSysConf()->ethSettings.Flags1.bIsDHCPEnabled = TempIsETHDHCPEnabled;
+#endif
+        }
+        else if (!strcmp(tmp, (const char*) "wifi"))
+        {
+#if CONFIG_WEBGUIAPP_WIFI_ENABLE
+            GetSysConf()->wifiSettings.Flags1.bIsWiFiEnabled = TempIsWiFiEnabled;
+            GetSysConf()->wifiSettings.Flags1.bIsDHCPEnabled = TempIsWIFIDHCPEnabled;
+#endif
+        }
+        else if (!strcmp(tmp, (const char*) "gprs"))
+        {
+#if    CONFIG_WEBGUIAPP_GPRS_ENABLE
+            GetSysConf()->gsmSettings.Flags1.bIsGSMEnabled = TempIsGSMEnabled;
+#endif
+        }
+
+        if (httpd_query_key_value(PostData, "save", tmp, 5) == ESP_OK)
+        {
+            WriteNVSSysConfig(GetSysConf());
+            return HTTP_IO_DONE;
+        }
+        else if (httpd_query_key_value(PostData, "apply", tmp, 5) == ESP_OK)
+        {
+            WriteNVSSysConfig(GetSysConf());
+            memcpy(PostData, "/reboot.html", sizeof "/reboot.html");
+            return HTTP_IO_REDIRECT;
+        }
+
+    }
+
     return HTTP_IO_DONE;
 }
 
