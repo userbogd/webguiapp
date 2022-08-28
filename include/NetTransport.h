@@ -111,4 +111,7 @@ void StartTimeGet(void);
 
 esp_err_t StartOTA(void);
 
+void StartSystemTimer(void);
+uint32_t GetUpTime(void);
+
 #endif /* MAIN_INCLUDE_NETTRANSPORT_H_ */

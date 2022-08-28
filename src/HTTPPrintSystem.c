@@ -120,7 +120,7 @@ static void HTTPPrint_time(char *VarData, void *arg)
 }
 static void HTTPPrint_uptime(char *VarData, void *arg)
 {
-    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", "-");
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", GetUpTime());
 }
 
 static void HTTPPrint_status_fail(char *VarData, void *arg)
@@ -192,7 +192,6 @@ static void HTTPPrint_otaurl(char *VarData, void *arg)
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->OTAURL);
 }
 
-
 static void HTTPPrint_tshift(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "7200");
@@ -216,7 +215,6 @@ static void HTTPPrint_defadp(char *VarData, void *arg)
 {
     GetDefaultNetIFName(VarData);
 }
-
 
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
 
@@ -399,12 +397,10 @@ static void HTTPPrint_emacadr(char *VarData, void *arg)
 
 #endif
 
-
 void HTTPPrint_gsmstat(char *VarData, void *arg)
 {
     PrintInterfaceState(VarData, arg, GetPPPNetifAdapter());
 }
-
 
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
 /*GSM MODEM*/
@@ -561,71 +557,90 @@ static void HTTPPrint_mqtt2st(char *VarData, void *arg)
 }
 
 
-//Default string if not found handler
-static void HTTPPrint_DEF(char *VarData, void *arg)
+/* Pass build configuration to web interface*/
+static void HTTPPrint_ifc_gprs(char *VarData, void *arg)
 {
-    snprintf(VarData, MAX_DYNVAR_LENGTH, "#DEF");
+#if CONFIG_WEBGUIAPP_GPRS_ENABLE
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "1");
+#else
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "0");
+#endif
+}
+
+static void HTTPPrint_ifc_mq2(char *VarData, void *arg)
+{
+#if CONFIG_MQTT_CLIENTS_NUM == 2
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "1");
+#else
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "0");
+#endif
 }
 
 
+//Default string if not found handler
+static void HTTPPrint_DEF(char *VarData, void *arg)
+{
+snprintf(VarData, MAX_DYNVAR_LENGTH, "#DEF");
+}
+
 dyn_var_handler_t HANDLERS_ARRAY[] = {
-        /*Ststem settings*/
-        { "dname", sizeof("dname") - 1, &HTTPPrint_dname },
-        { "login", sizeof("login") - 1, &HTTPPrint_login },
-        { "pass", sizeof("pass") - 1, &HTTPPrint_pass },
-        { "ota", sizeof("ota") - 1, &HTTPPrint_ota },
-        { "fver", sizeof("fver") - 1, &HTTPPrint_fver },
-        { "idfver", sizeof("idfver") - 1, &HTTPPrint_idfver },
-        { "builddate", sizeof("builddate") - 1, &HTTPPrint_builddate },
-        { "serial", sizeof("serial") - 1, &HTTPPrint_serial },
-        { "serial10", sizeof("serial10") - 1, &HTTPPrint_serial10 },
-        { "otaurl", sizeof("otaurl") - 1, &HTTPPrint_otaurl },
+    /*Ststem settings*/
+    { "dname", sizeof("dname") - 1, &HTTPPrint_dname },
+    { "login", sizeof("login") - 1, &HTTPPrint_login },
+    { "pass", sizeof("pass") - 1, &HTTPPrint_pass },
+    { "ota", sizeof("ota") - 1, &HTTPPrint_ota },
+    { "fver", sizeof("fver") - 1, &HTTPPrint_fver },
+    { "idfver", sizeof("idfver") - 1, &HTTPPrint_idfver },
+    { "builddate", sizeof("builddate") - 1, &HTTPPrint_builddate },
+    { "serial", sizeof("serial") - 1, &HTTPPrint_serial },
+    { "serial10", sizeof("serial10") - 1, &HTTPPrint_serial10 },
+    { "otaurl", sizeof("otaurl") - 1, &HTTPPrint_otaurl },
 
-        { "time", sizeof("time") - 1, &HTTPPrint_time },
-        { "uptime", sizeof("uptime") - 1, &HTTPPrint_uptime },
-        { "tshift", sizeof("tshift") - 1, &HTTPPrint_tshift },
-        { "tz", sizeof("tz") - 1, &HTTPPrint_tz },
+    { "time", sizeof("time") - 1, &HTTPPrint_time },
+    { "uptime", sizeof("uptime") - 1, &HTTPPrint_uptime },
+    { "tshift", sizeof("tshift") - 1, &HTTPPrint_tshift },
+    { "tz", sizeof("tz") - 1, &HTTPPrint_tz },
 
-        { "defadp", sizeof("defadp") - 1, &HTTPPrint_defadp },
-        { "wlev", sizeof("wlev") - 1, &HTTPPrint_wlev },
+    { "defadp", sizeof("defadp") - 1, &HTTPPrint_defadp },
+    { "wlev", sizeof("wlev") - 1, &HTTPPrint_wlev },
 
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
-        /*WiFi network*/
-        { "wfen", sizeof("wfen") - 1, &HTTPPrint_wfen },
-        { "wfstat", sizeof("wfstat") - 1, &HTTPPrint_wfstat },
-        { "cln", sizeof("cln") - 1, &HTTPPrint_cln },
-        { "apn", sizeof("apn") - 1, &HTTPPrint_apn },
-        { "ssidap", sizeof("ssidap") - 1, &HTTPPrint_ssidap },
-        { "wkeyap", sizeof("wkeyap") - 1, &HTTPPrint_wkeyap },
-        { "ipap", sizeof("ipap") - 1, &HTTPPrint_ipap },
-        { "ssid", sizeof("ssid") - 1, &HTTPPrint_ssid },
-        { "wkey", sizeof("wkey") - 1, &HTTPPrint_wkey },
-        { "cbdh", sizeof("cbdh") - 1, &HTTPPrint_cbdh },
-        { "ip", sizeof("ip") - 1, &HTTPPrint_ip },
-        { "msk", sizeof("msk") - 1, &HTTPPrint_msk },
-        { "gate", sizeof("gate") - 1, &HTTPPrint_gate },
-        { "dns", sizeof("dns") - 1, &HTTPPrint_dns },
-        { "dns2", sizeof("dns2") - 1, &HTTPPrint_dns2 },
-        { "dns3", sizeof("dns3") - 1, &HTTPPrint_dns3 },
-        { "macadr", sizeof("macadr") - 1, &HTTPPrint_macadr },
-        { "apmacadr", sizeof("apmacadr") - 1, &HTTPPrint_apmacadr },
-        #endif
+    /*WiFi network*/
+    { "wfen", sizeof("wfen") - 1, &HTTPPrint_wfen },
+    { "wfstat", sizeof("wfstat") - 1, &HTTPPrint_wfstat },
+    { "cln", sizeof("cln") - 1, &HTTPPrint_cln },
+    { "apn", sizeof("apn") - 1, &HTTPPrint_apn },
+    { "ssidap", sizeof("ssidap") - 1, &HTTPPrint_ssidap },
+    { "wkeyap", sizeof("wkeyap") - 1, &HTTPPrint_wkeyap },
+    { "ipap", sizeof("ipap") - 1, &HTTPPrint_ipap },
+    { "ssid", sizeof("ssid") - 1, &HTTPPrint_ssid },
+    { "wkey", sizeof("wkey") - 1, &HTTPPrint_wkey },
+    { "cbdh", sizeof("cbdh") - 1, &HTTPPrint_cbdh },
+    { "ip", sizeof("ip") - 1, &HTTPPrint_ip },
+    { "msk", sizeof("msk") - 1, &HTTPPrint_msk },
+    { "gate", sizeof("gate") - 1, &HTTPPrint_gate },
+    { "dns", sizeof("dns") - 1, &HTTPPrint_dns },
+    { "dns2", sizeof("dns2") - 1, &HTTPPrint_dns2 },
+    { "dns3", sizeof("dns3") - 1, &HTTPPrint_dns3 },
+    { "macadr", sizeof("macadr") - 1, &HTTPPrint_macadr },
+    { "apmacadr", sizeof("apmacadr") - 1, &HTTPPrint_apmacadr },
+    #endif
 
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
-        /*ETHERNET network*/
-        { "ethen", sizeof("ethen") - 1, &HTTPPrint_ethen },
-        { "ecbdh", sizeof("ecbdh") - 1, &HTTPPrint_ecbdh },
-        { "ethstat", sizeof("ethstat") - 1, &HTTPPrint_ethstat },
-        { "eip", sizeof("eip") - 1, &HTTPPrint_eip },
-        { "emsk", sizeof("emsk") - 1, &HTTPPrint_emsk },
-        { "egate", sizeof("egate") - 1, &HTTPPrint_egate },
-        { "edns", sizeof("edns") - 1, &HTTPPrint_edns },
-        { "bkedns", sizeof("bkedns") - 1, &HTTPPrint_bkedns },
-        { "fledns", sizeof("fledns") - 1, &HTTPPrint_fledns },
-        { "emacadr", sizeof("emacadr") - 1, &HTTPPrint_emacadr },
-        #endif
+    /*ETHERNET network*/
+    { "ethen", sizeof("ethen") - 1, &HTTPPrint_ethen },
+    { "ecbdh", sizeof("ecbdh") - 1, &HTTPPrint_ecbdh },
+    { "ethstat", sizeof("ethstat") - 1, &HTTPPrint_ethstat },
+    { "eip", sizeof("eip") - 1, &HTTPPrint_eip },
+    { "emsk", sizeof("emsk") - 1, &HTTPPrint_emsk },
+    { "egate", sizeof("egate") - 1, &HTTPPrint_egate },
+    { "edns", sizeof("edns") - 1, &HTTPPrint_edns },
+    { "bkedns", sizeof("bkedns") - 1, &HTTPPrint_bkedns },
+    { "fledns", sizeof("fledns") - 1, &HTTPPrint_fledns },
+    { "emacadr", sizeof("emacadr") - 1, &HTTPPrint_emacadr },
+    #endif
 
-        { "gsmstat", sizeof("gsmstat") - 1, &HTTPPrint_gsmstat },
+    { "gsmstat", sizeof("gsmstat") - 1, &HTTPPrint_gsmstat },
 
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
         /*GSM modem*/
@@ -645,15 +660,15 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         #endif
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
-        /*MQTT*/
-        { "mqtten1", sizeof("mqtten1") - 1, &HTTPPrint_mqtten1 },
-        { "ipcld1", sizeof("ipcld1") - 1, &HTTPPrint_ipcld1 },
-        { "mport1", sizeof("mport1") - 1, &HTTPPrint_mport1 },
-        { "idcld1", sizeof("idcld1") - 1, &HTTPPrint_idcld1 },
-        { "topic1", sizeof("topic1") - 1, &HTTPPrint_topic1 },
-        { "clname1", sizeof("clname1") - 1, &HTTPPrint_clname1 },
-        { "clpass1", sizeof("clpass1") - 1, &HTTPPrint_clpass1 },
-        #if CONFIG_MQTT_CLIENTS_NUM == 2
+    /*MQTT*/
+    { "mqtten1", sizeof("mqtten1") - 1, &HTTPPrint_mqtten1 },
+    { "ipcld1", sizeof("ipcld1") - 1, &HTTPPrint_ipcld1 },
+    { "mport1", sizeof("mport1") - 1, &HTTPPrint_mport1 },
+    { "idcld1", sizeof("idcld1") - 1, &HTTPPrint_idcld1 },
+    { "topic1", sizeof("topic1") - 1, &HTTPPrint_topic1 },
+    { "clname1", sizeof("clname1") - 1, &HTTPPrint_clname1 },
+    { "clpass1", sizeof("clpass1") - 1, &HTTPPrint_clpass1 },
+    #if CONFIG_MQTT_CLIENTS_NUM == 2
         { "mqtten2", sizeof("mqtten2") - 1, &HTTPPrint_mqtten2 },
         { "ipcld2", sizeof("ipcld2") - 1, &HTTPPrint_ipcld2 },
         { "mport2", sizeof("mport2") - 1, &HTTPPrint_mport2 },
@@ -663,81 +678,84 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "clpass2", sizeof("clpass2") - 1, &HTTPPrint_clpass2 },
 #endif
 #endif
-        /*SNTP*/
-        { "sntpen", sizeof("sntpen") - 1, &HTTPPrint_sntpen },
-        { "tmsrv", sizeof("tmsrv") - 1, &HTTPPrint_tmsrv },
+    /*SNTP*/
+    { "sntpen", sizeof("sntpen") - 1, &HTTPPrint_sntpen },
+    { "tmsrv", sizeof("tmsrv") - 1, &HTTPPrint_tmsrv },
 
-        { "freeram", sizeof("freeram") - 1, &HTTPPrint_freeram },
-        { "minram", sizeof("minram") - 1, &HTTPPrint_minram },
-        { "mqtt1st", sizeof("mqtt1st") - 1, &HTTPPrint_mqtt1st },
-        { "mqtt2st", sizeof("mqtt2st") - 1, &HTTPPrint_mqtt2st },
+    { "freeram", sizeof("freeram") - 1, &HTTPPrint_freeram },
+    { "minram", sizeof("minram") - 1, &HTTPPrint_minram },
+    { "mqtt1st", sizeof("mqtt1st") - 1, &HTTPPrint_mqtt1st },
+    { "mqtt2st", sizeof("mqtt2st") - 1, &HTTPPrint_mqtt2st },
 
-        /*ERROR report*/
-        { "status_fail", sizeof("status_fail") - 1, &HTTPPrint_status_fail },
+    /*ERROR report*/
+    { "status_fail", sizeof("status_fail") - 1, &HTTPPrint_status_fail },
+
+    { "ifc_gprs", sizeof("ifc_gprs") - 1, &HTTPPrint_ifc_gprs },
+    { "ifc_mq2", sizeof("ifc_mq2") - 1, &HTTPPrint_ifc_mq2 },
 
 };
 
 int HTTPPrint(httpd_req_t *req, char *buf, char *var)
 {
-    char VarData[MAX_DYNVAR_LENGTH];
-    const char incPat[] = "inc:";
-    const int incPatLen = sizeof(incPat) - 1;
-    if (!memcmp(var, incPat, incPatLen))
+char VarData[MAX_DYNVAR_LENGTH];
+const char incPat[] = "inc:";
+const int incPatLen = sizeof(incPat) - 1;
+if (!memcmp(var, incPat, incPatLen))
+{
+    const char rootFS[] = "/";
+    char filename[32];
+    filename[0] = 0x00;
+    var += incPatLen;
+    strcat(filename, rootFS);
+    strcat(filename, var);
+    espfs_file_t *file = espfs_fopen(fs, filename);
+    struct espfs_stat_t stat;
+    if (file)
     {
-        const char rootFS[] = "/";
-        char filename[32];
-        filename[0] = 0x00;
-        var += incPatLen;
-        strcat(filename, rootFS);
-        strcat(filename, var);
-        espfs_file_t *file = espfs_fopen(fs, filename);
-        struct espfs_stat_t stat;
-        if (file)
-        {
-            espfs_fstat(file, &stat);
-            int readBytes = espfs_fread(file, buf, stat.size);
-            espfs_fclose(file);
-            return readBytes;
-        }
+        espfs_fstat(file, &stat);
+        int readBytes = espfs_fread(file, buf, stat.size);
+        espfs_fclose(file);
+        return readBytes;
     }
+}
 
-    bool fnd = false;
-    char *p2 = var + strlen(var) - 1; //last var symbol
-    int arg = 0;
-    //searching for tag in handles array
-    for (int i = 0; i < (sizeof(HANDLERS_ARRAY) / sizeof(HANDLERS_ARRAY[0])); ++i)
-    {
-        if (*p2 == ')')
-        { //found close brace
-            char *p1 = p2;
-            while ((*p1 != '(') && (p1 > var))
-                --p1;
-            if (*p1 == '(')
-            { //found open brace
-                *p1 = 0x00; //trim variable to name part
-                ++p1; //to begin of argument
-                *p2 = 0x00; //set end of argument
-                arg = atoi(p1);
-            }
-        }
-        if (strcmp(var, HANDLERS_ARRAY[i].tag) == 0
-                && HANDLERS_ARRAY[i].HandlerRoutine != NULL)
-        {
-            HANDLERS_ARRAY[i].HandlerRoutine(VarData, (void*) &arg);
-            fnd = true;
-            break;
+bool fnd = false;
+char *p2 = var + strlen(var) - 1; //last var symbol
+int arg = 0;
+//searching for tag in handles array
+for (int i = 0; i < (sizeof(HANDLERS_ARRAY) / sizeof(HANDLERS_ARRAY[0])); ++i)
+{
+    if (*p2 == ')')
+    { //found close brace
+        char *p1 = p2;
+        while ((*p1 != '(') && (p1 > var))
+            --p1;
+        if (*p1 == '(')
+        { //found open brace
+            *p1 = 0x00; //trim variable to name part
+            ++p1; //to begin of argument
+            *p2 = 0x00; //set end of argument
+            arg = atoi(p1);
         }
     }
-    if (!fnd)
+    if (strcmp(var, HANDLERS_ARRAY[i].tag) == 0
+            && HANDLERS_ARRAY[i].HandlerRoutine != NULL)
     {
-        if (HTTPPrintCust != NULL)
-            return HTTPPrintCust(req, buf, var);
-        else
-            HTTPPrint_DEF(VarData, NULL);
+        HANDLERS_ARRAY[i].HandlerRoutine(VarData, (void*) &arg);
+        fnd = true;
+        break;
+    }
+}
+if (!fnd)
+{
+    if (HTTPPrintCust != NULL)
+        return HTTPPrintCust(req, buf, var);
+    else
+        HTTPPrint_DEF(VarData, NULL);
 
-    }
-    int dLen = strlen(VarData);
-    memcpy(buf, VarData, dLen);
-    return dLen;
+}
+int dLen = strlen(VarData);
+memcpy(buf, VarData, dLen);
+return dLen;
 
 }

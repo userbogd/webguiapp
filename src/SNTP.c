@@ -20,11 +20,21 @@
  */
 
 #include "esp_sntp.h"
+#include "esp_timer.h"
 #include "NetTransport.h"
 #define YEAR_BASE (1900) //tm structure base year
 
+static uint32_t UpTime = 0;
+
 static void initialize_sntp(void);
 
+
+void SecondTickSystem(void *arg);
+esp_timer_handle_t  system_seconds_timer;
+const esp_timer_create_args_t system_seconds_timer_args = {
+        .callback = &SecondTickSystem,
+        .name = "secondsTimer"
+};
 
 static void obtain_time(void *pvParameter)
 {
@@ -74,4 +84,18 @@ void GetRFC3339Time(char *t)
                 timeinfo.tm_sec);
 }
 
+void StartSystemTimer(void)
+{
+    ESP_ERROR_CHECK(esp_timer_create(&system_seconds_timer_args, &system_seconds_timer));
+    ESP_ERROR_CHECK(esp_timer_start_periodic(system_seconds_timer, 1000000));
+}
 
+void SecondTickSystem(void *param)
+{
+    ++UpTime;
+}
+
+uint32_t GetUpTime(void)
+{
+    return UpTime;
+}

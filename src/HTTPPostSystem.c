@@ -295,28 +295,27 @@ static HTTP_IO_RESULT HTTPPostServicesSettings(httpd_req_t *req, char *PostData)
 
 #if CONFIG_MQTT_CLIENTS_NUM == 2
     httpd_query_key_value(PostData, "cld2", GetSysConf()->mqttStation[1].ServerAddr,
-                          sizeof(GetSysConf()->mqttStation[1].ServerAddr));
+            sizeof(GetSysConf()->mqttStation[1].ServerAddr));
     httpd_query_key_value(PostData, "idd2", GetSysConf()->mqttStation[1].ClientID,
-                          sizeof(GetSysConf()->mqttStation[1].ClientID));
+            sizeof(GetSysConf()->mqttStation[1].ClientID));
     httpd_query_key_value(PostData, "top2", GetSysConf()->mqttStation[1].RootTopic,
-                          sizeof(GetSysConf()->mqttStation[1].RootTopic));
+            sizeof(GetSysConf()->mqttStation[1].RootTopic));
     httpd_query_key_value(PostData, "clnm2", GetSysConf()->mqttStation[1].UserName,
-                          sizeof(GetSysConf()->mqttStation[1].UserName));
-
+            sizeof(GetSysConf()->mqttStation[1].UserName));
 
     if (httpd_query_key_value(PostData, "mqttenb2", tmp, sizeof(tmp)) == ESP_OK)
     {
         if (!strcmp((const char*) tmp, (const char*) "1"))
-            TempIsMQTT2Enabled = true;
+        TempIsMQTT2Enabled = true;
     }
 
     if (httpd_query_key_value(PostData, "mprt2", tmp, sizeof(tmp)) == ESP_OK)
-        if (httpd_query_key_value(PostData, "mprt2", tmp, sizeof(tmp)) == ESP_OK)
-        {
-            uint16_t tp = atoi((const char*) tmp);
-            if (tp < 65535 && tp >= 1000)
-                GetSysConf()->mqttStation[1].ServerPort = tp;
-        }
+    if (httpd_query_key_value(PostData, "mprt2", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        uint16_t tp = atoi((const char*) tmp);
+        if (tp < 65535 && tp >= 1000)
+        GetSysConf()->mqttStation[1].ServerPort = tp;
+    }
 
     if (httpd_query_key_value(PostData, "clps2", tmp, sizeof(tmp)) == ESP_OK &&
             strcmp(tmp, (const char*) "******"))
@@ -326,14 +325,39 @@ static HTTP_IO_RESULT HTTPPostServicesSettings(httpd_req_t *req, char *PostData)
 
 #endif
 
-    if (httpd_query_key_value(PostData, "sav", tmp, 4) == ESP_OK)
+    /*SNTP*/
+    bool TempIsSNTPEnabled = false;
+    if (httpd_query_key_value(PostData, "sntpen", tmp, sizeof(tmp)) == ESP_OK)
     {
-        if (!strcmp(tmp, (const char*) "prs"))
+        if (!strcmp((const char*) tmp, (const char*) "1"))
+            TempIsSNTPEnabled = true;
+    }
+    httpd_query_key_value(PostData, "tsr", GetSysConf()->sntpClient.SntpServerAdr,
+                          sizeof(GetSysConf()->sntpClient.SntpServerAdr));
+
+    if (httpd_query_key_value(PostData, "save", tmp, 5) == ESP_OK ||
+            httpd_query_key_value(PostData, "apply", tmp, 5) == ESP_OK)
+    {
+        if (!strcmp(tmp, (const char*) "mqtt"))
         {
             GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled = TempIsMQTT1Enabled;
 #if CONFIG_MQTT_CLIENTS_NUM == 2
             GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled = TempIsMQTT2Enabled;
 #endif
+        }
+
+        else if (!strcmp(tmp, (const char*) "sntp"))
+        {
+            GetSysConf()->sntpClient.Flags1.bIsGlobalEnabled = TempIsSNTPEnabled;
+        }
+
+        if (httpd_query_key_value(PostData, "save", tmp, 5) == ESP_OK)
+        {
+            WriteNVSSysConfig(GetSysConf());
+            return HTTP_IO_DONE;
+        }
+        else if (httpd_query_key_value(PostData, "apply", tmp, 5) == ESP_OK)
+        {
             WriteNVSSysConfig(GetSysConf());
             memcpy(PostData, "/reboot.html", sizeof "/reboot.html");
             return HTTP_IO_REDIRECT;
@@ -346,19 +370,12 @@ static HTTP_IO_RESULT HTTPPostServicesSettings(httpd_req_t *req, char *PostData)
 static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
 {
     char tmp[64];
-    bool TempIsTCPConfirm = false;
-    bool TempIsLoRaConfirm = false;
     bool TempIsOTAEnabled = false;
 
     if (httpd_query_key_value(PostData, "nam", tmp, sizeof(tmp)) == ESP_OK)
     {
         UnencodeURL(tmp);
         strcpy(GetSysConf()->NetBIOSName, tmp);
-    }
-    if (httpd_query_key_value(PostData, "otaurl", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        UnencodeURL(tmp);
-        strcpy(GetSysConf()->OTAURL, tmp);
     }
 
     httpd_query_key_value(PostData, "lgn", GetSysConf()->SysName, sizeof(GetSysConf()->SysName));
@@ -369,22 +386,16 @@ static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
             strcpy(GetSysConf()->SysPass, tmp);
     }
 
-    if (httpd_query_key_value(PostData, "lrdel", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        if (!strcmp((const char*) tmp, (const char*) "1"))
-            TempIsLoRaConfirm = true;
-    }
-
-    if (httpd_query_key_value(PostData, "tcpdel", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        if (!strcmp((const char*) tmp, (const char*) "1"))
-            TempIsTCPConfirm = true;
-    }
-
     if (httpd_query_key_value(PostData, "ota", tmp, sizeof(tmp)) == ESP_OK)
     {
         if (!strcmp((const char*) tmp, (const char*) "1"))
             TempIsOTAEnabled = true;
+    }
+
+    if (httpd_query_key_value(PostData, "otaurl", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        UnencodeURL(tmp);
+        strcpy(GetSysConf()->OTAURL, tmp);
     }
 
     if (httpd_query_key_value(PostData, "upd", tmp, sizeof(tmp)) == ESP_OK)
@@ -398,26 +409,35 @@ static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
     }
     if (httpd_query_key_value(PostData, "rst", tmp, sizeof(tmp)) == ESP_OK)
     {
-
         if (!strcmp(tmp, (const char*) "prs"))
         {
             memcpy(PostData, "/reboot.html", sizeof "/reboot.html");
             return HTTP_IO_REDIRECT;
         }
     }
-    if (httpd_query_key_value(PostData, "sav", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        if (!strcmp(tmp, (const char*) "prs"))
-        {
-            GetSysConf()->Flags1.bIsTCPConfirm = TempIsTCPConfirm;
-            GetSysConf()->Flags1.bIsLoRaConfirm = TempIsLoRaConfirm;
-            GetSysConf()->Flags1.bIsOTAEnabled = TempIsOTAEnabled;
 
+    if (httpd_query_key_value(PostData, "save", tmp, sizeof(tmp)) == ESP_OK ||
+            httpd_query_key_value(PostData, "apply", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (!strcmp(tmp, (const char*) "syst"))
+        {
+            GetSysConf()->Flags1.bIsOTAEnabled = TempIsOTAEnabled;
+        }
+
+        if (httpd_query_key_value(PostData, "save", tmp, 5) == ESP_OK)
+        {
+            WriteNVSSysConfig(GetSysConf());
+            return HTTP_IO_DONE;
+        }
+        else if (httpd_query_key_value(PostData, "apply", tmp, 5) == ESP_OK)
+        {
             WriteNVSSysConfig(GetSysConf());
             memcpy(PostData, "/reboot.html", sizeof "/reboot.html");
             return HTTP_IO_REDIRECT;
         }
+
     }
+
     return HTTP_IO_DONE;
 }
 

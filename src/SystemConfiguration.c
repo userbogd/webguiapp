@@ -48,6 +48,7 @@
 
 static SYS_CONFIG SysConfig;
 
+
 #define SPI_LOCK_TIMEOUT_MS (1000)
 
 SemaphoreHandle_t xSemaphoreSPIHandle = NULL;
@@ -60,6 +61,7 @@ static void InitSysI2C(void);
 esp_err_t WebGuiAppInit(void)
 {
     InitSysIO();
+    StartSystemTimer();
 #if CONFIG_WEBGUIAPP_SPI_ENABLE
     InitSysSPI();
 #endif
@@ -417,7 +419,6 @@ esp_err_t ResetInitSysConfig(void)
     ResetSysConfig(&SysConfig);
     return WriteNVSSysConfig(&SysConfig);
 }
-
 
 void DelayedRestartTask(void *pvParameter)
 {

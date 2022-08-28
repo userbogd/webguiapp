@@ -115,7 +115,7 @@
         struct
         {
             int TimeZone;
-            uint8_t SntpServerAdr[33];
+            char SntpServerAdr[33];
             struct
             {
                 char bIsWifiEnabled :1;
