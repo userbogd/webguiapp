@@ -29,7 +29,6 @@
 #include "freertos/event_groups.h"
 #include "mqtt_client.h"
 #include "esp_netif.h"
-//#include "esp_modem_api.h"
 #include "esp_log.h"
 
 typedef struct

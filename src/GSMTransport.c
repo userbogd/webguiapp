@@ -202,8 +202,8 @@ static void GSMInitTask(void *pvParameter)
     }
     ESP_LOGI(TAG, "IMSI:%s", mod_info.imsi);
 
-    mod_info.oper[0] = 0x00;
-    while (esp_modem_get_operator_name(dce, mod_info.oper) != ESP_OK)
+    mod_info.oper[0] = 0x00; int tech = 0;
+    while (esp_modem_get_operator_name(dce, mod_info.oper, &tech) != ESP_OK)
     {
         if (++GSMConnectTimeout >= PPP_MODEM_TIMEOUT)
             goto modem_init_fail;

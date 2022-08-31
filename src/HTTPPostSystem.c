@@ -182,7 +182,6 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
 
 #endif
 #if    CONFIG_WEBGUIAPP_GPRS_ENABLE
-    char tmp[32];
     bool TempIsGSMEnabled = false;
     if (httpd_query_key_value(PostData, "gsmen", tmp, sizeof(tmp)) == ESP_OK)
     {
