@@ -72,7 +72,7 @@ esp_err_t WebGuiAppInit(void)
     esp_err_t err = nvs_flash_init();
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
-    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND || MANUAL_RESET == 1 || gpio_get_level(GPIO_NUM_34) == 0)
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND || MANUAL_RESET == 1)
     {
         // 1.OTA app partition table has a smaller NVS partition size than the non-OTA
         // partition table. This size mismatch may cause NVS initialization to fail.
@@ -155,16 +155,15 @@ static void InitSysIO(void)
     gpio_set_level(GPIO_NUM_15, 0);
 #endif
 
+    /*
     gpio_pad_select_gpio(GPIO_NUM_2);
     gpio_pad_select_gpio(GPIO_NUM_0);
     gpio_pad_select_gpio(GPIO_NUM_4);
     gpio_pad_select_gpio(GPIO_NUM_34);
     gpio_pad_select_gpio(GPIO_NUM_16);
     gpio_pad_select_gpio(GPIO_NUM_17);
-
     gpio_pad_select_gpio(GPIO_NUM_25);
     gpio_pad_select_gpio(GPIO_NUM_26);
-
     gpio_pad_select_gpio(GPIO_NUM_27);
     gpio_pad_select_gpio(GPIO_NUM_32);
     gpio_pad_select_gpio(GPIO_NUM_33);
@@ -175,14 +174,11 @@ static void InitSysIO(void)
     gpio_set_direction(GPIO_NUM_4, GPIO_MODE_OUTPUT);
     gpio_set_direction(GPIO_NUM_16, GPIO_MODE_OUTPUT);
     gpio_set_direction(GPIO_NUM_17, GPIO_MODE_OUTPUT);
-
     gpio_set_direction(GPIO_NUM_25, GPIO_MODE_OUTPUT);
     gpio_set_direction(GPIO_NUM_26, GPIO_MODE_OUTPUT);
-
     gpio_set_direction(GPIO_NUM_27, GPIO_MODE_INPUT);
     gpio_set_direction(GPIO_NUM_32, GPIO_MODE_OUTPUT);
     gpio_set_direction(GPIO_NUM_33, GPIO_MODE_INPUT);
-
     gpio_set_direction(GPIO_NUM_34, GPIO_MODE_INPUT);
     gpio_set_direction(GPIO_NUM_39, GPIO_MODE_INPUT);
 
@@ -190,14 +186,12 @@ static void InitSysIO(void)
     gpio_set_level(GPIO_NUM_4, 1);
     gpio_set_level(GPIO_NUM_16, 1);
     gpio_set_level(GPIO_NUM_17, 1);
-
     gpio_set_level(GPIO_NUM_25, 0); //RELAY
     gpio_set_level(GPIO_NUM_26, 0); //TRIAC
-
-    gpio_set_level(GPIO_NUM_32, 1);  //0- current , 1- voltage
-
+    gpio_set_level(GPIO_NUM_32, 1); //0- current , 1- voltage
+    */
     ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_IRAM));
-    ESP_LOGI(TAG, "GPO extender initialized OK");
+    ESP_LOGI(TAG, "GPIO  initialized OK");
 
 }
 
@@ -225,6 +219,8 @@ esp_err_t spi_device_polling_transmit_synchronized(spi_device_handle_t handle, s
 static void InitSysSPI(void)
 {
 #ifdef CONFIG_WEBGUIAPP_SPI_ENABLE
+
+
     spi_device_init_custom();
     spi_bus_config_t buscfg = {
             .miso_io_num = CONFIG_SPI_MISO_GPIO,
