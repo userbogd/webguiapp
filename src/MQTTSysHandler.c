@@ -27,7 +27,7 @@
  * "messid":12345,                                         //uint32_t message id for request/response context
  * "api":"2.0",                                            //string of current API version
  * "request":"GET",                                        //string request type -  "GET" or "POST" allowed
- * "url":"iotronic.cloud",                                 //string url of resource
+ * "url":"status.json",                                    //string url of resource (generally a file name)
  * "postdata":"param1=value&param2=value",                 //string of POST data payload (required if request is POST)
  * "reload":"true"                                         //string "true" or "false" is needed reload page after POST request (required if request is POST)
  * }

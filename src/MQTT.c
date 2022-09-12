@@ -115,7 +115,7 @@ static void mqtt_system_event_handler(void *handler_args, esp_event_base_t base,
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED client %d", ctx->mqtt_index);
             ComposeTopic(topic,
                          GetSysConf()->mqttStation[ctx->mqtt_index].RootTopic,
-                         "DOWNLINK",
+                         "DWLINK",
                          GetSysConf()->mqttStation[ctx->mqtt_index].ClientID,
                          "SYSTEM");
             msg_id = esp_mqtt_client_subscribe(client, (const char*) topic, 0);
@@ -144,7 +144,7 @@ static void mqtt_system_event_handler(void *handler_args, esp_event_base_t base,
             //Check if topic is SYSTEM and pass data to handler
             ComposeTopic(topic,
                          GetSysConf()->mqttStation[ctx->mqtt_index].RootTopic,
-                         "DOWNLINK",
+                         "DWLINK",
                          GetSysConf()->mqttStation[ctx->mqtt_index].ClientID,
                          "SYSTEM");
             if (!memcmp(topic, event->topic, event->topic_len))
