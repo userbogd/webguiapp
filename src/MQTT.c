@@ -85,13 +85,14 @@ void ComposeTopic(char *topic, char *system_name, char *direct, char *client_nam
     BytesToStr((unsigned char*) tmp, (unsigned char*) dev_rom_id, 4);
     strcpy((char*) topic, system_name);                 // Global system name
     strcat((char*) topic, "/");
-    strcat((char*) topic, direct);                      // Data direction UPLINK or DOWNLINK
-    strcat((char*) topic, "/");
     strcat((char*) topic, (const char*) dev_rom_id);    // Unique device ID (based on ROM chip id)
     strcat((char*) topic, "/");
     strcat((char*) topic, client_name);                 // Device client name  (for multiclient devices)
     strcat((char*) topic, "/");
     strcat((char*) topic, (const char*) service_name);  // Device service name
+    strcat((char*) topic, "/");
+    strcat((char*) topic, direct);  // Data direction UPLINK or DOWNLINK
+
 }
 
 
