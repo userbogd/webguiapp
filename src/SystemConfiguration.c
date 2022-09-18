@@ -72,7 +72,7 @@ esp_err_t WebGuiAppInit(void)
     esp_err_t err = nvs_flash_init();
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
-    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND || MANUAL_RESET == 1)
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND || MANUAL_RESET == 1 || gpio_get_level(GPIO_NUM_15) == 0)
     {
         // 1.OTA app partition table has a smaller NVS partition size than the non-OTA
         // partition table. This size mismatch may cause NVS initialization to fail.
@@ -140,21 +140,6 @@ if(GetSysConf()->wifiSettings.Flags1.bIsAP)
 
 static void InitSysIO(void)
 {
-#if !JTAG_DEBUG
-    gpio_pad_select_gpio(GPIO_NUM_12);
-    gpio_pad_select_gpio(GPIO_NUM_13);
-    gpio_pad_select_gpio(GPIO_NUM_14);
-    gpio_pad_select_gpio(GPIO_NUM_15);
-    gpio_set_direction(GPIO_NUM_12, GPIO_MODE_OUTPUT);
-    gpio_set_direction(GPIO_NUM_13, GPIO_MODE_OUTPUT);
-    gpio_set_direction(GPIO_NUM_14, GPIO_MODE_OUTPUT);
-    gpio_set_direction(GPIO_NUM_15, GPIO_MODE_OUTPUT);
-    gpio_set_level(GPIO_NUM_12, 0);
-    gpio_set_level(GPIO_NUM_13, 0);
-    gpio_set_level(GPIO_NUM_14, 0);
-    gpio_set_level(GPIO_NUM_15, 0);
-#endif
-
     /*
     gpio_pad_select_gpio(GPIO_NUM_2);
     gpio_pad_select_gpio(GPIO_NUM_0);
