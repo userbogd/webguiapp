@@ -50,9 +50,12 @@ static SYS_CONFIG SysConfig;
 
 
 #define SPI_LOCK_TIMEOUT_MS (1000)
+#define NETWORK_START_TIMEOUT (60)
 
 SemaphoreHandle_t xSemaphoreSPIHandle = NULL;
 StaticSemaphore_t xSemaphoreSPIBuf;
+
+static int NetworkStartTimeout = 0;
 
 static void InitSysIO(void);
 static void InitSysSPI(void);
@@ -76,7 +79,7 @@ esp_err_t WebGuiAppInit(void)
             err == ESP_ERR_NVS_NEW_VERSION_FOUND ||
             MANUAL_RESET == 1
 #if (CONFIG_MAIN_FUNCTIONAL_BUTTON_GPIO >= 0)
-            || gpio_get_level(GPIO_NUM_15) == 0
+            || gpio_get_level(CONFIG_MAIN_FUNCTIONAL_BUTTON_GPIO) == 0
 #endif
             )
     {
@@ -125,8 +128,18 @@ if(GetSysConf()->wifiSettings.Flags1.bIsAP)
     /*Start services depends on client connection*/
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE || CONFIG_WEBGUIAPP_ETHERNET_ENABLE || CONFIG_WEBGUIAPP_WIFI_ENABLE
     {
+        ESP_ERROR_CHECK(start_file_server());
         if (!WiFiApOnly)
         {
+            //start all services
+            /*Wait for interfaces connected*/
+            while (!(isPPPConnected() ||
+                    isWIFIConnected() ||
+                    isETHConnected() ||
+                    ++NetworkStartTimeout >= NETWORK_START_TIMEOUT))
+                vTaskDelay(pdMS_TO_TICKS(1000));
+
+            //Start all services needed internet connection
             StartTimeGet();
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
@@ -137,7 +150,7 @@ if(GetSysConf()->wifiSettings.Flags1.bIsAP)
             }
 #endif
         }
-        ESP_ERROR_CHECK(start_file_server());
+
 #endif
 
     }
