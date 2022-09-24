@@ -56,6 +56,7 @@ SemaphoreHandle_t xSemaphoreSPIHandle = NULL;
 StaticSemaphore_t xSemaphoreSPIBuf;
 
 static int NetworkStartTimeout = 0;
+static bool isUserAppNeedReset = false;
 
 static void InitSysIO(void);
 static void InitSysSPI(void);
@@ -87,6 +88,7 @@ esp_err_t WebGuiAppInit(void)
         // partition table. This size mismatch may cause NVS initialization to fail.
         // 2.NVS partition contains data in new format and cannot be recognized by this version of code.
         // If this happens, we erase NVS partition and initialize NVS again.
+        isUserAppNeedReset = true;
         ESP_ERROR_CHECK(nvs_flash_erase());
         ESP_ERROR_CHECK(nvs_flash_init());
         ESP_ERROR_CHECK(ResetInitSysConfig());
@@ -398,4 +400,14 @@ void DelayedRestartTask(void *pvParameter)
 void DelayedRestart(void)
 {
     xTaskCreate(DelayedRestartTask, "RestartTask", 1024 * 4, (void*) 0, 3, NULL);
+}
+
+bool GetUserAppNeedReset(void)
+{
+    return isUserAppNeedReset;
+}
+
+void SetUserAppNeedReset(bool res)
+{
+    isUserAppNeedReset = res;
 }
