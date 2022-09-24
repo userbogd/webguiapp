@@ -236,6 +236,16 @@ static void InitSysI2C(void)
 
 static void ResetSysConfig(SYS_CONFIG *Conf)
 {
+    char id[4]; char id2[9];
+    GetChipId((uint8_t*) id);
+    BytesToStr((unsigned char*) id, (unsigned char*) id2, 4);
+    id2[8] = 0x00;
+    memcpy(Conf->ID, id2, 9);
+
+    UINT32_VAL d;
+    GetChipId((uint8_t*) d.v);
+    snprintf(Conf->SN, 11, "%010u", swap(d.Val));
+
     memcpy(Conf->NetBIOSName, CONFIG_WEBGUIAPP_HOSTNAME, sizeof(CONFIG_WEBGUIAPP_HOSTNAME));
     memcpy(Conf->SysName, CONFIG_WEBGUIAPP_USERNAME, sizeof(CONFIG_WEBGUIAPP_USERNAME));
     memcpy(Conf->SysPass, CONFIG_WEBGUIAPP_USERPASS, sizeof(CONFIG_WEBGUIAPP_USERPASS));
@@ -244,15 +254,9 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
     memcpy(Conf->OTAURL, SYSTEM_DEFAULT_OTAURL, sizeof(SYSTEM_DEFAULT_OTAURL));
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
     Conf->wifiSettings.Flags1.bIsWiFiEnabled = CONFIG_WEBGUIAPP_WIFI_ON;
-
-    char id[4];
-    char id2[9];
-    GetChipId((uint8_t*) id);
-    BytesToStr((unsigned char*) id, (unsigned char*) id2, 4);
-    id2[8] = 0x00;
     memcpy(Conf->wifiSettings.ApSSID, CONFIG_WEBGUIAPP_WIFI_SSID_AP, sizeof(CONFIG_WEBGUIAPP_WIFI_SSID_AP));
     strcat(Conf->wifiSettings.ApSSID, "_");
-    strcat(Conf->wifiSettings.ApSSID, id2);
+    strcat(Conf->wifiSettings.ApSSID, Conf->ID);
 
     esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_WIFI_IP_STA, (esp_ip4_addr_t*) &Conf->wifiSettings.InfIPAddr);
     esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_WIFI_MASK_STA, (esp_ip4_addr_t*) &Conf->wifiSettings.InfMask);
@@ -307,8 +311,6 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
     memcpy(Conf->mqttStation[1].UserPass, CONFIG_WEBGUIAPP_MQTT_PASSWORD, sizeof(CONFIG_WEBGUIAPP_MQTT_PASSWORD));
 #endif
 #endif
-    GetChipId(Conf->imei);
-
     memcpy(Conf->sntpClient.SntpServerAdr, DEFAULT_SNTP_SERVERNAME, sizeof(DEFAULT_SNTP_SERVERNAME));
     Conf->sntpClient.Flags1.bIsEthEnabled = DEFAULT_SNTP_ETH_IS_ENABLED;
     Conf->sntpClient.Flags1.bIsWifiEnabled = DEFAULT_SNTP_WIFI_IS_ENABLED;

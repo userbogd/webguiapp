@@ -269,8 +269,7 @@ static void start_mqtt()
             mqtt_cfg.password = GetSysConf()->mqttStation[i].UserPass;
             strcpy(tmp, GetSysConf()->mqttStation[i].ClientID);
             strcat(tmp, "_");
-            int len = strlen(tmp);
-            BytesToStr((unsigned char*) &GetSysConf()->imei, (unsigned char*) &tmp[len], 4);
+            strcat(tmp, GetSysConf()->ID);
             mqtt_cfg.client_id = tmp;
             mqtt[i].is_connected = false;
             mqtt[i].mqtt_index = i;

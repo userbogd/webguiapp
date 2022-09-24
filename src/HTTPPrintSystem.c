@@ -150,16 +150,11 @@ static void HTTPPrint_ota(char *VarData, void *arg)
 
 static void HTTPPrint_serial(char *VarData, void *arg)
 {
-    char ser1[4], ser2[9];
-    GetChipId((uint8_t*) ser1);
-    BytesToStr((unsigned char*) ser1, (unsigned char*) ser2, 4);
-    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ser2);
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->ID);
 }
 static void HTTPPrint_serial10(char *VarData, void *arg)
 {
-    UINT32_VAL d;
-    GetChipId((uint8_t*) d.v);
-    snprintf(VarData, MAX_DYNVAR_LENGTH, "%010u", swap(d.Val));
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->SN);
 }
 
 static void HTTPPrint_fver(char *VarData, void *arg)

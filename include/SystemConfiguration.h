@@ -98,7 +98,9 @@
         char SysName[32];       ///< User Name
         char SysPass[32];       ///< User Password
         char OTAURL[64];        ///< OTA URL
-        uint8_t imei[4];
+
+        char SN[11];        ///< String of serial number (decimal ID)
+        char ID[9];        ///< String of ID ( last 4 bytes of MAC)
 
         struct
         {
