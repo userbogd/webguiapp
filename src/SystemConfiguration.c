@@ -46,6 +46,13 @@
 
 #define MANUAL_RESET 0
 
+#ifdef CONFIG_USERDEFINED_MAIN_FUNCTIONAL_BUTTON_GPIO
+#define MAIN_FUNCTIONAL_BUTTON_GPIO CONFIG_USERDEFINED_MAIN_FUNCTIONAL_BUTTON_GPIO
+#else
+#ifdef CONFIG_MAIN_FUNCTIONAL_BUTTON_GPIO
+#define MAIN_FUNCTIONAL_BUTTON_GPIO CONFIG_MAIN_FUNCTIONAL_BUTTON_GPIO
+#endif
+
 static SYS_CONFIG SysConfig;
 
 
@@ -79,8 +86,8 @@ esp_err_t WebGuiAppInit(void)
     if (err == ESP_ERR_NVS_NO_FREE_PAGES ||
             err == ESP_ERR_NVS_NEW_VERSION_FOUND ||
             MANUAL_RESET == 1
-#if (CONFIG_MAIN_FUNCTIONAL_BUTTON_GPIO >= 0)
-            || gpio_get_level(CONFIG_MAIN_FUNCTIONAL_BUTTON_GPIO) == 0
+#if (MAIN_FUNCTIONAL_BUTTON_GPIO >= 0)
+            || gpio_get_level(MAIN_FUNCTIONAL_BUTTON_GPIO) == 0
 #endif
             )
     {
@@ -161,12 +168,11 @@ if(GetSysConf()->wifiSettings.Flags1.bIsAP)
 
 static void InitSysIO(void)
 {
-#if (CONFIG_MAIN_FUNCTIONAL_BUTTON_GPIO >= 0)
-    gpio_pad_select_gpio(CONFIG_MAIN_FUNCTIONAL_BUTTON_GPIO);
-    gpio_set_direction(CONFIG_MAIN_FUNCTIONAL_BUTTON_GPIO, GPIO_MODE_INPUT);
-    gpio_set_pull_mode(CONFIG_MAIN_FUNCTIONAL_BUTTON_GPIO, GPIO_PULLUP_ONLY);
-    gpio_pullup_en(CONFIG_MAIN_FUNCTIONAL_BUTTON_GPIO);
-
+#if (FUNCTIONAL_BUTTON_GPIO >= 0)
+    gpio_pad_select_gpio(MAIN_FUNCTIONAL_BUTTON_GPIO);
+    gpio_set_direction(MAIN_FUNCTIONAL_BUTTON_GPIO, GPIO_MODE_INPUT);
+    gpio_set_pull_mode(MAIN_FUNCTIONAL_BUTTON_GPIO, GPIO_PULLUP_ONLY);
+    gpio_pullup_en(MAIN_FUNCTIONAL_BUTTON_GPIO);
 #endif
 
     ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_IRAM));
