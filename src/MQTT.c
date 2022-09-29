@@ -44,7 +44,8 @@ mqtt_client_t mqtt[CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM] = { 0 };
 static void mqtt_system_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
 
 void (*UserEventHandler)(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
-void regUserEventHandler(void (*event_handler)(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data))
+void regUserEventHandler(
+        void (*event_handler)(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data))
 {
     UserEventHandler = event_handler;
 }
@@ -77,24 +78,20 @@ static void log_error_if_nonzero(const char *message, int error_code)
     }
 }
 
-void ComposeTopic(char *topic, char *system_name, char *direct, char *client_name, char *service_name)
+void ComposeTopic(char *topic, int idx, char *service_name, char *direct)
 {
-    char tmp[4];
-    char dev_rom_id[8];
-    GetChipId((uint8_t*) tmp);
-    BytesToStr((unsigned char*) tmp, (unsigned char*) dev_rom_id, 4);
-    strcpy((char*) topic, system_name);                 // Global system name
+    strcpy((char*) topic, GetSysConf()->mqttStation[idx].SystemName);                 // Global system name
     strcat((char*) topic, "/");
-    strcat((char*) topic, (const char*) dev_rom_id);    // Unique device ID (based on ROM chip id)
+    strcat((char*) topic, GetSysConf()->mqttStation[idx].GroupName);                // Global system name
     strcat((char*) topic, "/");
-    strcat((char*) topic, client_name);                 // Device client name  (for multiclient devices)
+    strcat((char*) topic, GetSysConf()->mqttStation[idx].ClientID);     // Device client name  (for multiclient devices)
+    strcat((char*) topic, "-");
+    strcat((char*) topic, GetSysConf()->ID);                 //
     strcat((char*) topic, "/");
     strcat((char*) topic, (const char*) service_name);  // Device service name
     strcat((char*) topic, "/");
     strcat((char*) topic, direct);  // Data direction UPLINK or DOWNLINK
-
 }
-
 
 static void mqtt_system_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
@@ -113,12 +110,9 @@ static void mqtt_system_event_handler(void *handler_args, esp_event_base_t base,
             ctx->is_connected = true;
             MQTTReconnectCounter = 0;
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED client %d", ctx->mqtt_index);
-            ComposeTopic(topic,
-                         GetSysConf()->mqttStation[ctx->mqtt_index].RootTopic,
-                         "DWLINK",
-                         GetSysConf()->mqttStation[ctx->mqtt_index].ClientID,
-                         "SYSTEM");
+            ComposeTopic(topic, ctx->mqtt_index, "SYSTEM", "DWLINK");
             msg_id = esp_mqtt_client_subscribe(client, (const char*) topic, 0);
+            ESP_LOGI(TAG, "Subscribe to %s", topic);
             ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
         break;
         case MQTT_EVENT_DISCONNECTED:
@@ -142,11 +136,7 @@ static void mqtt_system_event_handler(void *handler_args, esp_event_base_t base,
         case MQTT_EVENT_DATA:
             ESP_LOGI(TAG, "MQTT_EVENT_DATA, client %d", ctx->mqtt_index);
             //Check if topic is SYSTEM and pass data to handler
-            ComposeTopic(topic,
-                         GetSysConf()->mqttStation[ctx->mqtt_index].RootTopic,
-                         "DWLINK",
-                         GetSysConf()->mqttStation[ctx->mqtt_index].ClientID,
-                         "SYSTEM");
+            ComposeTopic(topic, ctx->mqtt_index, "SYSTEM", "DWLINK");
             if (!memcmp(topic, event->topic, event->topic_len))
             {
                 SystemDataHandler(event->data, event->data_len, ctx->mqtt_index);
@@ -231,7 +221,8 @@ void MQTTTaskTransmit(void *pvParameter)
             esp_mqtt_client_publish(mqtt[idx].mqtt,
                                     (const char*) DSS.topic,
                                     (const char*) DSS.raw_data_ptr,
-                                    DSS.data_length, 0, 0);
+                                    DSS.data_length,
+                                    0, 0);
         }
         else
             ESP_LOGE(TAG, "MQTT client not initialized");
@@ -268,7 +259,7 @@ static void start_mqtt()
             mqtt_cfg.username = GetSysConf()->mqttStation[i].UserName;
             mqtt_cfg.password = GetSysConf()->mqttStation[i].UserPass;
             strcpy(tmp, GetSysConf()->mqttStation[i].ClientID);
-            strcat(tmp, "_");
+            strcat(tmp, "-");
             strcat(tmp, GetSysConf()->ID);
             mqtt_cfg.client_id = tmp;
             mqtt[i].is_connected = false;
@@ -297,7 +288,6 @@ void MQTTRun(void)
                                                       MQTT1MessagesQueueStorageArea,
                                                       &xStaticMQTT1MessagesQueue);
     mqtt[0].mqtt_queue = MQTT1MessagesQueueHandle;
-
 
 #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
     if (GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled)

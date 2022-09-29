@@ -578,7 +578,7 @@ menu "webguiapp configuration"
 	    	config WEBGUIAPP_MQTT_MAX_TOPIC_LENGTH
 	    		int "Max topic length"
 	    		range 32 512
-	    		default 64		
+	    		default 128		
 	    		
 	    	config WEBGUIAPP_MQTT_SERVER_URL
 	    		string "MQTT server URL"
@@ -590,18 +590,22 @@ menu "webguiapp configuration"
 	    		default 1883
 	    	
 	    	config WEBGUIAPP_MQTT_CLIENT_ID_1
-	    		string "MQTT_1 client ID"
-	    		default "DEVID1"	
+	    		string "MQTT_1 client ID prefix"
+	    		default "DEV1"	
 	    	
 	    	if WEBGUIAPP_MQTT_CLIENTS_NUM > 1
 	    		config WEBGUIAPP_MQTT_CLIENT_ID_2
-	    			string "MQTT_2 client ID"
-	    			default "DEVID2"
+	    			string "MQTT_2 client ID prefix"
+	    			default "DEV2"
 	    	endif	
 	    		
-	    	config WEBGUIAPP_MQTT_ROOT_TOPIC
-	    		string "MQTT root topic"
-	    		default "ROOTTOPIC"
+	    	config WEBGUIAPP_MQTT_SYSTEM_NAME
+	    		string "MQTT global system name"
+	    		default "SYSTEMNAME"
+	    		
+	        config WEBGUIAPP_MQTT_GROUP_NAME
+	    		string "MQTT group name"
+	    		default "GROUPNAME"	
 	    	
 	    	config WEBGUIAPP_MQTT_USERNAME
 	    		string "MQTT user name"

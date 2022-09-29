@@ -457,61 +457,69 @@ void HTTPPrint_gsmmac(char *VarData, void *arg)
 #endif
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
-void HTTPPrint_mqtten1(char *VarData, void *arg)
+void HTTPPrint_mqen1(char *VarData, void *arg)
 {
     PrintCheckbox(VarData, arg, GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled);
 }
-void HTTPPrint_ipcld1(char *VarData, void *arg)
+void HTTPPrint_mqurl1(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->mqttStation[0].ServerAddr);
 }
-void HTTPPrint_mport1(char *VarData, void *arg)
+void HTTPPrint_mqport1(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", GetSysConf()->mqttStation[0].ServerPort);
 }
-void HTTPPrint_idcld1(char *VarData, void *arg)
+void HTTPPrint_mqid1(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->mqttStation[0].ClientID);
 }
-void HTTPPrint_topic1(char *VarData, void *arg)
+void HTTPPrint_mqsys1(char *VarData, void *arg)
 {
-    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->mqttStation[0].RootTopic);
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->mqttStation[0].SystemName);
 }
-void HTTPPrint_clname1(char *VarData, void *arg)
+void HTTPPrint_mqgrp1(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->mqttStation[0].GroupName);
+}
+void HTTPPrint_mqname1(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->mqttStation[0].UserName);
 }
-void HTTPPrint_clpass1(char *VarData, void *arg)
+void HTTPPrint_mqpass1(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", "******");
 }
 
-#if CONFIG_MQTT_CLIENTS_NUM == 2
-void HTTPPrint_mqtten2(char *VarData, void *arg)
+#if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
+void HTTPPrint_mqen2(char *VarData, void *arg)
 {
     PrintCheckbox(VarData, arg, GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled);
 }
-void HTTPPrint_ipcld2(char *VarData, void *arg)
+void HTTPPrint_mqurl2(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->mqttStation[1].ServerAddr);
 }
-void HTTPPrint_mport2(char *VarData, void *arg)
+void HTTPPrint_mqport2(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", GetSysConf()->mqttStation[1].ServerPort);
 }
-void HTTPPrint_idcld2(char *VarData, void *arg)
+void HTTPPrint_mqid2(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->mqttStation[1].ClientID);
 }
-void HTTPPrint_topic2(char *VarData, void *arg)
+void HTTPPrint_mqsys2(char *VarData, void *arg)
 {
-    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->mqttStation[1].RootTopic);
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->mqttStation[1].SystemName);
 }
-void HTTPPrint_clname2(char *VarData, void *arg)
+void HTTPPrint_mqgrp2(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->mqttStation[1].GroupName);
+}
+void HTTPPrint_mqname2(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->mqttStation[1].UserName);
 }
-void HTTPPrint_clpass2(char *VarData, void *arg)
+void HTTPPrint_mqpass2(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", "******");
 }
@@ -564,7 +572,7 @@ static void HTTPPrint_ifc_gprs(char *VarData, void *arg)
 
 static void HTTPPrint_ifc_mq2(char *VarData, void *arg)
 {
-#if CONFIG_MQTT_CLIENTS_NUM == 2
+#if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
         snprintf(VarData, MAX_DYNVAR_LENGTH, "1");
 #else
         snprintf(VarData, MAX_DYNVAR_LENGTH, "0");
@@ -656,21 +664,23 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
     /*MQTT*/
-    { "mqtten1", sizeof("mqtten1") - 1, &HTTPPrint_mqtten1 },
-    { "ipcld1", sizeof("ipcld1") - 1, &HTTPPrint_ipcld1 },
-    { "mport1", sizeof("mport1") - 1, &HTTPPrint_mport1 },
-    { "idcld1", sizeof("idcld1") - 1, &HTTPPrint_idcld1 },
-    { "topic1", sizeof("topic1") - 1, &HTTPPrint_topic1 },
-    { "clname1", sizeof("clname1") - 1, &HTTPPrint_clname1 },
-    { "clpass1", sizeof("clpass1") - 1, &HTTPPrint_clpass1 },
-    #if CONFIG_MQTT_CLIENTS_NUM == 2
-        { "mqtten2", sizeof("mqtten2") - 1, &HTTPPrint_mqtten2 },
-        { "ipcld2", sizeof("ipcld2") - 1, &HTTPPrint_ipcld2 },
-        { "mport2", sizeof("mport2") - 1, &HTTPPrint_mport2 },
-        { "idcld2", sizeof("idcld2") - 1, &HTTPPrint_idcld2 },
-        { "topic2", sizeof("topic2") - 1, &HTTPPrint_topic2 },
-        { "clname2", sizeof("clname2") - 1, &HTTPPrint_clname2 },
-        { "clpass2", sizeof("clpass2") - 1, &HTTPPrint_clpass2 },
+    { "mqen1", sizeof("mqen1") - 1, &HTTPPrint_mqen1 },
+    { "mqurl1", sizeof("mqurl1") - 1, &HTTPPrint_mqurl1 },
+    { "mqport1", sizeof("mqport1") - 1, &HTTPPrint_mqport1 },
+    { "mqsys1", sizeof("mqsys1") - 1, &HTTPPrint_mqsys1 },
+    { "mqgrp1", sizeof("mqgrp1") - 1, &HTTPPrint_mqgrp1 },
+    { "mqid1", sizeof("mqid1") - 1, &HTTPPrint_mqid1 },
+    { "mqname1", sizeof("mqname1") - 1, &HTTPPrint_mqname1 },
+    { "mqpass1", sizeof("mqpass1") - 1, &HTTPPrint_mqpass1 },
+    #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
+        { "mqen2", sizeof("mqen2") - 1, &HTTPPrint_mqen2 },
+        { "mqurl2", sizeof("mqurl2") - 1, &HTTPPrint_mqurl2 },
+        { "mqport2", sizeof("mqport2") - 1, &HTTPPrint_mqport2 },
+        { "mqid2", sizeof("mqid2") - 1, &HTTPPrint_mqid2 },
+        { "mqsys2", sizeof("mqsys2") - 1, &HTTPPrint_mqsys2 },
+        { "mqgrp2", sizeof("mqgrp2") - 1, &HTTPPrint_mqgrp2 },
+        { "mqname2", sizeof("mqname2") - 1, &HTTPPrint_mqname2 },
+        { "mqpass2", sizeof("mqpass2") - 1, &HTTPPrint_mqpass2 },
 #endif
 #endif
     /*SNTP*/

@@ -136,8 +136,9 @@
         {
             char ServerAddr[32];
             uint16_t ServerPort;
+            char SystemName[32];
+            char GroupName[32];
             char ClientID[32];
-            char RootTopic[32];
             char UserName[32];
             char UserPass[32];
             struct

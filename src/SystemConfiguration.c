@@ -304,16 +304,19 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
     Conf->mqttStation[0].Flags1.bIsGlobalEnabled = CONFIG_WEBGUIAPP_MQTT_ON;
     memcpy(Conf->mqttStation[0].ServerAddr, CONFIG_WEBGUIAPP_MQTT_SERVER_URL, sizeof(CONFIG_WEBGUIAPP_MQTT_SERVER_URL));
     Conf->mqttStation[0].ServerPort = CONFIG_WEBGUIAPP_MQTT_SERVER_PORT;
+
+    memcpy(Conf->mqttStation[0].SystemName, CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME, sizeof(CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME));
+    memcpy(Conf->mqttStation[0].GroupName, CONFIG_WEBGUIAPP_MQTT_GROUP_NAME, sizeof(CONFIG_WEBGUIAPP_MQTT_GROUP_NAME));
     memcpy(Conf->mqttStation[0].ClientID, CONFIG_WEBGUIAPP_MQTT_CLIENT_ID_1, sizeof(CONFIG_WEBGUIAPP_MQTT_CLIENT_ID_1));
-    memcpy(Conf->mqttStation[0].RootTopic, CONFIG_WEBGUIAPP_MQTT_ROOT_TOPIC, sizeof(CONFIG_WEBGUIAPP_MQTT_ROOT_TOPIC));
     memcpy(Conf->mqttStation[0].UserName, CONFIG_WEBGUIAPP_MQTT_USERNAME, sizeof(CONFIG_WEBGUIAPP_MQTT_USERNAME));
     memcpy(Conf->mqttStation[0].UserPass, CONFIG_WEBGUIAPP_MQTT_PASSWORD, sizeof(CONFIG_WEBGUIAPP_MQTT_PASSWORD));
-#if CONFIG_MQTT_CLIENTS_NUM == 2
+#if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
     Conf->mqttStation[1].Flags1.bIsGlobalEnabled = CONFIG_WEBGUIAPP_MQTT_ON;
     memcpy(Conf->mqttStation[1].ServerAddr, CONFIG_WEBGUIAPP_MQTT_SERVER_URL, sizeof(CONFIG_WEBGUIAPP_MQTT_SERVER_URL));
     Conf->mqttStation[1].ServerPort = CONFIG_WEBGUIAPP_MQTT_SERVER_PORT;
+    memcpy(Conf->mqttStation[1].SystemName, CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME, sizeof(CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME));
+    memcpy(Conf->mqttStation[1].GroupName, CONFIG_WEBGUIAPP_MQTT_GROUP_NAME, sizeof(CONFIG_WEBGUIAPP_MQTT_GROUP_NAME));
     memcpy(Conf->mqttStation[1].ClientID, CONFIG_WEBGUIAPP_MQTT_CLIENT_ID_2, sizeof(CONFIG_WEBGUIAPP_MQTT_CLIENT_ID_2));
-    memcpy(Conf->mqttStation[1].RootTopic, CONFIG_WEBGUIAPP_MQTT_ROOT_TOPIC, sizeof(CONFIG_WEBGUIAPP_MQTT_ROOT_TOPIC));
     memcpy(Conf->mqttStation[1].UserName, CONFIG_WEBGUIAPP_MQTT_USERNAME, sizeof(CONFIG_WEBGUIAPP_MQTT_USERNAME));
     memcpy(Conf->mqttStation[1].UserPass, CONFIG_WEBGUIAPP_MQTT_PASSWORD, sizeof(CONFIG_WEBGUIAPP_MQTT_PASSWORD));
 #endif

@@ -104,26 +104,26 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
     if (httpd_query_key_value(PostData, "ethen", tmp, sizeof(tmp)) == ESP_OK)
     {
         if (!strcmp((const char*) tmp, (const char*) "1"))
-            TempIsETHEnabled = true;
+        TempIsETHEnabled = true;
     }
     if (httpd_query_key_value(PostData, "dhcp", tmp, sizeof(tmp)) == ESP_OK)
     {
         if (!strcmp((const char*) tmp, (const char*) "1"))
-            TempIsETHDHCPEnabled = true;
+        TempIsETHDHCPEnabled = true;
     }
 
     if (httpd_query_key_value(PostData, "ipa", tmp, 15) == ESP_OK)
-        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.IPAddr);
+    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.IPAddr);
     if (httpd_query_key_value(PostData, "mas", tmp, 15) == ESP_OK)
-        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Mask);
+    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Mask);
     if (httpd_query_key_value(PostData, "gte", tmp, 15) == ESP_OK)
-        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Gateway);
+    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Gateway);
     if (httpd_query_key_value(PostData, "dns1", tmp, 15) == ESP_OK)
-        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr1);
+    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr1);
     if (httpd_query_key_value(PostData, "dns2", tmp, 15) == ESP_OK)
-        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr2);
+    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr2);
     if (httpd_query_key_value(PostData, "dns3", tmp, 15) == ESP_OK)
-        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr3);
+    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr3);
 
 #endif
 
@@ -261,62 +261,66 @@ static HTTP_IO_RESULT HTTPPostServicesSettings(httpd_req_t *req, char *PostData)
     char tmp[33];
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
     bool TempIsMQTT1Enabled = false;
-#if CONFIG_MQTT_CLIENTS_NUM == 2
+#if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
     bool TempIsMQTT2Enabled = false;
 #endif
-    httpd_query_key_value(PostData, "cld1", GetSysConf()->mqttStation[0].ServerAddr,
+    httpd_query_key_value(PostData, "mqurl1", GetSysConf()->mqttStation[0].ServerAddr,
                           sizeof(GetSysConf()->mqttStation[0].ServerAddr));
-    httpd_query_key_value(PostData, "idd1", GetSysConf()->mqttStation[0].ClientID,
+    httpd_query_key_value(PostData, "mqid1", GetSysConf()->mqttStation[0].ClientID,
                           sizeof(GetSysConf()->mqttStation[0].ClientID));
-    httpd_query_key_value(PostData, "top1", GetSysConf()->mqttStation[0].RootTopic,
-                          sizeof(GetSysConf()->mqttStation[0].RootTopic));
-    httpd_query_key_value(PostData, "clnm1", GetSysConf()->mqttStation[0].UserName,
+    httpd_query_key_value(PostData, "mqsys1", GetSysConf()->mqttStation[0].SystemName,
+                          sizeof(GetSysConf()->mqttStation[0].SystemName));
+    httpd_query_key_value(PostData, "mqgrp1", GetSysConf()->mqttStation[0].GroupName,
+                          sizeof(GetSysConf()->mqttStation[0].GroupName));
+    httpd_query_key_value(PostData, "mqname1", GetSysConf()->mqttStation[0].UserName,
                           sizeof(GetSysConf()->mqttStation[0].UserName));
 
-    if (httpd_query_key_value(PostData, "mqttenb1", tmp, sizeof(tmp)) == ESP_OK)
+    if (httpd_query_key_value(PostData, "mqen1", tmp, sizeof(tmp)) == ESP_OK)
     {
         if (!strcmp((const char*) tmp, (const char*) "1"))
             TempIsMQTT1Enabled = true;
     }
-    if (httpd_query_key_value(PostData, "mprt1", tmp, sizeof(tmp)) == ESP_OK)
-        if (httpd_query_key_value(PostData, "mprt1", tmp, sizeof(tmp)) == ESP_OK)
+    if (httpd_query_key_value(PostData, "mqport1", tmp, sizeof(tmp)) == ESP_OK)
+        if (httpd_query_key_value(PostData, "mqport1", tmp, sizeof(tmp)) == ESP_OK)
         {
             uint16_t tp = atoi((const char*) tmp);
             if (tp < 65535 && tp >= 1000)
                 GetSysConf()->mqttStation[0].ServerPort = tp;
         }
 
-    if (httpd_query_key_value(PostData, "clps1", tmp, sizeof(tmp)) == ESP_OK &&
+    if (httpd_query_key_value(PostData, "mqpass1", tmp, sizeof(tmp)) == ESP_OK &&
             strcmp(tmp, (const char*) "******"))
     {
         strcpy(GetSysConf()->mqttStation[0].UserPass, tmp);
     }
 
-#if CONFIG_MQTT_CLIENTS_NUM == 2
-    httpd_query_key_value(PostData, "cld2", GetSysConf()->mqttStation[1].ServerAddr,
-            sizeof(GetSysConf()->mqttStation[1].ServerAddr));
-    httpd_query_key_value(PostData, "idd2", GetSysConf()->mqttStation[1].ClientID,
-            sizeof(GetSysConf()->mqttStation[1].ClientID));
-    httpd_query_key_value(PostData, "top2", GetSysConf()->mqttStation[1].RootTopic,
-            sizeof(GetSysConf()->mqttStation[1].RootTopic));
-    httpd_query_key_value(PostData, "clnm2", GetSysConf()->mqttStation[1].UserName,
-            sizeof(GetSysConf()->mqttStation[1].UserName));
+#if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
+    httpd_query_key_value(PostData, "mqurl2", GetSysConf()->mqttStation[1].ServerAddr,
+                          sizeof(GetSysConf()->mqttStation[1].ServerAddr));
+    httpd_query_key_value(PostData, "mqid2", GetSysConf()->mqttStation[1].ClientID,
+                          sizeof(GetSysConf()->mqttStation[1].ClientID));
+    httpd_query_key_value(PostData, "mqsys2", GetSysConf()->mqttStation[1].SystemName,
+                          sizeof(GetSysConf()->mqttStation[1].SystemName));
+    httpd_query_key_value(PostData, "mqgrp2", GetSysConf()->mqttStation[1].GroupName,
+                          sizeof(GetSysConf()->mqttStation[1].GroupName));
+    httpd_query_key_value(PostData, "mqname2", GetSysConf()->mqttStation[1].UserName,
+                          sizeof(GetSysConf()->mqttStation[1].UserName));
 
-    if (httpd_query_key_value(PostData, "mqttenb2", tmp, sizeof(tmp)) == ESP_OK)
+    if (httpd_query_key_value(PostData, "mqen2", tmp, sizeof(tmp)) == ESP_OK)
     {
         if (!strcmp((const char*) tmp, (const char*) "1"))
-        TempIsMQTT2Enabled = true;
+            TempIsMQTT2Enabled = true;
     }
 
-    if (httpd_query_key_value(PostData, "mprt2", tmp, sizeof(tmp)) == ESP_OK)
-    if (httpd_query_key_value(PostData, "mprt2", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        uint16_t tp = atoi((const char*) tmp);
-        if (tp < 65535 && tp >= 1000)
-        GetSysConf()->mqttStation[1].ServerPort = tp;
-    }
+    if (httpd_query_key_value(PostData, "mqport2", tmp, sizeof(tmp)) == ESP_OK)
+        if (httpd_query_key_value(PostData, "mqport2", tmp, sizeof(tmp)) == ESP_OK)
+        {
+            uint16_t tp = atoi((const char*) tmp);
+            if (tp < 65535 && tp >= 1000)
+                GetSysConf()->mqttStation[1].ServerPort = tp;
+        }
 
-    if (httpd_query_key_value(PostData, "clps2", tmp, sizeof(tmp)) == ESP_OK &&
+    if (httpd_query_key_value(PostData, "mqpass2", tmp, sizeof(tmp)) == ESP_OK &&
             strcmp(tmp, (const char*) "******"))
     {
         strcpy(GetSysConf()->mqttStation[1].UserPass, tmp);
@@ -340,7 +344,7 @@ static HTTP_IO_RESULT HTTPPostServicesSettings(httpd_req_t *req, char *PostData)
         if (!strcmp(tmp, (const char*) "mqtt"))
         {
             GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled = TempIsMQTT1Enabled;
-#if CONFIG_MQTT_CLIENTS_NUM == 2
+#if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
             GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled = TempIsMQTT2Enabled;
 #endif
         }
