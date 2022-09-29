@@ -49,7 +49,7 @@ typedef struct
 
 QueueHandle_t MQTT1MessagesQueueHandle;
 QueueHandle_t MQTT2MessagesQueueHandle;
-QueueHandle_t UARTMessagesQueueHandle;
+
 
 EventGroupHandle_t transport_event_group;
 
