@@ -338,12 +338,16 @@ static HTTP_IO_RESULT HTTPPostServicesSettings(httpd_req_t *req, char *PostData)
     httpd_query_key_value(PostData, "tsr", GetSysConf()->sntpClient.SntpServerAdr,
                           sizeof(GetSysConf()->sntpClient.SntpServerAdr));
 
-    if (httpd_query_key_value(PostData, "save", tmp, 5) == ESP_OK ||
-            httpd_query_key_value(PostData, "apply", tmp, 5) == ESP_OK)
+    if (httpd_query_key_value(PostData, "save", tmp, 6) == ESP_OK ||
+            httpd_query_key_value(PostData, "apply", tmp, 6) == ESP_OK)
     {
-        if (!strcmp(tmp, (const char*) "mqtt"))
+        if (!strcmp(tmp, (const char*) "mqtt1"))
         {
             GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled = TempIsMQTT1Enabled;
+        }
+
+        else if (!strcmp(tmp, (const char*) "mqtt2"))
+        {
 #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
             GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled = TempIsMQTT2Enabled;
 #endif
