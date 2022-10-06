@@ -1,4 +1,4 @@
- /* Copyright 2022 Bogdan Pilyugin
+/* Copyright 2022 Bogdan Pilyugin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,6 @@
  * Description:	
  */
 
-
-
 #include "SystemConfiguration.h"
 #include <stdio.h>
 #include <string.h>
@@ -37,8 +35,13 @@
 #endif
 
 static const char *TAG = "EthTransport";
-
 static bool isEthConn = false;
+
+static void (*eth_reset)(uint8_t level) = NULL;
+void RegEthReset(void (*eth_rst)(uint8_t level))
+{
+    eth_reset = eth_rst;
+}
 
 #if CONFIG_USE_SPI_ETHERNET
 esp_netif_t *eth_netif_spi[CONFIG_SPI_ETHERNETS_NUM] = { NULL };
@@ -65,8 +68,6 @@ esp_netif_t* GetETHNetifAdapter(void)
 }
 
 #endif
-
-
 
 bool isETHConnected(void)
 {
@@ -122,7 +123,6 @@ static void got_ip_event_handler(void *arg, esp_event_base_t event_base,
     isEthConn = true;
 }
 
-
 static void eth_init(void *pvParameter)
 {
 #if CONFIG_USE_INTERNAL_ETHERNET
@@ -161,13 +161,29 @@ static void eth_init(void *pvParameter)
 
 #if CONFIG_USE_SPI_ETHERNET
     //Reset ethernet SPI device
+#if CONFIG_ETH_SPI_PHY_RST0_GPIO >=0
     gpio_set_level(CONFIG_ETH_SPI_PHY_RST0_GPIO, 0);
     vTaskDelay(pdMS_TO_TICKS(10));
     gpio_set_level(CONFIG_ETH_SPI_PHY_RST0_GPIO, 1);
     vTaskDelay(pdMS_TO_TICKS(10));
+#else
+    if (eth_reset)
+    {
+        eth_reset(0);
+        vTaskDelay(pdMS_TO_TICKS(10));
+        eth_reset(1);
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+    else
+    {
+        ESP_LOGE(TAG, "ethernet chip reset pin not defined");
+        ESP_ERROR_CHECK(1);
+    }
+#endif
 
     // Create instance(s) of esp-netif for SPI Ethernet(s)
-    esp_netif_inherent_config_t esp_netif_config = ESP_NETIF_INHERENT_DEFAULT_ETH();
+    esp_netif_inherent_config_t esp_netif_config = ESP_NETIF_INHERENT_DEFAULT_ETH()
+            ;
     esp_netif_config_t cfg_spi = {
             .base = &esp_netif_config,
             .stack = ESP_NETIF_NETSTACK_DEFAULT_ETH
@@ -183,7 +199,7 @@ static void eth_init(void *pvParameter)
         strcat(strcpy(if_desc_str, "eth"), num_str);
         esp_netif_config.if_key = if_key_str;
         esp_netif_config.if_desc = if_desc_str;
-        esp_netif_config.route_prio = ETH_PRIO-i;
+        esp_netif_config.route_prio = ETH_PRIO - i;
         eth_netif_spi[i] = esp_netif_new(&cfg_spi);
     }
 
@@ -301,7 +317,7 @@ static void eth_init(void *pvParameter)
         else
         {
             ESP_ERROR_CHECK(esp_eth_ioctl(eth_handle_spi[i], ETH_CMD_S_MAC_ADDR, (uint8_t[] ) {
-                                                  0x02, 0x00, 0x00, 0x12, 0x34, 0x56 + i}));
+                                                  0x02, 0x00, 0x00, 0x12, 0x34, 0x56 + i }));
         }
         // attach Ethernet driver to TCP/IP stack
         ESP_ERROR_CHECK(esp_netif_attach(eth_netif_spi[i], esp_eth_new_netif_glue(eth_handle_spi[i])));
@@ -330,10 +346,8 @@ static void eth_init(void *pvParameter)
     vTaskDelete(NULL);
 }
 
-
 void EthStart(void)
 {
     xTaskCreate(eth_init, "EthInitTask", 1024 * 4, (void*) 0, 3, NULL);
 }
-
 

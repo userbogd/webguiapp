@@ -169,7 +169,7 @@ if(GetSysConf()->wifiSettings.Flags1.bIsAP)
 
 static void InitSysIO(void)
 {
-#if (FUNCTIONAL_BUTTON_GPIO >= 0)
+#if (MAIN_FUNCTIONAL_BUTTON_GPIO >= 0)
     gpio_pad_select_gpio(MAIN_FUNCTIONAL_BUTTON_GPIO);
     gpio_set_direction(MAIN_FUNCTIONAL_BUTTON_GPIO, GPIO_MODE_INPUT);
     gpio_set_pull_mode(MAIN_FUNCTIONAL_BUTTON_GPIO, GPIO_PULLUP_ONLY);

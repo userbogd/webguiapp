@@ -291,10 +291,7 @@ static esp_err_t GETHandler(httpd_req_t *req)
     file = espfs_fopen(fs, filepath);
     if (!file)
     {
-        ESP_LOGE(TAG, "Failed to read existing file : %s", filepath);
-        /* Respond with 500 Internal Server Error */
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR,
-                            "Failed to read existing file");
+        httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File not found");
         return ESP_FAIL;
     }
     //get file info
