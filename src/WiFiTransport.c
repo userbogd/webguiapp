@@ -135,11 +135,15 @@ static void wifi_init_softap(void *pvParameter)
 
     esp_netif_ip_info_t ip_info;
     memcpy(&ip_info.ip, &GetSysConf()->wifiSettings.ApIPAddr, 4);
-    memcpy(&ip_info.gw, &GetSysConf()->wifiSettings.InfGateway, 4);
+    memcpy(&ip_info.gw, &GetSysConf()->wifiSettings.ApIPAddr, 4);
     memcpy(&ip_info.netmask, &GetSysConf()->wifiSettings.InfMask, 4);
+
+    esp_netif_dns_info_t dns_info;
+    memcpy(&dns_info, &GetSysConf()->wifiSettings.ApIPAddr, 4);
 
     esp_netif_dhcps_stop(ap_netif);
     esp_netif_set_ip_info(ap_netif, &ip_info);
+    esp_netif_set_dns_info(ap_netif, ESP_NETIF_DNS_MAIN, &dns_info);
     esp_netif_dhcps_start(ap_netif);
 
     esp_netif_attach_wifi_ap(ap_netif);
@@ -206,7 +210,6 @@ static void wifi_init_sta(void *pvParameter)
 
     esp_netif_dhcpc_stop(sta_netif);
     esp_netif_set_ip_info(sta_netif, &ip_info);
-
     esp_netif_set_dns_info(sta_netif, ESP_NETIF_DNS_MAIN, &dns_info);
 
     //esp_netif_str_to_ip4(&GetSysConf()->wifiSettings.DNSAddr3, (esp_ip4_addr_t*)(&dns_info.ip));
