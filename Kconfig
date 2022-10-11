@@ -425,6 +425,13 @@ menu "webguiapp configuration"
 				bool "Default GPRS switched on"
 	        	default n
 	        	
+	        config MODEM_DEVICE_POWER_CONTROL_PIN
+	            int "Power control GPIO"
+	            default -1
+	            range -1 33
+	                help
+	                    Pin number of power control.	
+	        	
 	   		choice MODEM_DEVICE
 	            prompt "Choose supported modem device (DCE)"
 	            default MODEM_DEVICE_SIM800

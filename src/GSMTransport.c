@@ -1,4 +1,4 @@
- /* Copyright 2022 Bogdan Pilyugin
+/* Copyright 2022 Bogdan Pilyugin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@
 #include "SystemConfiguration.h"
 #include "NetTransport.h"
 
-
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
 static EventGroupHandle_t event_group = NULL;
 static const int CONNECT_BIT = BIT0;
@@ -44,7 +43,6 @@ static bool isPPPinitializing = false;
 static bool isPPPConn = false;
 TaskHandle_t initTaskhandle;
 
-
 #define PPP_MODEM_TIMEOUT 40
 
 MODEM_INFO mod_info = { "-", "-", "-", "-" };
@@ -52,7 +50,11 @@ esp_netif_t *ppp_netif;
 esp_modem_dce_t *dce;
 TaskHandle_t trasporttask;
 
-
+static void (*gsm_reset)(uint8_t level) = NULL;
+void RegGSMReset(void (*gsm_rst)(uint8_t level))
+{
+    gsm_reset = gsm_rst;
+}
 
 esp_netif_t* GetPPPNetifAdapter(void)
 {
@@ -146,12 +148,27 @@ static void GSMInitTask(void *pvParameter)
 
     if (starttype == 0)
     {
-        //SetGSM_PWR(OFF);
-        gpio_set_level(GPIO_NUM_2, 0);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        //SetGSM_PWR(ON);
-        gpio_set_level(GPIO_NUM_2, 1);
+#if CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN >= 0
+    gpio_set_level(CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN, 0);
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    gpio_set_level(CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN, 1);
+#else
+        if (gsm_reset)
+        {
+            gsm_reset(0);
+            vTaskDelay(pdMS_TO_TICKS(1000));
+            gsm_reset(1);
+            vTaskDelay(pdMS_TO_TICKS(10000));
+        }
+        else
+        {
+            ESP_LOGE(TAG, "ethernet chip reset pin not defined");
+            ESP_ERROR_CHECK(1);
+        }
+#endif
+
     }
+
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, ESP_EVENT_ANY_ID, &on_ip_event, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(NETIF_PPP_STATUS, ESP_EVENT_ANY_ID, &on_ppp_changed, NULL));
     event_group = xEventGroupCreate();
@@ -171,8 +188,8 @@ static void GSMInitTask(void *pvParameter)
     /* Configure the DCE */
     esp_modem_dce_config_t dce_config = ESP_MODEM_DCE_DEFAULT_CONFIG(CONFIG_MODEM_PPP_APN);
     /* Configure the PPP netif */
-    esp_netif_inherent_config_t esp_netif_conf = ESP_NETIF_INHERENT_DEFAULT_PPP()
-            ;
+    esp_netif_inherent_config_t esp_netif_conf = ESP_NETIF_INHERENT_DEFAULT_PPP();
+
     esp_netif_conf.route_prio = PPP_PRIO;
     esp_netif_config_t netif_ppp_config = ESP_NETIF_DEFAULT_PPP();
 
@@ -202,7 +219,8 @@ static void GSMInitTask(void *pvParameter)
     }
     ESP_LOGI(TAG, "IMSI:%s", mod_info.imsi);
 
-    mod_info.oper[0] = 0x00; int tech = 0;
+    mod_info.oper[0] = 0x00;
+    int tech = 0;
     while (esp_modem_get_operator_name(dce, mod_info.oper, &tech) != ESP_OK)
     {
         if (++GSMConnectTimeout >= PPP_MODEM_TIMEOUT)
@@ -272,6 +290,4 @@ void PPPModemStart(void)
 }
 
 #endif
-
-
 
