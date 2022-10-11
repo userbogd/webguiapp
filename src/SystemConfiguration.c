@@ -105,16 +105,18 @@ esp_err_t WebGuiAppInit(void)
     //init rom file system
     init_rom_fs("/espfs");
 
-#if CONFIG_WEBGUIAPP_GPRS_ENABLE
-    /*Start PPP modem*/
-    if (GetSysConf()->gsmSettings.Flags1.bIsGSMEnabled)
-        PPPModemStart();
-#endif
+
 
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
     /*Start Ethernet connection*/
     if (GetSysConf()->ethSettings.Flags1.bIsETHEnabled)
         EthStart();
+#endif
+
+#if CONFIG_WEBGUIAPP_GPRS_ENABLE
+    /*Start PPP modem*/
+    if (GetSysConf()->gsmSettings.Flags1.bIsGSMEnabled)
+        PPPModemStart();
 #endif
 
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
@@ -127,6 +129,8 @@ esp_err_t WebGuiAppInit(void)
             WiFiSTAStart();
     }
 #endif
+
+
 
     bool WiFiApOnly = false;
 #if   !CONFIG_WEBGUIAPP_GPRS_ENABLE && !CONFIG_WEBGUIAPP_ETHERNET_ENABLE && CONFIG_WEBGUIAPP_WIFI_ENABLE
