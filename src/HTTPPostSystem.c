@@ -89,7 +89,7 @@ static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, c
 
     // If not found target URL here, try to call custom code
     if (AfterPostHandlerCust != NULL)
-        AfterPostHandlerCust(req, filename, PostData);
+        return AfterPostHandlerCust(req, filename, PostData);
 
     return HTTP_IO_DONE;
 }
