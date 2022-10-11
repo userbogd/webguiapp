@@ -64,7 +64,7 @@ typedef struct
     void (*HandlerRoutine)(char *VarData, void *arg);
 } dyn_var_handler_t;
 
-void regHTTPPrintCustom(int (*print_handler)(httpd_req_t *req, char *buf, char *var));
+void regHTTPPrintCustom(int (*print_handler)(httpd_req_t *req, char *buf, char *var, int arg));
 void regAfterPostHandlerCustom(HTTP_IO_RESULT (*post_handler)(httpd_req_t *req, const char *filename, char *PostData));
 
 esp_err_t start_file_server(void);

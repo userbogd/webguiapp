@@ -40,9 +40,9 @@ typedef enum
 } IP_PRINT_TYPE;
 
 //Pointer to extend user implemented print handler
-static int (*HTTPPrintCust)(httpd_req_t *req, char *buf, char *var);
+static int (*HTTPPrintCust)(httpd_req_t *req, char *buf, char *var, int arg);
 
-void regHTTPPrintCustom(int (*print_handler)(httpd_req_t *req, char *buf, char *var))
+void regHTTPPrintCustom(int (*print_handler)(httpd_req_t *req, char *buf, char *var, int arg))
 {
     HTTPPrintCust = print_handler;
 }
@@ -754,7 +754,7 @@ for (int i = 0; i < (sizeof(HANDLERS_ARRAY) / sizeof(HANDLERS_ARRAY[0])); ++i)
 if (!fnd)
 {
     if (HTTPPrintCust != NULL)
-        return HTTPPrintCust(req, buf, var);
+        return HTTPPrintCust(req, buf, var, arg);
     else
         HTTPPrint_DEF(VarData, NULL);
 

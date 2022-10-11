@@ -358,12 +358,12 @@ static HTTP_IO_RESULT HTTPPostServicesSettings(httpd_req_t *req, char *PostData)
             GetSysConf()->sntpClient.Flags1.bIsGlobalEnabled = TempIsSNTPEnabled;
         }
 
-        if (httpd_query_key_value(PostData, "apply", tmp, 5) == ESP_OK)
+        if (httpd_query_key_value(PostData, "apply", tmp, 6) == ESP_OK)
         {
             WriteNVSSysConfig(GetSysConf());
             return HTTP_IO_DONE;
         }
-        else if (httpd_query_key_value(PostData, "save", tmp, 5) == ESP_OK)
+        else if (httpd_query_key_value(PostData, "save", tmp, 6) == ESP_OK)
         {
             WriteNVSSysConfig(GetSysConf());
             memcpy(PostData, "/reboot.html", sizeof "/reboot.html");

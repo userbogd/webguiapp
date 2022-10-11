@@ -183,9 +183,6 @@ static void InitSysIO(void)
 static void InitSysSPI(void)
 {
 #ifdef CONFIG_WEBGUIAPP_SPI_ENABLE
-
-
-    //spi_device_init_custom();
     spi_bus_config_t buscfg = {
             .miso_io_num = CONFIG_SPI_MISO_GPIO,
             .mosi_io_num = CONFIG_SPI_MOSI_GPIO,
