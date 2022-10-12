@@ -1,4 +1,4 @@
-menu "webguiapp configuration"            
+menu "WebGUIApp"            
     config APP_PROJECT_VER
         string "Device firmware version"
         default "0.0.0.0000"
@@ -6,7 +6,7 @@ menu "webguiapp configuration"
             Project version code
             
 	config DEVICE_MODEL_NAME
-    	string "Default device model name"
+    	string "Device model name"
     	default "DEVICE MODEL NAME"        
                       
     config WEBGUIAPP_HOSTNAME
