@@ -112,6 +112,11 @@ static void PrintCheckbox(char *VarData, void *arg, bool checked)
         snprintf(VarData, MAX_DYNVAR_LENGTH, " ");
 }
 
+static void HTTPPrint_name(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", CONFIG_DEVICE_MODEL_NAME);
+}
+
 static void HTTPPrint_time(char *VarData, void *arg)
 {
     time_t now;
@@ -588,6 +593,7 @@ snprintf(VarData, MAX_DYNVAR_LENGTH, "#DEF");
 
 dyn_var_handler_t HANDLERS_ARRAY[] = {
     /*Ststem settings*/
+    { "name", sizeof("name") - 1, &HTTPPrint_name },
     { "dname", sizeof("dname") - 1, &HTTPPrint_dname },
     { "login", sizeof("login") - 1, &HTTPPrint_login },
     { "pass", sizeof("pass") - 1, &HTTPPrint_pass },
