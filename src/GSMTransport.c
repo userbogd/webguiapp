@@ -158,7 +158,6 @@ static void GSMInitTask(void *pvParameter)
             gsm_reset(0);
             vTaskDelay(pdMS_TO_TICKS(1000));
             gsm_reset(1);
-            vTaskDelay(pdMS_TO_TICKS(10000));
         }
         else
         {
@@ -262,13 +261,13 @@ modem_init_fail:
 void PPPModemColdStart(void)
 {
     ResetType = 0;
-    xTaskCreate(GSMInitTask, "GSMInitTask", 1024 * 4, &ResetType, 3, initTaskhandle);
+    xTaskCreate(GSMInitTask, "GSMInitTask", 1024 * 6, &ResetType, 3, initTaskhandle);
 }
 
 void PPPModemSoftRestart(void)
 {
     ResetType = 1;
-    xTaskCreate(GSMInitTask, "GSMInitTask", 1024 * 4, &ResetType, 3, initTaskhandle);
+    xTaskCreate(GSMInitTask, "GSMInitTask", 1024 * 6, &ResetType, 3, initTaskhandle);
 }
 
 static void GSMRunTask(void *pvParameter)
