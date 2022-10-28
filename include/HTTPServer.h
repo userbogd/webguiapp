@@ -43,6 +43,7 @@
 #include "esp_eth.h"
 #include "mbedtls/base64.h"
 
+#define MAX_DYNVAR_NAME_LENGTH 32
 #define MAX_DYNVAR_LENGTH 256
 #define MAX_INCFILE_LENGTH 1024
 

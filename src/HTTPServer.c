@@ -252,6 +252,8 @@ static esp_err_t GETHandler(httpd_req_t *req)
     espfs_file_t *file;
     struct espfs_stat_t stat;
     bool isDynamicVars = false;
+    uint32_t fileSize;      //length of file in bytes
+    uint32_t readBytes;     //number of bytes, already read from file
 
     const char *filename = get_path_from_uri(filepath,
                                              ((struct file_server_data*) req->user_ctx)->base_path,
@@ -305,43 +307,69 @@ static esp_err_t GETHandler(httpd_req_t *req)
     set_content_type_from_file(req, filename);
     /* Retrieve the pointer to scratch buffer for temporary storage */
     char *chunk = ((struct file_server_data*) req->user_ctx)->scratch;
-    uint32_t readBytes, fileSize;
+
     fileSize = stat.size;
-    char *buf = (char*) malloc(fileSize);
-    if (buf)
-    {
-        readBytes = espfs_fread(file, buf, fileSize);
-    }
-    else
+    readBytes = 0;
+    //char *buf = (char*) malloc(fileSize);
+    //allocate buffer for file data
+    char *buf = (char*) malloc(MIN(fileSize, SCRATCH_BUFSIZE) + MAX_DYNVAR_LENGTH);
+    if (!buf)
     {
         ESP_LOGE(TAG, "Failed to allocate memory");
         /* Respond with 500 Internal Server Error */
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR,
-                            "Out of memory");
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Out of memory");
         espfs_fclose(file);
         return ESP_FAIL;
     }
-
+    //read first portion of data from file
+    readBytes = espfs_fread(file, buf, MIN(fileSize, SCRATCH_BUFSIZE));
+    //check if file is compressed by GZIP and add correspondent header
     if (memmem(buf, 3, GZIP_SIGN, 3))
     {
         httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
         httpd_resp_set_hdr(req, "Cache-Control", "max-age=600");
     }
 
+    //check if the file can contains dynamic variables
     if (IS_FILE_EXT(filename, ".html") || IS_FILE_EXT(filename, ".json"))
         isDynamicVars = true;
+
+    char *ptr = buf;
+    do
+    {
+        while (ptr < fileSize && readBytes < (SCRATCH_BUFSIZE - MAX_DYNVAR_LENGTH))
+        {
+            if (buf[pt] == '~' && isDynamicVars)
+            {
+                int k = 0;
+                char DynVarName[MAX_DYNVAR_NAME_LENGTH];
+                while (pt < fileSize && k < MAX_DYNVAR_NAME_LENGTH && (buf[++pt] != '~'))
+                    DynVarName[k++] = buf[pt];
+                if (buf[pt] == '~')
+                {  //got valid dynamic variable name
+                    DynVarName[k] = 0x00;
+                    readBytes += HTTPPrint(req, &chunk[readBytes], DynVarName);
+                    pt++;
+                }
+            }
+            else
+                chunk[readBytes++] = buf[pt++];
+        }
+
+    }
+    while (1);
 
     int pt = 0;
     do
     {
         readBytes = 0;
-        while (pt < fileSize && readBytes < (SCRATCH_BUFSIZE - 64))
+        while (pt < fileSize && readBytes < (SCRATCH_BUFSIZE - MAX_DYNVAR_LENGTH))
         {
             if (buf[pt] == '~' && isDynamicVars)
             {
                 int k = 0;
-                char DynVarName[16];
-                while (pt < fileSize && k < 16 && (buf[++pt] != '~'))
+                char DynVarName[MAX_DYNVAR_NAME_LENGTH];
+                while (pt < fileSize && k < MAX_DYNVAR_NAME_LENGTH && (buf[++pt] != '~'))
                     DynVarName[k++] = buf[pt];
                 if (buf[pt] == '~')
                 {  //got valid dynamic variable name
@@ -375,7 +403,7 @@ static esp_err_t GETHandler(httpd_req_t *req)
         }
         /* Keep looping till the whole file is sent */
     }
-    while (readBytes != 0);
+    while (readBytes != fileSize);
     /* Close file after sending complete */
     espfs_fclose(file);
 #if HTTP_SERVER_DEBUG_LEVEL > 0
