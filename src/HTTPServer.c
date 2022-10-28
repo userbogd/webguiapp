@@ -34,10 +34,9 @@ static esp_err_t CheckAuth(httpd_req_t *req);
 
 /* Max size of an individual file. Make sure this
  * value is same as that set in upload_script.html */
-#define MAX_FILE_SIZE   (200*1024) // 200 KB
-#define MAX_FILE_SIZE_STR "200KB"
+
 /* Scratch buffer size */
-#define SCRATCH_BUFSIZE  8192
+#define SCRATCH_BUFSIZE  4096
 #define AUTH_DATA_MAX_LENGTH 16
 
 struct file_server_data
@@ -253,6 +252,7 @@ static esp_err_t GETHandler(httpd_req_t *req)
     struct espfs_stat_t stat;
     bool isDynamicVars = false;
     uint32_t fileSize;      //length of file in bytes
+    uint32_t bufSize;
     uint32_t readBytes;     //number of bytes, already read from file
 
     const char *filename = get_path_from_uri(filepath,
@@ -309,10 +309,10 @@ static esp_err_t GETHandler(httpd_req_t *req)
     char *chunk = ((struct file_server_data*) req->user_ctx)->scratch;
 
     fileSize = stat.size;
+    bufSize = MIN(fileSize, SCRATCH_BUFSIZE - MAX_DYNVAR_LENGTH);  //
     readBytes = 0;
-    //char *buf = (char*) malloc(fileSize);
     //allocate buffer for file data
-    char *buf = (char*) malloc(MIN(fileSize, SCRATCH_BUFSIZE) + MAX_DYNVAR_LENGTH);
+    char *buf = (char*) malloc(bufSize);
     if (!buf)
     {
         ESP_LOGE(TAG, "Failed to allocate memory");
@@ -322,7 +322,7 @@ static esp_err_t GETHandler(httpd_req_t *req)
         return ESP_FAIL;
     }
     //read first portion of data from file
-    readBytes = espfs_fread(file, buf, MIN(fileSize, SCRATCH_BUFSIZE));
+    readBytes = espfs_fread(file, buf, bufSize);
     //check if file is compressed by GZIP and add correspondent header
     if (memmem(buf, 3, GZIP_SIGN, 3))
     {
@@ -334,60 +334,68 @@ static esp_err_t GETHandler(httpd_req_t *req)
     if (IS_FILE_EXT(filename, ".html") || IS_FILE_EXT(filename, ".json"))
         isDynamicVars = true;
 
-    char *ptr = buf;
+    bool transfComplete = false;
     do
     {
-        while (ptr < fileSize && readBytes < (SCRATCH_BUFSIZE - MAX_DYNVAR_LENGTH))
+        int pt = 0;
+        int prcdBytes = 0;
+        while (pt < bufSize && prcdBytes < (SCRATCH_BUFSIZE))
         {
-            if (buf[pt] == '~' && isDynamicVars)
+            if (buf[pt] == '~' && isDynamicVars) //open tag
             {
                 int k = 0;
+                char ch = 0x00;
                 char DynVarName[MAX_DYNVAR_NAME_LENGTH];
-                while (pt < fileSize && k < MAX_DYNVAR_NAME_LENGTH && (buf[++pt] != '~'))
-                    DynVarName[k++] = buf[pt];
-                if (buf[pt] == '~')
-                {  //got valid dynamic variable name
+                while (k < MAX_DYNVAR_NAME_LENGTH)
+                {
+                    if (pt < bufSize)
+                    {
+                        if (buf[++pt] != '~')
+                            DynVarName[k++] = buf[pt]; //continue extract variable name from buf
+                        else
+                        {
+                            break; //found close tag
+                        }
+                    }
+                    else //need read more characters directly from file
+                    {
+                        if (espfs_fread(file, &ch, 1))
+                        {
+                            readBytes++;
+                            if (ch != '~')
+                                DynVarName[k++] = ch; //continue extract variable name from file
+                            else
+                                break; //found close tag
+                        }
+                        else // end of file
+                        {
+                            break;  //error end of file
+                        }
+                    }
+                }
+
+
+                if (buf[pt] == '~' || ch == '~')   //close tag, got valid dynamic variable name
+                {
                     DynVarName[k] = 0x00;
-                    readBytes += HTTPPrint(req, &chunk[readBytes], DynVarName);
+                    prcdBytes += HTTPPrint(req, &chunk[prcdBytes], DynVarName);
                     pt++;
+                }
+                else  //not found close tag, exit by overflow max variable size or file end
+                {
+
                 }
             }
             else
-                chunk[readBytes++] = buf[pt++];
+                chunk[prcdBytes++] = buf[pt++]; //ordinary character
         }
-
-    }
-    while (1);
-
-    int pt = 0;
-    do
-    {
-        readBytes = 0;
-        while (pt < fileSize && readBytes < (SCRATCH_BUFSIZE - MAX_DYNVAR_LENGTH))
-        {
-            if (buf[pt] == '~' && isDynamicVars)
-            {
-                int k = 0;
-                char DynVarName[MAX_DYNVAR_NAME_LENGTH];
-                while (pt < fileSize && k < MAX_DYNVAR_NAME_LENGTH && (buf[++pt] != '~'))
-                    DynVarName[k++] = buf[pt];
-                if (buf[pt] == '~')
-                {  //got valid dynamic variable name
-                    DynVarName[k] = 0x00;
-                    readBytes += HTTPPrint(req, &chunk[readBytes], DynVarName);
-                    pt++;
-                }
-            }
-            else
-                chunk[readBytes++] = buf[pt++];
-        }
-        if (readBytes != 0)
+        if (prcdBytes != 0)
         {
             /* Send the buffer contents as HTTP response chunk */
 #if HTTP_SERVER_DEBUG_LEVEL > 0
-            ESP_LOGI(TAG, "Write to HTTPserv resp %d", readBytes);
+            ESP_LOGI(TAG, "Write to HTTPserv resp %d", prcdBytes);
 #endif
-            if (httpd_resp_send_chunk(req, chunk, readBytes) != ESP_OK)
+            if (httpd_resp_send_chunk(req, chunk, prcdBytes) != ESP_OK)
             {
                 ESP_LOGE(TAG, "File sending failed!");
                 /* Abort sending file */
@@ -399,15 +407,23 @@ static esp_err_t GETHandler(httpd_req_t *req)
                 espfs_fclose(file);
                 return ESP_FAIL;
             }
-
         }
         /* Keep looping till the whole file is sent */
+         int nextPortion;
+         if((nextPortion = espfs_fread(file, buf, bufSize)))
+         {
+             bufSize = nextPortion;
+             readBytes += nextPortion;
+         }
+         else
+           transfComplete = true;
     }
-    while (readBytes != fileSize);
+    while (!transfComplete);
+
     /* Close file after sending complete */
     espfs_fclose(file);
 #if HTTP_SERVER_DEBUG_LEVEL > 0
-    ESP_LOGI(TAG, "File sending complete");
+    ESP_LOGI(TAG, "File sending complete, read from file %d", readBytes);
 #endif
     /* Respond with an empty chunk to signal HTTP response completion */
     httpd_resp_send_chunk(req, NULL, 0);
