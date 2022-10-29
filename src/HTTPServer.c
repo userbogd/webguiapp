@@ -51,6 +51,13 @@ struct file_server_data *server_data = NULL;
 httpd_handle_t server = NULL;
 static const char *TAG = "HTTPServer";
 
+//Pointer to external user defined rest api handler
+static int (*HTTPUserRestAPI)(char *url, char *req, int len, char *resp) = NULL;
+void regHTTPUserRestAPI(int (*api_handler)(char *url, char *req, int len, char *resp))
+{
+    HTTPUserRestAPI = api_handler;
+}
+
 static esp_err_t CheckAuth(httpd_req_t *req)
 {
     unsigned char pass[18] = { 0 }; //max length of login:password decoded string
@@ -168,6 +175,16 @@ static const char* get_path_from_uri(char *dest, const char *base_path,
     return dest + base_pathlen;
 }
 
+static esp_err_t RestApiHandler(httpd_req_t *req)
+{
+#if HTTP_SERVER_DEBUG_LEVEL > 0
+    ESP_LOGI(TAG, "REST API handler");
+#endif
+
+    httpd_resp_sendstr(req, "{\"apiver\":\"1.00\",\"result\":\"OK\"}");  // Response body can be empty
+    return ESP_OK;
+}
+
 static esp_err_t POSTHandler(httpd_req_t *req)
 {
 #if HTTP_SERVER_DEBUG_LEVEL > 0
@@ -209,6 +226,12 @@ static esp_err_t POSTHandler(httpd_req_t *req)
                                                      ((struct file_server_data*) req->user_ctx)->base_path,
                                                      req->uri,
                                                      sizeof(filepath));
+
+            if (!memcmp(filename, "/api", 4))
+            {
+                return RestApiHandler(req);
+            }
+
             http_res = HTTPPostApp(req, filename, buf);
 
             if (http_res == HTTP_IO_DONE)
@@ -279,7 +302,7 @@ static esp_err_t GETHandler(httpd_req_t *req)
         return ESP_OK;
     }
 
-    //check auth for all files except status.json
+//check auth for all files except status.json
     if (strcmp(filename, "/status.json"))
     {
         if (CheckAuth(req) != ESP_OK)
@@ -288,28 +311,28 @@ static esp_err_t GETHandler(httpd_req_t *req)
         }
     }
 
-    //open file
+//open file
     file = espfs_fopen(fs, filepath);
     if (!file)
     {
         httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File not found");
         return ESP_FAIL;
     }
-    //get file info
+//get file info
     espfs_stat(fs, filepath, &stat);
 
 #if HTTP_SERVER_DEBUG_LEVEL > 0
     ESP_LOGI(TAG, "Sending file : %s (%d bytes)...", filename,
              stat.size);
 #endif
-    //OutputDisplay((char*) filepath);
+//OutputDisplay((char*) filepath);
     set_content_type_from_file(req, filename);
     /* Retrieve the pointer to scratch buffer for temporary storage */
     char *chunk = ((struct file_server_data*) req->user_ctx)->scratch;
 
     bufSize = MIN(stat.size, SCRATCH_BUFSIZE - MAX_DYNVAR_LENGTH);
     readBytes = 0;
-    //allocate buffer for file data
+//allocate buffer for file data
     char *buf = (char*) malloc(bufSize);
     if (!buf)
     {
@@ -319,16 +342,16 @@ static esp_err_t GETHandler(httpd_req_t *req)
         espfs_fclose(file);
         return ESP_FAIL;
     }
-    //read first portion of data from file
+//read first portion of data from file
     readBytes = espfs_fread(file, buf, bufSize);
-    //check if file is compressed by GZIP and add correspondent header
+//check if file is compressed by GZIP and add correspondent header
     if (memmem(buf, 3, GZIP_SIGN, 3))
     {
         httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
         httpd_resp_set_hdr(req, "Cache-Control", "max-age=600");
     }
 
-    //check if the file can contains dynamic variables
+//check if the file can contains dynamic variables
     if (IS_FILE_EXT(filename, ".html") || IS_FILE_EXT(filename, ".json"))
         isDynamicVars = true;
 
@@ -446,7 +469,7 @@ static httpd_handle_t start_webserver(void)
     config.uri_match_fn = httpd_uri_match_wildcard;
     config.max_open_sockets = 3;
 
-    // Start the httpd server
+// Start the httpd server
     ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
     if (httpd_start(&server, &config) == ESP_OK)
     {
@@ -475,7 +498,7 @@ static httpd_handle_t start_webserver(void)
 
 static void stop_webserver(httpd_handle_t server)
 {
-    // Stop the httpd server
+// Stop the httpd server
     httpd_stop(server);
 }
 
