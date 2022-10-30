@@ -415,7 +415,7 @@ static esp_err_t GETHandler(httpd_req_t *req)
             if (preparedBytes >= (SCRATCH_BUFSIZE - MAX_DYNVAR_LENGTH))
             {
 #if HTTP_SERVER_DEBUG_LEVEL > 0
-                ESP_LOGI(TAG, "Write to HTTPserv resp %d", preparedBytes);
+                ESP_LOGI(TAG, "Call resp_send_chank because of chunk full. Send %d bytes", preparedBytes);
 #endif
                 if (httpd_resp_send_chunk(req, chunk, preparedBytes) != ESP_OK)
                     goto file_send_error;
@@ -427,7 +427,7 @@ static esp_err_t GETHandler(httpd_req_t *req)
         if (preparedBytes)
         {
 #if HTTP_SERVER_DEBUG_LEVEL > 0
-            ESP_LOGI(TAG, "Write to HTTPserv resp %d", preparedBytes);
+            ESP_LOGI(TAG, "Call resp_send_chank because of buf empty. Send %d bytes", preparedBytes);
 #endif
             if (httpd_resp_send_chunk(req, chunk, preparedBytes) != ESP_OK)
                 goto file_send_error;
