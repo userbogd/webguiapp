@@ -354,7 +354,6 @@ static esp_err_t GETHandler(httpd_req_t *req)
 //check if the file can contains dynamic variables
     if (IS_FILE_EXT(filename, ".html") || IS_FILE_EXT(filename, ".json"))
         isDynamicVars = true;
-
     do
     {
         int pt = 0;
@@ -366,12 +365,13 @@ static esp_err_t GETHandler(httpd_req_t *req)
                 int k = 0;
                 char ch = 0x00;
                 char DynVarName[MAX_DYNVAR_NAME_LENGTH];
+                pt++; //skip open tag
                 while (k < MAX_DYNVAR_NAME_LENGTH)
                 {
                     if (pt < bufSize)
                     {
-                        if (buf[++pt] != '~')
-                            DynVarName[k++] = buf[pt]; //continue extract variable name from buf
+                        if (buf[pt] != '~')
+                            DynVarName[k++] = buf[pt++]; //continue extract variable name from buf
                         else
                             break; //found close tag
                     }
@@ -388,25 +388,19 @@ static esp_err_t GETHandler(httpd_req_t *req)
                         else
                             //unexpected end of file
                             goto file_send_error;
-
                     }
                 }
-
                 if (buf[pt] == '~' || ch == '~')   //close tag, got valid dynamic variable name
                 {
                     DynVarName[k] = 0x00;
                     preparedBytes += HTTPPrint(req, &chunk[preparedBytes], DynVarName);
-
-                    //skip close '~' in buf or directly in file
-                    if (ch == '~')
-                        espfs_fread(file, &ch, 1);
-                    else
+                    //skip close '~' in buf but not directly in file!
+                    if (ch != '~')
                         pt++;
                 }
                 else
                     //not found close tag, exit by overflow max variable size or file end
                     goto file_send_error;
-
             }
             else
                 chunk[preparedBytes++] = buf[pt++]; //write to chunk ordinary character

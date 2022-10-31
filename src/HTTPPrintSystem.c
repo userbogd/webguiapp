@@ -586,8 +586,8 @@ static void HTTPPrint_ifc_mq2(char *VarData, void *arg)
 
 static void HTTPPrint_testvariable(char *VarData, void *arg)
 {
-static int counter = 0;
-snprintf(VarData, MAX_DYNVAR_LENGTH, "[%d]", counter++);
+static int counter = 1;
+snprintf(VarData, MAX_DYNVAR_LENGTH, "[Long extended dynamic variable number %d]", counter++);
 }
 
 //Default string if not found handler
