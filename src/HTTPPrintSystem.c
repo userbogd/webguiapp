@@ -584,6 +584,11 @@ static void HTTPPrint_ifc_mq2(char *VarData, void *arg)
 #endif
 }
 
+static void HTTPPrint_testvariable(char *VarData, void *arg)
+{
+static int counter = 1;
+snprintf(VarData, MAX_DYNVAR_LENGTH, "[Long extended dynamic variable number %d]", counter++);
+}
 
 //Default string if not found handler
 static void HTTPPrint_DEF(char *VarData, void *arg)
@@ -703,6 +708,7 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
 
     { "ifc_gprs", sizeof("ifc_gprs") - 1, &HTTPPrint_ifc_gprs },
     { "ifc_mq2", sizeof("ifc_mq2") - 1, &HTTPPrint_ifc_mq2 },
+    { "testvariable", sizeof("testvariable") - 1, &HTTPPrint_testvariable},
 
 };
 
