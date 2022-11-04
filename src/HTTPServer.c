@@ -315,8 +315,13 @@ static esp_err_t GETHandler(httpd_req_t *req)
     file = espfs_fopen(fs, filepath);
     if (!file)
     {
-        httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File not found");
-        return ESP_FAIL;
+        strcat(filepath, ".gz"); //check if requested file in gzip archive
+        file = espfs_fopen(fs, filepath);
+        if (!file)
+        {
+            httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File not found");
+            return ESP_FAIL;
+        }
     }
 //get file info
     espfs_stat(fs, filepath, &stat);
