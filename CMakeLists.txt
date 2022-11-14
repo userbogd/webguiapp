@@ -1,6 +1,7 @@
 idf_component_register(
     SRCS "src/SystemConfiguration.c"
     	 "src/romfs.c"
+    	 "src/spifs.c"
     	 "src/HTTPServer.c"
     	 "src/HTTPPrintSystem.c"
     	 "src/HTTPPostSystem.c"
@@ -20,6 +21,7 @@ idf_component_register(
     			   
     REQUIRES nvs_flash 
     		 libespfs
+    		 spiffs
     		 esp_http_server
     		 mbedtls
     		 lwip

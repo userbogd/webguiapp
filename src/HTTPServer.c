@@ -29,15 +29,7 @@ const char GZIP_SIGN[] = { 0x1f, 0x8b, 0x08 };
 static esp_err_t GETHandler(httpd_req_t *req);
 static esp_err_t CheckAuth(httpd_req_t *req);
 
-/* Max length a file path can have on storage */
-#define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
 
-/* Max size of an individual file. Make sure this
- * value is same as that set in upload_script.html */
-
-/* Scratch buffer size */
-#define SCRATCH_BUFSIZE  4096
-#define AUTH_DATA_MAX_LENGTH 16
 
 struct file_server_data
 {
@@ -103,6 +95,7 @@ static esp_err_t CheckAuth(httpd_req_t *req)
 
 #define IS_FILE_EXT(filename, ext) \
     (strcasecmp(&filename[strlen(filename) - sizeof(ext) + 1], ext) == 0)
+
 
 /* Set HTTP response content type according to file extension */
 static esp_err_t set_content_type_from_file(httpd_req_t *req,
@@ -459,6 +452,8 @@ file_send_error:
     espfs_fclose(file);
     return ESP_FAIL;
 }
+
+
 
 static httpd_handle_t start_webserver(void)
 {

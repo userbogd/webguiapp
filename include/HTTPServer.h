@@ -47,6 +47,15 @@
 #define MAX_DYNVAR_LENGTH 256
 #define MAX_INCFILE_LENGTH 1024
 
+/* Max length a file path can have on storage */
+#define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
+#define MAX_FILE_SIZE   (200*1024) // 200 KB
+#define MAX_FILE_SIZE_STR "200KB"
+
+/* Scratch buffer size */
+#define SCRATCH_BUFSIZE  4096
+#define AUTH_DATA_MAX_LENGTH 16
+
 #define HTTP_SERVER_DEBUG_LEVEL 0
 
 typedef enum
