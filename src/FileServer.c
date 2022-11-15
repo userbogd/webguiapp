@@ -24,13 +24,47 @@
 
 #include "HTTPServer.h"
 
-static const char *TAG = "HTTPServer";
+static const char *TAG = "FileServer";
+
+/* Copies the full path into destination buffer and returns
+ * pointer to path (skipping the preceding base path) */
+static const char* get_path_from_uri(char *dest, const char *base_path,
+                                     const char *uri,
+                                     size_t destsize)
+{
+    const size_t base_pathlen = strlen(base_path);
+    size_t pathlen = strlen(uri);
+
+    const char *quest = strchr(uri, '?');
+    if (quest)
+    {
+        pathlen = MIN(pathlen, quest - uri);
+    }
+    const char *hash = strchr(uri, '#');
+    if (hash)
+    {
+        pathlen = MIN(pathlen, hash - uri);
+    }
+
+    if (base_pathlen + pathlen + 1 > destsize)
+    {
+        /* Full path string won't fit into destination buffer */
+        return NULL;
+    }
+
+    /* Construct full path (base + path) */
+    strcpy(dest, base_path);
+    strlcpy(dest + base_pathlen, uri, pathlen + 1);
+
+    /* Return pointer to path, skipping the base */
+    return dest + base_pathlen;
+}
 
 /* Send HTTP response with a run-time generated html consisting of
  * a list of all files and folders under the requested path.
  * In case of SPIFFS this returns empty list when path is any
  * string other than '/', since SPIFFS doesn't support directories */
-static esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath)
+esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath)
 {
     char entrypath[FILE_PATH_MAX];
     char entrysize[16];
@@ -51,6 +85,8 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath)
         httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "Directory does not exist");
         return ESP_FAIL;
     }
+
+
 
     /* Send HTML file header */
     httpd_resp_sendstr_chunk(req, "<!DOCTYPE html><html><body>");
@@ -116,7 +152,7 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath)
 }
 
 /* Handler to upload a file onto the server */
-static esp_err_t upload_post_handler(httpd_req_t *req)
+esp_err_t upload_post_handler(httpd_req_t *req)
 {
     char filepath[FILE_PATH_MAX];
     FILE *fd = NULL;
@@ -124,7 +160,7 @@ static esp_err_t upload_post_handler(httpd_req_t *req)
 
     /* Skip leading "/upload" from URI to get filename */
     /* Note sizeof() counts NULL termination hence the -1 */
-    const char *filename = get_path_from_uri(filepath, ((struct file_server_data *)req->user_ctx)->base_path,
+    const char *filename = get_path_from_uri(filepath, ((struct file_server_data *)req->user_ctx)->base_path2,
                                              req->uri + sizeof("/upload") - 1, sizeof(filepath));
     if (!filename) {
         /* Respond with 500 Internal Server Error */
@@ -230,14 +266,14 @@ static esp_err_t upload_post_handler(httpd_req_t *req)
 }
 
 /* Handler to delete a file from the server */
-static esp_err_t delete_post_handler(httpd_req_t *req)
+esp_err_t delete_post_handler(httpd_req_t *req)
 {
     char filepath[FILE_PATH_MAX];
     struct stat file_stat;
 
     /* Skip leading "/delete" from URI to get filename */
     /* Note sizeof() counts NULL termination hence the -1 */
-    const char *filename = get_path_from_uri(filepath, ((struct file_server_data *)req->user_ctx)->base_path,
+    const char *filename = get_path_from_uri(filepath, ((struct file_server_data *)req->user_ctx)->base_path2,
                                              req->uri  + sizeof("/delete") - 1, sizeof(filepath));
     if (!filename) {
         /* Respond with 500 Internal Server Error */

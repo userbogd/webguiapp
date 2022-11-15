@@ -3,6 +3,7 @@ idf_component_register(
     	 "src/romfs.c"
     	 "src/spifs.c"
     	 "src/HTTPServer.c"
+    	 "src/FileServer.c"
     	 "src/HTTPPrintSystem.c"
     	 "src/HTTPPostSystem.c"
     	 "src/Helpers.c"
@@ -18,6 +19,8 @@ idf_component_register(
     INCLUDE_DIRS  "."
     			  "include"
     			  "src"
+    
+    EMBED_FILES "upload_script.html"			  
     			   
     REQUIRES nvs_flash 
     		 libespfs

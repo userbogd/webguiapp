@@ -67,6 +67,18 @@ typedef enum
     HTTP_IO_DONE_NOREFRESH
 } HTTP_IO_RESULT;
 
+
+
+struct file_server_data
+{
+    /* Base path of file storage */
+    char base_path[ESP_VFS_PATH_MAX + 1];
+    char base_path2[ESP_VFS_PATH_MAX + 1];
+    /* Scratch buffer for temporary storage during file transfer */
+    char scratch[SCRATCH_BUFSIZE];
+/* Pointer to external POST handler*/
+};
+
 typedef struct
 {
     const char tag[16];
@@ -80,5 +92,10 @@ void regAfterPostHandlerCustom(HTTP_IO_RESULT (*post_handler)(httpd_req_t *req, 
 esp_err_t start_file_server(void);
 HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostData);
 int HTTPPrint(httpd_req_t *req, char* buf, char* var);
+
+
+esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath);
+esp_err_t upload_post_handler(httpd_req_t *req);
+esp_err_t delete_post_handler(httpd_req_t *req);
 
 #endif /* COMPONENTS_WEB_GUI_APPLICATION_INCLUDE_HTTPSERVER_H_ */

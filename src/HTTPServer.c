@@ -29,16 +29,6 @@ const char GZIP_SIGN[] = { 0x1f, 0x8b, 0x08 };
 static esp_err_t GETHandler(httpd_req_t *req);
 static esp_err_t CheckAuth(httpd_req_t *req);
 
-
-
-struct file_server_data
-{
-    /* Base path of file storage */
-    char base_path[ESP_VFS_PATH_MAX + 1];
-    /* Scratch buffer for temporary storage during file transfer */
-    char scratch[SCRATCH_BUFSIZE];
-/* Pointer to external POST handler*/
-};
 struct file_server_data *server_data = NULL;
 httpd_handle_t server = NULL;
 static const char *TAG = "HTTPServer";
@@ -183,6 +173,7 @@ static esp_err_t POSTHandler(httpd_req_t *req)
 #if HTTP_SERVER_DEBUG_LEVEL > 0
     ESP_LOGI(TAG, "POST request handle");
 #endif
+
     char *buf = ((struct file_server_data*) req->user_ctx)->scratch;
     int received;
     int remaining = req->content_len;
@@ -215,10 +206,20 @@ static esp_err_t POSTHandler(httpd_req_t *req)
         if (received)
         {
             char filepath[FILE_PATH_MAX];
+
             const char *filename = get_path_from_uri(filepath,
                                                      ((struct file_server_data*) req->user_ctx)->base_path,
                                                      req->uri,
                                                      sizeof(filepath));
+            ESP_LOGW(TAG, "filepath %s", filepath);
+
+            filename = get_path_from_uri(filepath,
+                                                     ((struct file_server_data*) req->user_ctx)->base_path,
+                                                     req->uri,
+                                                     sizeof(filepath));
+
+
+
 
             if (!memcmp(filename, "/api", 4))
             {
@@ -294,6 +295,13 @@ static esp_err_t GETHandler(httpd_req_t *req)
 #endif
         return ESP_OK;
     }
+
+
+    if (!strcmp(filename, "/files.html"))
+    {
+        return http_resp_dir_html(req, "/data");
+    }
+
 
 //check auth for all files except status.json
     if (strcmp(filename, "/status.json"))
@@ -528,6 +536,7 @@ esp_err_t start_file_server(void)
         return ESP_ERR_NO_MEM;
     }
     strlcpy(server_data->base_path, "/", sizeof("/"));
+    strlcpy(server_data->base_path2, "/data", sizeof("/data"));
     server = start_webserver();
     return ESP_OK;
 }
