@@ -93,9 +93,9 @@ esp_err_t start_file_server(void);
 HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostData);
 int HTTPPrint(httpd_req_t *req, char* buf, char* var);
 
-
-esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath);
+esp_err_t download_get_handler(httpd_req_t *req);
 esp_err_t upload_post_handler(httpd_req_t *req);
 esp_err_t delete_post_handler(httpd_req_t *req);
+
 
 #endif /* COMPONENTS_WEB_GUI_APPLICATION_INCLUDE_HTTPSERVER_H_ */

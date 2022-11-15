@@ -211,14 +211,18 @@ static esp_err_t POSTHandler(httpd_req_t *req)
                                                      ((struct file_server_data*) req->user_ctx)->base_path,
                                                      req->uri,
                                                      sizeof(filepath));
-            ESP_LOGW(TAG, "filepath %s", filepath);
+
+            ESP_LOGW(TAG, "URI %s", req->uri);
+            if (memmem(filename, strlen(filename), "/files/upload/", sizeof("/files/upload/")))
+            {
+                ESP_LOGW(TAG, "filepath %s", filepath);
+                return upload_post_handler(req);
+            }
 
             filename = get_path_from_uri(filepath,
                                                      ((struct file_server_data*) req->user_ctx)->base_path,
                                                      req->uri,
                                                      sizeof(filepath));
-
-
 
 
             if (!memcmp(filename, "/api", 4))
@@ -284,6 +288,12 @@ static esp_err_t GETHandler(httpd_req_t *req)
         return ESP_FAIL;
     }
 
+    ESP_LOGW(TAG, "URI %s", req->uri);
+    if (!strcmp(filename, "/files/"))
+    {
+        return download_get_handler(req);
+    }
+
     /* Redirect request to /index.html */
     if (filename[strlen(filename) - 1] == '/')
     {
@@ -295,13 +305,6 @@ static esp_err_t GETHandler(httpd_req_t *req)
 #endif
         return ESP_OK;
     }
-
-
-    if (!strcmp(filename, "/files.html"))
-    {
-        return http_resp_dir_html(req, "/data");
-    }
-
 
 //check auth for all files except status.json
     if (strcmp(filename, "/status.json"))
