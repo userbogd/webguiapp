@@ -86,7 +86,6 @@ static esp_err_t CheckAuth(httpd_req_t *req)
 #define IS_FILE_EXT(filename, ext) \
     (strcasecmp(&filename[strlen(filename) - sizeof(ext) + 1], ext) == 0)
 
-
 /* Set HTTP response content type according to file extension */
 static esp_err_t set_content_type_from_file(httpd_req_t *req,
                                             const char *filename)
@@ -174,6 +173,11 @@ static esp_err_t POSTHandler(httpd_req_t *req)
     ESP_LOGI(TAG, "POST request handle");
 #endif
 
+    if (true)
+    {
+        return upload_post_handler(req);
+    }
+
     char *buf = ((struct file_server_data*) req->user_ctx)->scratch;
     int received;
     int remaining = req->content_len;
@@ -206,24 +210,12 @@ static esp_err_t POSTHandler(httpd_req_t *req)
         if (received)
         {
             char filepath[FILE_PATH_MAX];
-
-            const char *filename = get_path_from_uri(filepath,
-                                                     ((struct file_server_data*) req->user_ctx)->base_path,
-                                                     req->uri,
-                                                     sizeof(filepath));
-
-            ESP_LOGW(TAG, "URI %s", req->uri);
-            if (memmem(filename, strlen(filename), "/files/upload/", sizeof("/files/upload/")))
-            {
-                ESP_LOGW(TAG, "filepath %s", filepath);
-                return upload_post_handler(req);
-            }
+            const char *filename;
 
             filename = get_path_from_uri(filepath,
-                                                     ((struct file_server_data*) req->user_ctx)->base_path,
-                                                     req->uri,
-                                                     sizeof(filepath));
-
+                                         ((struct file_server_data*) req->user_ctx)->base_path,
+                                         req->uri,
+                                         sizeof(filepath));
 
             if (!memcmp(filename, "/api", 4))
             {
@@ -268,12 +260,23 @@ static esp_err_t GETHandler(httpd_req_t *req)
 #if HTTP_SERVER_DEBUG_LEVEL > 0
     ESP_LOGI(TAG, "GET request handle");
 #endif
+
+    ESP_LOGW(TAG, "URI %s", req->uri);
+    //if (!strcmp(req->uri, "/files/"))
+    if(memmem(req->uri, strlen(req->uri), "/files/", 7))
+    {
+        return download_get_handler(req);
+    }
+
     char filepath[FILE_PATH_MAX];
     espfs_file_t *file;
     struct espfs_stat_t stat;
     bool isDynamicVars = false;
     uint32_t bufSize;       //size of ram buffer for chunk of data, read from file
     uint32_t readBytes;     //number of bytes, read from file. used for information only
+
+
+
 
     const char *filename = get_path_from_uri(filepath,
                                              ((struct file_server_data*) req->user_ctx)->base_path,
@@ -288,11 +291,7 @@ static esp_err_t GETHandler(httpd_req_t *req)
         return ESP_FAIL;
     }
 
-    ESP_LOGW(TAG, "URI %s", req->uri);
-    if (!strcmp(filename, "/files/"))
-    {
-        return download_get_handler(req);
-    }
+
 
     /* Redirect request to /index.html */
     if (filename[strlen(filename) - 1] == '/')
@@ -463,8 +462,6 @@ file_send_error:
     espfs_fclose(file);
     return ESP_FAIL;
 }
-
-
 
 static httpd_handle_t start_webserver(void)
 {

@@ -210,9 +210,13 @@ esp_err_t download_get_handler(httpd_req_t *req)
     FILE *fd = NULL;
     struct stat file_stat;
 
-    const char *filename = get_path_from_uri(filepath, ((struct file_server_data*) req->user_ctx)->base_path,
+    const char *filename = get_path_from_uri(filepath, ((struct file_server_data*) req->user_ctx)->base_path2,
                                              req->uri,
                                              sizeof(filepath));
+    ESP_LOGW(TAG, "FILE_GET_URI %s", req->uri);
+    ESP_LOGW(TAG, "FILE_GET_FILEPATH %s", filepath);
+    ESP_LOGW(TAG, "FILE_GET_FILENAME %s", filename);
+
     if (!filename)
     {
         ESP_LOGE(TAG, "Filename is too long");
@@ -224,7 +228,7 @@ esp_err_t download_get_handler(httpd_req_t *req)
     /* If name has trailing '/', respond with directory contents */
     if (filename[strlen(filename) - 1] == '/')
     {
-        return http_resp_dir_html(req, "/data");
+        return http_resp_dir_html(req, "/data/");
     }
 
     if (stat(filepath, &file_stat) == -1)
@@ -305,9 +309,13 @@ esp_err_t upload_post_handler(httpd_req_t *req)
 
     /* Skip leading "/upload" from URI to get filename */
     /* Note sizeof() counts NULL termination hence the -1 */
-    const char *filename = get_path_from_uri(filepath, ((struct file_server_data*) req->user_ctx)->base_path,
+    const char *filename = get_path_from_uri(filepath, ((struct file_server_data*) req->user_ctx)->base_path2,
                                              req->uri + sizeof("/files/upload") - 1,
                                              sizeof(filepath));
+    ESP_LOGW(TAG, "FILE_POST_URI %s", req->uri);
+    ESP_LOGW(TAG, "FILE_POST_FILEPATH %s", filepath);
+    ESP_LOGW(TAG, "FILE_POST_FILENAME %s", filename);
+
     if (!filename)
     {
         /* Respond with 500 Internal Server Error */
