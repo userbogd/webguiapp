@@ -29,24 +29,6 @@ const char GZIP_SIGN[] = { 0x1f, 0x8b, 0x08 };
 static esp_err_t GETHandler(httpd_req_t *req);
 static esp_err_t CheckAuth(httpd_req_t *req);
 
-/* Max length a file path can have on storage */
-#define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
-
-/* Max size of an individual file. Make sure this
- * value is same as that set in upload_script.html */
-
-/* Scratch buffer size */
-#define SCRATCH_BUFSIZE  4096
-#define AUTH_DATA_MAX_LENGTH 16
-
-struct file_server_data
-{
-    /* Base path of file storage */
-    char base_path[ESP_VFS_PATH_MAX + 1];
-    /* Scratch buffer for temporary storage during file transfer */
-    char scratch[SCRATCH_BUFSIZE];
-/* Pointer to external POST handler*/
-};
 struct file_server_data *server_data = NULL;
 httpd_handle_t server = NULL;
 static const char *TAG = "HTTPServer";
@@ -190,6 +172,13 @@ static esp_err_t POSTHandler(httpd_req_t *req)
 #if HTTP_SERVER_DEBUG_LEVEL > 0
     ESP_LOGI(TAG, "POST request handle");
 #endif
+
+    if (memmem(req->uri, strlen(req->uri), "/files/upload/", sizeof("/files/upload/")-1))
+        return upload_post_handler(req);
+
+    if (memmem(req->uri, strlen(req->uri), "/files/delete/", sizeof("/files/delete/")-1))
+        return delete_post_handler(req);
+
     char *buf = ((struct file_server_data*) req->user_ctx)->scratch;
     int received;
     int remaining = req->content_len;
@@ -222,10 +211,12 @@ static esp_err_t POSTHandler(httpd_req_t *req)
         if (received)
         {
             char filepath[FILE_PATH_MAX];
-            const char *filename = get_path_from_uri(filepath,
-                                                     ((struct file_server_data*) req->user_ctx)->base_path,
-                                                     req->uri,
-                                                     sizeof(filepath));
+            const char *filename;
+
+            filename = get_path_from_uri(filepath,
+                                         ((struct file_server_data*) req->user_ctx)->base_path,
+                                         req->uri,
+                                         sizeof(filepath));
 
             if (!memcmp(filename, "/api", 4))
             {
@@ -270,6 +261,11 @@ static esp_err_t GETHandler(httpd_req_t *req)
 #if HTTP_SERVER_DEBUG_LEVEL > 0
     ESP_LOGI(TAG, "GET request handle");
 #endif
+
+    //Route to file server GET handler
+    if (memmem(req->uri, strlen(req->uri), "/files/", sizeof("/files/") - 1))
+        return download_get_handler(req);
+
     char filepath[FILE_PATH_MAX];
     espfs_file_t *file;
     struct espfs_stat_t stat;
@@ -533,6 +529,7 @@ esp_err_t start_file_server(void)
         return ESP_ERR_NO_MEM;
     }
     strlcpy(server_data->base_path, "/", sizeof("/"));
+    strlcpy(server_data->base_path2, "/data", sizeof("/data"));
     server = start_webserver();
     return ESP_OK;
 }

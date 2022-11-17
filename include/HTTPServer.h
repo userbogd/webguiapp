@@ -47,6 +47,15 @@
 #define MAX_DYNVAR_LENGTH 256
 #define MAX_INCFILE_LENGTH 1024
 
+/* Max length a file path can have on storage */
+#define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
+#define MAX_FILE_SIZE   (200*1024) // 200 KB
+#define MAX_FILE_SIZE_STR "200KB"
+
+/* Scratch buffer size */
+#define SCRATCH_BUFSIZE  4096
+#define AUTH_DATA_MAX_LENGTH 16
+
 #define HTTP_SERVER_DEBUG_LEVEL 0
 
 typedef enum
@@ -57,6 +66,18 @@ typedef enum
     HTTP_IO_REDIRECT,
     HTTP_IO_DONE_NOREFRESH
 } HTTP_IO_RESULT;
+
+
+
+struct file_server_data
+{
+    /* Base path of file storage */
+    char base_path[ESP_VFS_PATH_MAX + 1];
+    char base_path2[ESP_VFS_PATH_MAX + 1];
+    /* Scratch buffer for temporary storage during file transfer */
+    char scratch[SCRATCH_BUFSIZE];
+/* Pointer to external POST handler*/
+};
 
 typedef struct
 {
@@ -71,5 +92,10 @@ void regAfterPostHandlerCustom(HTTP_IO_RESULT (*post_handler)(httpd_req_t *req, 
 esp_err_t start_file_server(void);
 HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostData);
 int HTTPPrint(httpd_req_t *req, char* buf, char* var);
+
+esp_err_t download_get_handler(httpd_req_t *req);
+esp_err_t upload_post_handler(httpd_req_t *req);
+esp_err_t delete_post_handler(httpd_req_t *req);
+
 
 #endif /* COMPONENTS_WEB_GUI_APPLICATION_INCLUDE_HTTPSERVER_H_ */

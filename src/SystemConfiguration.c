@@ -36,6 +36,7 @@
 
 #include "SystemConfiguration.h"
 #include "romfs.h"
+#include "spifs.h"
 #include "NetTransport.h"
 #include "Helpers.h"
 #include "HTTPServer.h"
@@ -102,8 +103,9 @@ esp_err_t WebGuiAppInit(void)
     }
     ESP_ERROR_CHECK(InitSysConfig());
 
-    //init rom file system
+    //init  file systems
     init_rom_fs("/espfs");
+    init_spi_fs("/data");
 
 
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
