@@ -103,7 +103,7 @@ static const char* get_path_from_uri(char *dest, const char *base_path,
 
     /* Construct full path (base + path) */
     strcpy(dest, base_path);
-    strlcpy(dest + base_pathlen, uri, pathlen + 1);
+    strlcpy(dest + base_pathlen, uri + (sizeof("/files")-1), pathlen + 1 - (sizeof("/files")-1));
 
     /* Return pointer to path, skipping the base */
     return dest + base_pathlen;
@@ -150,8 +150,8 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath)
     /* Send file-list table definition and column labels */
     httpd_resp_sendstr_chunk(
             req,
-            "<table class=\"fixed\" border=\"1\">"
-            "<col width=\"800px\" /><col width=\"300px\" /><col width=\"300px\" /><col width=\"100px\" />"
+            "<table class=\"fixed\" border=\"0\">"
+            "<col width=\"600px\" /><col width=\"200px\" /><col width=\"200px\" /><col width=\"100px\" />"
             "<thead><tr><th>Name</th><th>Type</th><th>Size (Bytes)</th><th>Delete</th></tr></thead>"
             "<tbody>");
 
@@ -184,8 +184,8 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath)
         httpd_resp_sendstr_chunk(req, "</td><td>");
         httpd_resp_sendstr_chunk(req, entrysize);
         httpd_resp_sendstr_chunk(req, "</td><td>");
-        httpd_resp_sendstr_chunk(req, "<form method=\"post\" action=\"/delete");
-        httpd_resp_sendstr_chunk(req, req->uri);
+        httpd_resp_sendstr_chunk(req, "<form method=\"post\" action=\"/files/delete/");
+        //httpd_resp_sendstr_chunk(req, req->uri);
         httpd_resp_sendstr_chunk(req, entry->d_name);
         httpd_resp_sendstr_chunk(req, "\"><button type=\"submit\">Delete</button></form>");
         httpd_resp_sendstr_chunk(req, "</td></tr>\n");
@@ -228,7 +228,7 @@ esp_err_t download_get_handler(httpd_req_t *req)
     /* If name has trailing '/', respond with directory contents */
     if (filename[strlen(filename) - 1] == '/')
     {
-        return http_resp_dir_html(req, "/data/");
+        return http_resp_dir_html(req, filepath);
     }
 
     if (stat(filepath, &file_stat) == -1)
@@ -240,8 +240,6 @@ esp_err_t download_get_handler(httpd_req_t *req)
         {
             return index_html_get_handler(req);
         }
-
-
 
         ESP_LOGE(TAG, "Failed to stat file : %s", filepath);
         /* Respond with 404 Not Found */
@@ -310,7 +308,7 @@ esp_err_t upload_post_handler(httpd_req_t *req)
     /* Skip leading "/upload" from URI to get filename */
     /* Note sizeof() counts NULL termination hence the -1 */
     const char *filename = get_path_from_uri(filepath, ((struct file_server_data*) req->user_ctx)->base_path2,
-                                             req->uri + sizeof("/files/upload") - 1,
+                                             req->uri + sizeof("/upload") - 1,
                                              sizeof(filepath));
     ESP_LOGW(TAG, "FILE_POST_URI %s", req->uri);
     ESP_LOGW(TAG, "FILE_POST_FILEPATH %s", filepath);
@@ -420,7 +418,7 @@ esp_err_t upload_post_handler(httpd_req_t *req)
 
     /* Redirect onto root to see the updated file list */
     httpd_resp_set_status(req, "303 See Other");
-    httpd_resp_set_hdr(req, "Location", "/");
+    httpd_resp_set_hdr(req, "Location", "/files/");
 #ifdef CONFIG_EXAMPLE_HTTPD_CONN_CLOSE_HEADER
     httpd_resp_set_hdr(req, "Connection", "close");
 #endif
@@ -468,7 +466,7 @@ esp_err_t delete_post_handler(httpd_req_t *req)
 
     /* Redirect onto root to see the updated file list */
     httpd_resp_set_status(req, "303 See Other");
-    httpd_resp_set_hdr(req, "Location", "/");
+    httpd_resp_set_hdr(req, "Location", "/files/");
 #ifdef CONFIG_EXAMPLE_HTTPD_CONN_CLOSE_HEADER
     httpd_resp_set_hdr(req, "Connection", "close");
 #endif

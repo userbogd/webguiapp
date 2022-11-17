@@ -173,10 +173,11 @@ static esp_err_t POSTHandler(httpd_req_t *req)
     ESP_LOGI(TAG, "POST request handle");
 #endif
 
-    if (true)
-    {
+    if (memmem(req->uri, strlen(req->uri), "/files/upload/", sizeof("/files/upload/")-1))
         return upload_post_handler(req);
-    }
+
+    if (memmem(req->uri, strlen(req->uri), "/files/delete/", sizeof("/files/delete/")-1))
+        return delete_post_handler(req);
 
     char *buf = ((struct file_server_data*) req->user_ctx)->scratch;
     int received;
@@ -261,12 +262,9 @@ static esp_err_t GETHandler(httpd_req_t *req)
     ESP_LOGI(TAG, "GET request handle");
 #endif
 
-    ESP_LOGW(TAG, "URI %s", req->uri);
-    //if (!strcmp(req->uri, "/files/"))
-    if(memmem(req->uri, strlen(req->uri), "/files/", 7))
-    {
+    //Route to file server GET handler
+    if (memmem(req->uri, strlen(req->uri), "/files/", sizeof("/files/") - 1))
         return download_get_handler(req);
-    }
 
     char filepath[FILE_PATH_MAX];
     espfs_file_t *file;
@@ -274,9 +272,6 @@ static esp_err_t GETHandler(httpd_req_t *req)
     bool isDynamicVars = false;
     uint32_t bufSize;       //size of ram buffer for chunk of data, read from file
     uint32_t readBytes;     //number of bytes, read from file. used for information only
-
-
-
 
     const char *filename = get_path_from_uri(filepath,
                                              ((struct file_server_data*) req->user_ctx)->base_path,
@@ -290,8 +285,6 @@ static esp_err_t GETHandler(httpd_req_t *req)
                             "Filename too long");
         return ESP_FAIL;
     }
-
-
 
     /* Redirect request to /index.html */
     if (filename[strlen(filename) - 1] == '/')
