@@ -31,11 +31,16 @@ menu "WebGUIApp"
 	
 	config DEBUG_MODE_ENABLE
 		bool "Enabled JTAG debug"
-        default n
+        default y
              help
         		Switch on JTAG debug mode. Otherwise pins 12-15 used as normal GPIO  
 	            
-
+	config RESET_MODE_ENABLE
+		bool "Enabled RESET on boot"
+        default n
+             help
+        		This will reset to default settings on every startup
+	
 	menu "SPI settings"
 		config WEBGUIAPP_SPI_ENABLE
 		bool "Enabled SPI interface"
