@@ -27,12 +27,9 @@
 #include "nvs_flash.h"
 #include "nvs.h"
 
-
-
 #include "driver/gpio.h"
 #include "driver/adc.h"
 #include "driver/i2c.h"
-
 
 #include "SystemConfiguration.h"
 #include "romfs.h"
@@ -40,7 +37,6 @@
 #include "NetTransport.h"
 #include "Helpers.h"
 #include "HTTPServer.h"
-
 
 #define STORAGE_NAMESPACE "storage"
 #define TAG "SystemConfiguration"
@@ -61,11 +57,7 @@
 
 static SYS_CONFIG SysConfig;
 
-
-
 #define NETWORK_START_TIMEOUT (60)
-
-
 
 static int NetworkStartTimeout = 0;
 static bool isUserAppNeedReset = false;
@@ -91,10 +83,10 @@ esp_err_t WebGuiAppInit(void)
     if (err == ESP_ERR_NVS_NO_FREE_PAGES ||
             err == ESP_ERR_NVS_NEW_VERSION_FOUND ||
             MANUAL_RESET == 1
-#if (MAIN_FUNCTIONAL_BUTTON_GPIO >= 0)
+                    #if (MAIN_FUNCTIONAL_BUTTON_GPIO >= 0)
             || gpio_get_level(MAIN_FUNCTIONAL_BUTTON_GPIO) == 0
 #endif
-            )
+                    )
     {
         // 1.OTA app partition table has a smaller NVS partition size than the non-OTA
         // partition table. This size mismatch may cause NVS initialization to fail.
@@ -110,7 +102,6 @@ esp_err_t WebGuiAppInit(void)
     //init  file systems
     init_rom_fs("/espfs");
     init_spi_fs("/data");
-
 
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
     /*Start PPP modem*/
@@ -134,8 +125,6 @@ esp_err_t WebGuiAppInit(void)
             WiFiSTAStart();
     }
 #endif
-
-
 
     bool WiFiApOnly = false;
 #if   !CONFIG_WEBGUIAPP_GPRS_ENABLE && !CONFIG_WEBGUIAPP_ETHERNET_ENABLE && CONFIG_WEBGUIAPP_WIFI_ENABLE
@@ -184,6 +173,15 @@ static void InitSysIO(void)
     gpio_pullup_en(MAIN_FUNCTIONAL_BUTTON_GPIO);
 #endif
 
+#if CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN >= 0
+    gpio_set_direction(CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN, 0);
+#endif
+#if CONFIG_ETH_SPI_PHY_RST0_GPIO >=0
+    gpio_set_direction(CONFIG_ETH_SPI_PHY_RST0_GPIO, GPIO_MODE_OUTPUT);
+    gpio_set_level(CONFIG_ETH_SPI_PHY_RST0_GPIO, 0);
+#endif
+
     ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_IRAM));
     ESP_LOGI(TAG, "System GPIO's initialized OK");
 
@@ -227,7 +225,8 @@ static void InitSysI2C(void)
 
 static void ResetSysConfig(SYS_CONFIG *Conf)
 {
-    char id[4]; char id2[9];
+    char id[4];
+    char id2[9];
     GetChipId((uint8_t*) id);
     BytesToStr((unsigned char*) id, (unsigned char*) id2, 4);
     id2[8] = 0x00;
@@ -289,7 +288,8 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
     memcpy(Conf->mqttStation[0].ServerAddr, CONFIG_WEBGUIAPP_MQTT_SERVER_URL, sizeof(CONFIG_WEBGUIAPP_MQTT_SERVER_URL));
     Conf->mqttStation[0].ServerPort = CONFIG_WEBGUIAPP_MQTT_SERVER_PORT;
 
-    memcpy(Conf->mqttStation[0].SystemName, CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME, sizeof(CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME));
+    memcpy(Conf->mqttStation[0].SystemName, CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME,
+           sizeof(CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME));
     memcpy(Conf->mqttStation[0].GroupName, CONFIG_WEBGUIAPP_MQTT_GROUP_NAME, sizeof(CONFIG_WEBGUIAPP_MQTT_GROUP_NAME));
     memcpy(Conf->mqttStation[0].ClientID, CONFIG_WEBGUIAPP_MQTT_CLIENT_ID_1, sizeof(CONFIG_WEBGUIAPP_MQTT_CLIENT_ID_1));
     memcpy(Conf->mqttStation[0].UserName, CONFIG_WEBGUIAPP_MQTT_USERNAME, sizeof(CONFIG_WEBGUIAPP_MQTT_USERNAME));
@@ -298,7 +298,8 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
     Conf->mqttStation[1].Flags1.bIsGlobalEnabled = CONFIG_WEBGUIAPP_MQTT_ON;
     memcpy(Conf->mqttStation[1].ServerAddr, CONFIG_WEBGUIAPP_MQTT_SERVER_URL, sizeof(CONFIG_WEBGUIAPP_MQTT_SERVER_URL));
     Conf->mqttStation[1].ServerPort = CONFIG_WEBGUIAPP_MQTT_SERVER_PORT;
-    memcpy(Conf->mqttStation[1].SystemName, CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME, sizeof(CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME));
+    memcpy(Conf->mqttStation[1].SystemName, CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME,
+           sizeof(CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME));
     memcpy(Conf->mqttStation[1].GroupName, CONFIG_WEBGUIAPP_MQTT_GROUP_NAME, sizeof(CONFIG_WEBGUIAPP_MQTT_GROUP_NAME));
     memcpy(Conf->mqttStation[1].ClientID, CONFIG_WEBGUIAPP_MQTT_CLIENT_ID_2, sizeof(CONFIG_WEBGUIAPP_MQTT_CLIENT_ID_2));
     memcpy(Conf->mqttStation[1].UserName, CONFIG_WEBGUIAPP_MQTT_USERNAME, sizeof(CONFIG_WEBGUIAPP_MQTT_USERNAME));

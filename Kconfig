@@ -506,14 +506,14 @@ menu "WebGUIApp"
 	            config MODEM_UART_TX_PIN
 	                int "TXD Pin Number"
 	                default 17
-	                range 0 31
+	                range 0 33
 	                help
 	                    Pin number of UART TX.
 	    
 	            config MODEM_UART_RX_PIN
 	                int "RXD Pin Number"
 	                default 16
-	                range 0 31
+	                range 0 39
 	                help
 	                    Pin number of UART RX.
 	    
