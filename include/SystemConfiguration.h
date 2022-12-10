@@ -158,12 +158,12 @@
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
         struct
         {
-            ip4_addr_t IPAddr; // IP address
-            ip4_addr_t Mask; // network mask
-            ip4_addr_t Gateway; // gateway
-            ip4_addr_t DNSAddr1; //
-            ip4_addr_t DNSAddr2; //
-            ip4_addr_t DNSAddr3; //
+            esp_ip4_addr_t IPAddr; // IP address
+            esp_ip4_addr_t Mask; // network mask
+            esp_ip4_addr_t Gateway; // gateway
+            esp_ip4_addr_t DNSAddr1; //
+            esp_ip4_addr_t DNSAddr2; //
+            esp_ip4_addr_t DNSAddr3; //
             uint8_t MACAddr[6]; // MAC address
 
             struct
@@ -184,13 +184,13 @@
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
         struct
         {
-            ip4_addr_t InfIPAddr; // IP address in infrastructure(INF) mode
-            ip4_addr_t InfMask; // network mask in INF mode
-            ip4_addr_t InfGateway; // gateway IP in INF mode
-            ip4_addr_t ApIPAddr; // IP address in Access point(AP) mode
-            ip4_addr_t DNSAddr1; // DNS in station mode
-            ip4_addr_t DNSAddr2; // DNS in station mode
-            ip4_addr_t DNSAddr3; // DNS in station mode
+            esp_ip4_addr_t InfIPAddr; // IP address in infrastructure(INF) mode
+            esp_ip4_addr_t InfMask; // network mask in INF mode
+            esp_ip4_addr_t InfGateway; // gateway IP in INF mode
+            esp_ip4_addr_t ApIPAddr; // IP address in Access point(AP) mode
+            esp_ip4_addr_t DNSAddr1; // DNS in station mode
+            esp_ip4_addr_t DNSAddr2; // DNS in station mode
+            esp_ip4_addr_t DNSAddr3; // DNS in station mode
 
             char InfSSID[32]; // Wireless SSID in INF mode
             char InfSecurityKey[32]; // Network key in INF mode
@@ -218,12 +218,12 @@
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
         struct
         {
-            ip4_addr_t IPAddr; // IP address
-            ip4_addr_t Mask; // network mask
-            ip4_addr_t Gateway; // gateway
-            ip4_addr_t DNSAddr1; //
-            ip4_addr_t DNSAddr2; //
-            ip4_addr_t DNSAddr3; //
+            esp_ip4_addr_t IPAddr; // IP address
+            esp_ip4_addr_t Mask; // network mask
+            esp_ip4_addr_t Gateway; // gateway
+            esp_ip4_addr_t DNSAddr1; //
+            esp_ip4_addr_t DNSAddr2; //
+            esp_ip4_addr_t DNSAddr3; //
             uint8_t MACAddr[6]; // MAC address
             struct
             {
