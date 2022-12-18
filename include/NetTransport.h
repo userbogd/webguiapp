@@ -46,17 +46,24 @@ typedef struct
 
 //#define DEFAULT_FALLBACK_DNS  "8.8.8.8"
 
-
 QueueHandle_t MQTT1MessagesQueueHandle;
 QueueHandle_t MQTT2MessagesQueueHandle;
 
-
 EventGroupHandle_t transport_event_group;
 
+typedef enum
+{
+  MQTT = 0,
+} transport_data_type;
 
+typedef struct
+{
+    transport_data_type dType;
+    char *raw_data_ptr;
+    int data_length;
+} net_transport_data_t;
 
 void StartTimeGet(void);
-
 
 void WiFiAPStart(void);
 void WiFiSTAStart(void);

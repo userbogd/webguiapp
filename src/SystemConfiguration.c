@@ -109,6 +109,14 @@ esp_err_t WebGuiAppInit(void)
         PPPModemStart();
 #endif
 
+    /*LoRaWAN start if enabled*/
+#if !CONFIG_TTN_LORA_FREQ_DISABLED
+    if (GetSysConf()->lorawanSettings.Flags1.bIsLoRaWANEnabled)
+    {
+        LoRaWANStart();
+    }
+#endif
+
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
     /*Start Ethernet connection*/
     if (GetSysConf()->ethSettings.Flags1.bIsETHEnabled)
@@ -318,6 +326,19 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
     Conf->sntpClient.Flags1.bIsWifiEnabled = DEFAULT_SNTP_WIFI_IS_ENABLED;
     Conf->sntpClient.Flags1.bIsGlobalEnabled = DEFAULT_SNTP_GLOBAL_ENABLED;
     Conf->sntpClient.TimeZone = DEFAULT_SNTP_TIMEZONE;
+
+#ifdef CONFIG_WEBGUIAPP_LORAWAN_ENABLE
+    Conf->lorawanSettings.Flags1.bIsLoRaWANEnabled = true;
+    Conf->Flags1.bIsLoRaConfirm = false;
+    unsigned char temp[16] = { 0 };
+    GetChipId((uint8_t*) temp + 4);
+    memcpy(Conf->lorawanSettings.DevEui, temp, 8);
+    StrToBytes((unsigned char*) CONFIG_LORA_APP_KEY, temp);
+    memcpy(Conf->lorawanSettings.AppKey, temp, 16);
+    StrToBytes((unsigned char*) CONFIG_LORA_APP_ID, temp);
+    memcpy(Conf->lorawanSettings.AppEui, temp, 8);
+#endif
+
 }
 
 esp_err_t ReadNVSSysConfig(SYS_CONFIG *SysConf)

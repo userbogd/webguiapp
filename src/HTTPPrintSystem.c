@@ -461,6 +461,41 @@ void HTTPPrint_gsmmac(char *VarData, void *arg)
 }
 #endif
 
+
+#ifdef CONFIG_WEBGUIAPP_LORAWAN_ENABLE
+/*LORAWAN settings*/
+void HTTPPrint_lren(char *VarData, void *arg)
+{
+    PrintCheckbox(VarData, arg, GetSysConf()->lorawanSettings.Flags1.bIsLoRaWANEnabled);
+}
+void HTTPPrint_lrstat(char *VarData, void *arg)
+{
+    if (isLORAConnected())
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "CONNECTED");
+    else
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "DISCONNECTED");
+}
+void HTTPPrint_lrdvid(char *VarData, void *arg)
+{
+    uint8_t temp[16];
+    BytesToStr((unsigned char*) &GetSysConf()->lorawanSettings.DevEui, temp, 8);
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", temp);
+}
+
+void HTTPPrint_lrapid(char *VarData, void *arg)
+{
+    uint8_t temp[16];
+    BytesToStr((unsigned char*) &GetSysConf()->lorawanSettings.AppEui, temp, 8);
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", temp);
+}
+void HTTPPrint_lrapkey(char *VarData, void *arg)
+{
+    uint8_t temp[32];
+    BytesToStr((unsigned char*) &GetSysConf()->lorawanSettings.AppKey, temp, 16);
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", temp);
+}
+#endif
+
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
 void HTTPPrint_mqen1(char *VarData, void *arg)
 {
@@ -564,97 +599,116 @@ static void HTTPPrint_mqtt2st(char *VarData, void *arg)
         snprintf(VarData, MAX_DYNVAR_LENGTH, "DISCONNECTED");
 }
 
-
 /* Pass build configuration to web interface*/
-static void HTTPPrint_ifc_gprs(char *VarData, void *arg)
+static void HTTPPrint_hide_gprs(char *VarData, void *arg)
 {
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
-        snprintf(VarData, MAX_DYNVAR_LENGTH, "1");
+    snprintf(VarData, MAX_DYNVAR_LENGTH, " ");
 #else
-    snprintf(VarData, MAX_DYNVAR_LENGTH, "0");
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "hide");
 #endif
 }
 
-static void HTTPPrint_ifc_mq2(char *VarData, void *arg)
+static void HTTPPrint_hide_mqtt1(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, " ");
+}
+
+static void HTTPPrint_hide_mqtt2(char *VarData, void *arg)
 {
 #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
-        snprintf(VarData, MAX_DYNVAR_LENGTH, "1");
+    snprintf(VarData, MAX_DYNVAR_LENGTH, " ");
 #else
-        snprintf(VarData, MAX_DYNVAR_LENGTH, "0");
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "hide");
 #endif
+}
+
+static void HTTPPrint_hide_lora(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, " ");
+}
+
+static void HTTPPrint_hide_eth(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, " ");
+}
+
+static void HTTPPrint_hide_wifi(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, " ");
 }
 
 static void HTTPPrint_testvariable(char *VarData, void *arg)
 {
-static int counter = 1;
-snprintf(VarData, MAX_DYNVAR_LENGTH, "[Long extended dynamic variable number %d]", counter++);
+    static int counter = 1;
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "[Long extended dynamic variable number %d]", counter++);
 }
 
 //Default string if not found handler
 static void HTTPPrint_DEF(char *VarData, void *arg)
 {
-snprintf(VarData, MAX_DYNVAR_LENGTH, "#DEF");
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "#DEF");
 }
 
 dyn_var_handler_t HANDLERS_ARRAY[] = {
-    /*Ststem settings*/
-    { "name", sizeof("name") - 1, &HTTPPrint_name },
-    { "dname", sizeof("dname") - 1, &HTTPPrint_dname },
-    { "login", sizeof("login") - 1, &HTTPPrint_login },
-    { "pass", sizeof("pass") - 1, &HTTPPrint_pass },
-    { "ota", sizeof("ota") - 1, &HTTPPrint_ota },
-    { "fver", sizeof("fver") - 1, &HTTPPrint_fver },
-    { "idfver", sizeof("idfver") - 1, &HTTPPrint_idfver },
-    { "builddate", sizeof("builddate") - 1, &HTTPPrint_builddate },
-    { "serial", sizeof("serial") - 1, &HTTPPrint_serial },
-    { "serial10", sizeof("serial10") - 1, &HTTPPrint_serial10 },
-    { "otaurl", sizeof("otaurl") - 1, &HTTPPrint_otaurl },
+        /*Ststem settings*/
+        { "name", sizeof("name") - 1, &HTTPPrint_name },
+        { "dname", sizeof("dname") - 1, &HTTPPrint_dname },
+        { "login", sizeof("login") - 1, &HTTPPrint_login },
+        { "pass", sizeof("pass") - 1, &HTTPPrint_pass },
+        { "ota", sizeof("ota") - 1, &HTTPPrint_ota },
+        { "fver", sizeof("fver") - 1, &HTTPPrint_fver },
+        { "idfver", sizeof("idfver") - 1, &HTTPPrint_idfver },
+        { "builddate", sizeof("builddate") - 1, &HTTPPrint_builddate },
+        { "serial", sizeof("serial") - 1, &HTTPPrint_serial },
+        { "serial10", sizeof("serial10") - 1, &HTTPPrint_serial10 },
+        { "otaurl", sizeof("otaurl") - 1, &HTTPPrint_otaurl },
 
-    { "time", sizeof("time") - 1, &HTTPPrint_time },
-    { "uptime", sizeof("uptime") - 1, &HTTPPrint_uptime },
-    { "tshift", sizeof("tshift") - 1, &HTTPPrint_tshift },
-    { "tz", sizeof("tz") - 1, &HTTPPrint_tz },
+        { "time", sizeof("time") - 1, &HTTPPrint_time },
+        { "uptime", sizeof("uptime") - 1, &HTTPPrint_uptime },
+        { "tshift", sizeof("tshift") - 1, &HTTPPrint_tshift },
+        { "tz", sizeof("tz") - 1, &HTTPPrint_tz },
 
-    { "defadp", sizeof("defadp") - 1, &HTTPPrint_defadp },
-    { "wlev", sizeof("wlev") - 1, &HTTPPrint_wlev },
+        { "defadp", sizeof("defadp") - 1, &HTTPPrint_defadp },
+        { "wlev", sizeof("wlev") - 1, &HTTPPrint_wlev },
 
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
-    /*WiFi network*/
-    { "wfen", sizeof("wfen") - 1, &HTTPPrint_wfen },
-    { "wfstat", sizeof("wfstat") - 1, &HTTPPrint_wfstat },
-    { "cln", sizeof("cln") - 1, &HTTPPrint_cln },
-    { "apn", sizeof("apn") - 1, &HTTPPrint_apn },
-    { "ssidap", sizeof("ssidap") - 1, &HTTPPrint_ssidap },
-    { "wkeyap", sizeof("wkeyap") - 1, &HTTPPrint_wkeyap },
-    { "ipap", sizeof("ipap") - 1, &HTTPPrint_ipap },
-    { "ssid", sizeof("ssid") - 1, &HTTPPrint_ssid },
-    { "wkey", sizeof("wkey") - 1, &HTTPPrint_wkey },
-    { "cbdh", sizeof("cbdh") - 1, &HTTPPrint_cbdh },
-    { "ip", sizeof("ip") - 1, &HTTPPrint_ip },
-    { "msk", sizeof("msk") - 1, &HTTPPrint_msk },
-    { "gate", sizeof("gate") - 1, &HTTPPrint_gate },
-    { "dns", sizeof("dns") - 1, &HTTPPrint_dns },
-    { "dns2", sizeof("dns2") - 1, &HTTPPrint_dns2 },
-    { "dns3", sizeof("dns3") - 1, &HTTPPrint_dns3 },
-    { "macadr", sizeof("macadr") - 1, &HTTPPrint_macadr },
-    { "apmacadr", sizeof("apmacadr") - 1, &HTTPPrint_apmacadr },
-    #endif
+        /*WiFi network*/
+        { "wfen", sizeof("wfen") - 1, &HTTPPrint_wfen },
+        { "wfstat", sizeof("wfstat") - 1, &HTTPPrint_wfstat },
+        { "cln", sizeof("cln") - 1, &HTTPPrint_cln },
+        { "apn", sizeof("apn") - 1, &HTTPPrint_apn },
+        { "ssidap", sizeof("ssidap") - 1, &HTTPPrint_ssidap },
+        { "wkeyap", sizeof("wkeyap") - 1, &HTTPPrint_wkeyap },
+        { "ipap", sizeof("ipap") - 1, &HTTPPrint_ipap },
+        { "ssid", sizeof("ssid") - 1, &HTTPPrint_ssid },
+        { "wkey", sizeof("wkey") - 1, &HTTPPrint_wkey },
+        { "cbdh", sizeof("cbdh") - 1, &HTTPPrint_cbdh },
+        { "ip", sizeof("ip") - 1, &HTTPPrint_ip },
+        { "msk", sizeof("msk") - 1, &HTTPPrint_msk },
+        { "gate", sizeof("gate") - 1, &HTTPPrint_gate },
+        { "dns", sizeof("dns") - 1, &HTTPPrint_dns },
+        { "dns2", sizeof("dns2") - 1, &HTTPPrint_dns2 },
+        { "dns3", sizeof("dns3") - 1, &HTTPPrint_dns3 },
+        { "macadr", sizeof("macadr") - 1, &HTTPPrint_macadr },
+        { "apmacadr", sizeof("apmacadr") - 1, &HTTPPrint_apmacadr },
+        #endif
 
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
-    /*ETHERNET network*/
-    { "ethen", sizeof("ethen") - 1, &HTTPPrint_ethen },
-    { "ecbdh", sizeof("ecbdh") - 1, &HTTPPrint_ecbdh },
-    { "ethstat", sizeof("ethstat") - 1, &HTTPPrint_ethstat },
-    { "eip", sizeof("eip") - 1, &HTTPPrint_eip },
-    { "emsk", sizeof("emsk") - 1, &HTTPPrint_emsk },
-    { "egate", sizeof("egate") - 1, &HTTPPrint_egate },
-    { "edns", sizeof("edns") - 1, &HTTPPrint_edns },
-    { "bkedns", sizeof("bkedns") - 1, &HTTPPrint_bkedns },
-    { "fledns", sizeof("fledns") - 1, &HTTPPrint_fledns },
-    { "emacadr", sizeof("emacadr") - 1, &HTTPPrint_emacadr },
-    #endif
+        /*ETHERNET network*/
+        { "ethen", sizeof("ethen") - 1, &HTTPPrint_ethen },
+        { "ecbdh", sizeof("ecbdh") - 1, &HTTPPrint_ecbdh },
+        { "ethstat", sizeof("ethstat") - 1, &HTTPPrint_ethstat },
+        { "eip", sizeof("eip") - 1, &HTTPPrint_eip },
+        { "emsk", sizeof("emsk") - 1, &HTTPPrint_emsk },
+        { "egate", sizeof("egate") - 1, &HTTPPrint_egate },
+        { "edns", sizeof("edns") - 1, &HTTPPrint_edns },
+        { "bkedns", sizeof("bkedns") - 1, &HTTPPrint_bkedns },
+        { "fledns", sizeof("fledns") - 1, &HTTPPrint_fledns },
+        { "emacadr", sizeof("emacadr") - 1, &HTTPPrint_emacadr },
+        #endif
 
-    { "gsmstat", sizeof("gsmstat") - 1, &HTTPPrint_gsmstat },
+        { "gsmstat", sizeof("gsmstat") - 1, &HTTPPrint_gsmstat },
 
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
         /*GSM modem*/
@@ -673,17 +727,25 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "gsmmac", sizeof("gsmmac") - 1, &HTTPPrint_gsmmac },
         #endif
 
+#ifdef CONFIG_WEBGUIAPP_LORAWAN_ENABLE
+        /*LORAWAN settings*/
+        { "lren", sizeof("lren") - 1, &HTTPPrint_lren },
+        { "lrstat", sizeof("lrstat") - 1, &HTTPPrint_lrstat },
+        { "lrdvid", sizeof("lrdvid") - 1, &HTTPPrint_lrdvid },
+        { "lrapid", sizeof("lrapid") - 1, &HTTPPrint_lrapid },
+        { "lrapkey", sizeof("lrapkey") - 1, &HTTPPrint_lrapkey },
+#endif
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
-    /*MQTT*/
-    { "mqen1", sizeof("mqen1") - 1, &HTTPPrint_mqen1 },
-    { "mqurl1", sizeof("mqurl1") - 1, &HTTPPrint_mqurl1 },
-    { "mqport1", sizeof("mqport1") - 1, &HTTPPrint_mqport1 },
-    { "mqsys1", sizeof("mqsys1") - 1, &HTTPPrint_mqsys1 },
-    { "mqgrp1", sizeof("mqgrp1") - 1, &HTTPPrint_mqgrp1 },
-    { "mqid1", sizeof("mqid1") - 1, &HTTPPrint_mqid1 },
-    { "mqname1", sizeof("mqname1") - 1, &HTTPPrint_mqname1 },
-    { "mqpass1", sizeof("mqpass1") - 1, &HTTPPrint_mqpass1 },
-    #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
+        /*MQTT*/
+        { "mqen1", sizeof("mqen1") - 1, &HTTPPrint_mqen1 },
+        { "mqurl1", sizeof("mqurl1") - 1, &HTTPPrint_mqurl1 },
+        { "mqport1", sizeof("mqport1") - 1, &HTTPPrint_mqport1 },
+        { "mqsys1", sizeof("mqsys1") - 1, &HTTPPrint_mqsys1 },
+        { "mqgrp1", sizeof("mqgrp1") - 1, &HTTPPrint_mqgrp1 },
+        { "mqid1", sizeof("mqid1") - 1, &HTTPPrint_mqid1 },
+        { "mqname1", sizeof("mqname1") - 1, &HTTPPrint_mqname1 },
+        { "mqpass1", sizeof("mqpass1") - 1, &HTTPPrint_mqpass1 },
+        #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
         { "mqen2", sizeof("mqen2") - 1, &HTTPPrint_mqen2 },
         { "mqurl2", sizeof("mqurl2") - 1, &HTTPPrint_mqurl2 },
         { "mqport2", sizeof("mqport2") - 1, &HTTPPrint_mqport2 },
@@ -692,87 +754,92 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "mqgrp2", sizeof("mqgrp2") - 1, &HTTPPrint_mqgrp2 },
         { "mqname2", sizeof("mqname2") - 1, &HTTPPrint_mqname2 },
         { "mqpass2", sizeof("mqpass2") - 1, &HTTPPrint_mqpass2 },
+        #endif
 #endif
-#endif
-    /*SNTP*/
-    { "sntpen", sizeof("sntpen") - 1, &HTTPPrint_sntpen },
-    { "tmsrv", sizeof("tmsrv") - 1, &HTTPPrint_tmsrv },
+        /*SNTP*/
+        { "sntpen", sizeof("sntpen") - 1, &HTTPPrint_sntpen },
+        { "tmsrv", sizeof("tmsrv") - 1, &HTTPPrint_tmsrv },
 
-    { "freeram", sizeof("freeram") - 1, &HTTPPrint_freeram },
-    { "minram", sizeof("minram") - 1, &HTTPPrint_minram },
-    { "mqtt1st", sizeof("mqtt1st") - 1, &HTTPPrint_mqtt1st },
-    { "mqtt2st", sizeof("mqtt2st") - 1, &HTTPPrint_mqtt2st },
+        { "freeram", sizeof("freeram") - 1, &HTTPPrint_freeram },
+        { "minram", sizeof("minram") - 1, &HTTPPrint_minram },
+        { "mqtt1st", sizeof("mqtt1st") - 1, &HTTPPrint_mqtt1st },
+        { "mqtt2st", sizeof("mqtt2st") - 1, &HTTPPrint_mqtt2st },
 
-    /*ERROR report*/
-    { "status_fail", sizeof("status_fail") - 1, &HTTPPrint_status_fail },
+        /*ERROR report*/
+        { "status_fail", sizeof("status_fail") - 1, &HTTPPrint_status_fail },
 
-    { "ifc_gprs", sizeof("ifc_gprs") - 1, &HTTPPrint_ifc_gprs },
-    { "ifc_mq2", sizeof("ifc_mq2") - 1, &HTTPPrint_ifc_mq2 },
-    { "testvariable", sizeof("testvariable") - 1, &HTTPPrint_testvariable},
+        { "hide_eth", sizeof("hide_eth") - 1, &HTTPPrint_hide_eth },
+        { "hide_wifi", sizeof("hide_wifi") - 1, &HTTPPrint_hide_wifi },
+        { "hide_lora", sizeof("hide_lora") - 1, &HTTPPrint_hide_lora },
+        { "hide_gprs", sizeof("hide_gprs") - 1, &HTTPPrint_hide_gprs },
+        { "hide_mqtt1", sizeof("hide_mqtt1") - 1, &HTTPPrint_hide_mqtt1 },
+        { "hide_mqtt2", sizeof("hide_mqtt2") - 1, &HTTPPrint_hide_mqtt2 },
+
+        { "testvariable", sizeof("testvariable") - 1, &HTTPPrint_testvariable },
 
 };
 
 int HTTPPrint(httpd_req_t *req, char *buf, char *var)
 {
-char VarData[MAX_DYNVAR_LENGTH];
-const char incPat[] = "inc:";
-const int incPatLen = sizeof(incPat) - 1;
-if (!memcmp(var, incPat, incPatLen))
-{
-    const char rootFS[] = "/";
-    char filename[32];
-    filename[0] = 0x00;
-    var += incPatLen;
-    strcat(filename, rootFS);
-    strcat(filename, var);
-    espfs_file_t *file = espfs_fopen(fs, filename);
-    struct espfs_stat_t stat;
-    if (file)
+    char VarData[MAX_DYNVAR_LENGTH];
+    const char incPat[] = "inc:";
+    const int incPatLen = sizeof(incPat) - 1;
+    if (!memcmp(var, incPat, incPatLen))
     {
-        espfs_fstat(file, &stat);
-        int readBytes = espfs_fread(file, buf, stat.size);
-        espfs_fclose(file);
-        return readBytes;
-    }
-}
-
-bool fnd = false;
-char *p2 = var + strlen(var) - 1; //last var symbol
-int arg = 0;
-//searching for tag in handles array
-for (int i = 0; i < (sizeof(HANDLERS_ARRAY) / sizeof(HANDLERS_ARRAY[0])); ++i)
-{
-    if (*p2 == ')')
-    { //found close brace
-        char *p1 = p2;
-        while ((*p1 != '(') && (p1 > var))
-            --p1;
-        if (*p1 == '(')
-        { //found open brace
-            *p1 = 0x00; //trim variable to name part
-            ++p1; //to begin of argument
-            *p2 = 0x00; //set end of argument
-            arg = atoi(p1);
+        const char rootFS[] = "/";
+        char filename[32];
+        filename[0] = 0x00;
+        var += incPatLen;
+        strcat(filename, rootFS);
+        strcat(filename, var);
+        espfs_file_t *file = espfs_fopen(fs, filename);
+        struct espfs_stat_t stat;
+        if (file)
+        {
+            espfs_fstat(file, &stat);
+            int readBytes = espfs_fread(file, buf, stat.size);
+            espfs_fclose(file);
+            return readBytes;
         }
     }
-    if (strcmp(var, HANDLERS_ARRAY[i].tag) == 0
-            && HANDLERS_ARRAY[i].HandlerRoutine != NULL)
-    {
-        HANDLERS_ARRAY[i].HandlerRoutine(VarData, (void*) &arg);
-        fnd = true;
-        break;
-    }
-}
-if (!fnd)
-{
-    if (HTTPPrintCust != NULL)
-        return HTTPPrintCust(req, buf, var, arg);
-    else
-        HTTPPrint_DEF(VarData, NULL);
 
-}
-int dLen = strlen(VarData);
-memcpy(buf, VarData, dLen);
-return dLen;
+    bool fnd = false;
+    char *p2 = var + strlen(var) - 1; //last var symbol
+    int arg = 0;
+//searching for tag in handles array
+    for (int i = 0; i < (sizeof(HANDLERS_ARRAY) / sizeof(HANDLERS_ARRAY[0])); ++i)
+    {
+        if (*p2 == ')')
+        { //found close brace
+            char *p1 = p2;
+            while ((*p1 != '(') && (p1 > var))
+                --p1;
+            if (*p1 == '(')
+            { //found open brace
+                *p1 = 0x00; //trim variable to name part
+                ++p1; //to begin of argument
+                *p2 = 0x00; //set end of argument
+                arg = atoi(p1);
+            }
+        }
+        if (strcmp(var, HANDLERS_ARRAY[i].tag) == 0
+                && HANDLERS_ARRAY[i].HandlerRoutine != NULL)
+        {
+            HANDLERS_ARRAY[i].HandlerRoutine(VarData, (void*) &arg);
+            fnd = true;
+            break;
+        }
+    }
+    if (!fnd)
+    {
+        if (HTTPPrintCust != NULL)
+            return HTTPPrintCust(req, buf, var, arg);
+        else
+            HTTPPrint_DEF(VarData, NULL);
+
+    }
+    int dLen = strlen(VarData);
+    memcpy(buf, VarData, dLen);
+    return dLen;
 
 }

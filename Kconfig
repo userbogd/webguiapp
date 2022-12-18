@@ -420,8 +420,6 @@ menu "WebGUIApp"
 	    endif
 	endmenu	
 
-
-
      menu "GPRS settings"
 			config WEBGUIAPP_GPRS_ENABLE
 				bool "Enabled GPRS PPP interface"
@@ -576,7 +574,49 @@ menu "WebGUIApp"
              	    
 	    endif
     endmenu
-
+    
+	menu "LoRaWAN settings"
+			config WEBGUIAPP_LORAWAN_ENABLE
+				bool "Enabled LoRaWAN interface"
+	        	default n
+	        	help
+	        		Set enabled LoRaWAN module
+	    
+	    if WEBGUIAPP_LORAWAN_ENABLE
+			config LORA_SPI_CS_GPIO
+            	int "SPI CS GPIO number for LoRa module"
+            	range 0 33
+            	default 4
+            	help
+                	Set the GPIO number used by SPI chip select for LoRa module.
+            config LORA_DIO0_GPIO
+            	int "DIO0 GPIO number for LoRa module"
+            	range 0 39
+            	default 34
+            	help
+                	Set the GPIO number used by .
+        
+       		config LORA_DIO1_GPIO
+            	int "DIO1 GPI1 number for LoRa module"
+            	range 0 39
+            	default 35
+            	help
+                	Set the GPIO number used by . 
+            config LORA_APP_ID
+            	string "Default LoRaWAN Application ID"
+            	default "BBBBBBBBBBBBBBBB"
+            	help    	
+	   	 			Set default application ID for LoRaWAN network	
+	   	 			
+            config LORA_APP_KEY
+            	string "Default LoRaWAN Application key"
+            	default "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+            	help    	
+	   	 			Set default application key for LoRaWAN network	   	 				            
+	   endif
+	endmenu
+	
+    
 	menu "MQTT settings"
 		config WEBGUIAPP_MQTT_ENABLE
 			bool "Enabled MQTT transport"

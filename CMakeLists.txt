@@ -11,6 +11,7 @@ idf_component_register(
     	 "src/WiFiTransport.c"
     	 "src/GSMTransport.c"
     	 "src/ETHTransport.c"
+    	 "src/LoRaWANTransport.c"
     	 "src/SNTP.c"
     	 "src/MQTT.c"
     	 "src/MQTTSysHandler.c"
@@ -33,4 +34,5 @@ idf_component_register(
     		 esp_https_ota
     		 app_update
     		 jReadWrite
+    		 ttn-esp32
 ) 

@@ -76,11 +76,6 @@
 #define DEFAULT_DNS2                "4.4.8.8"
 #define DEFAULT_DNS3                "1.1.1.1"
 
-    /*GSM DEFAULT SETTINGS*/
-#define DEFAULT_GSM_GLOBAL_ENABLED      true
-
-
-//#define LOCK_RELAY_ON
 
 // Application-dependent structure used to contain address information
 
@@ -239,6 +234,27 @@
 
         } gsmSettings;
 #endif
+
+        struct
+          {
+              char DevEui[8];
+              char AppEui[8];
+              char AppKey[16];
+
+              struct
+              {
+                  char b0 :1;
+                  char b1 :1;
+                  char b2 :1;
+                  char b3 :1;
+                  char b4 :1;
+                  char b5 :1;
+                  char b6 :1;
+                  char bIsLoRaWANEnabled :1;
+              } Flags1; // Flag structure
+
+          } lorawanSettings;
+
 
     } SYS_CONFIG;
 
