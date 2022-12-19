@@ -48,8 +48,6 @@
 #define LORAWAN_APP_LOG_ENABLED 1
 #define LORAWAN_MESSAGE_BUFER_LENTH 32
 
-static const int LORA_WAIT_DELIVERY_BIT = BIT2;
-
 QueueHandle_t LORAMessagesQueueHandle;
 static StaticQueue_t xStaticLoRaMessagesQueue;
 uint8_t LoRaMessagesQueueStorageArea[LORAWAN_MESSAGE_BUFER_LENTH
@@ -72,7 +70,6 @@ esp_err_t LORASendData(LORA_DATA_SEND_STRUCT *pdss)
         LORA_DATA_SEND_STRUCT DSS;
         DSS.raw_data_ptr = ptr;
         DSS.data_length = MESSAGE_LENGTH;
-
         if (xQueueSend(LORAMessagesQueueHandle, &DSS,
                 pdMS_TO_TICKS(1000)) == pdPASS)
             return ESP_OK;
@@ -111,11 +108,10 @@ void LoRaWANTransportTask(void *pvParameter)
     {
         while (!ttn_is_connected())
             vTaskDelay(pdMS_TO_TICKS(300));
-
         if (ttn_is_provisioned())
         {
-            xEventGroupClearBits(transport_event_group, LORA_WAIT_DELIVERY_BIT);
-            xQueuePeek(LORAMessagesQueueHandle, &DSS, portMAX_DELAY);
+            xQueueReceive(LORAMessagesQueueHandle, &DSS, portMAX_DELAY);
+            ttn_transmit_message((const uint8_t*) DSS.raw_data_ptr, MESSAGE_LENGTH, 1, true);
 
 #if LORAWAN_APP_LOG_ENABLED == 1
             char P[MESSAGE_LENGTH * 2 + 1];
@@ -123,9 +119,6 @@ void LoRaWANTransportTask(void *pvParameter)
             P[MESSAGE_LENGTH * 2] = 0x00;
             ESP_LOGI(TAG, "Sent=%s", P);
 #endif
-            ttn_transmit_message((const uint8_t*) DSS.raw_data_ptr, MESSAGE_LENGTH, 1, true);
-            xQueueReceive(LORAMessagesQueueHandle, &DSS, 0);
-
         }
         else
         {
@@ -135,7 +128,6 @@ void LoRaWANTransportTask(void *pvParameter)
         }
     }
 }
-
 
 
 void LoRaWANRejoin(void)
@@ -151,7 +143,6 @@ void LoRaWANInitJoinTask(void *pvParameter)
                                                      sizeof(LORA_DATA_SEND_STRUCT),
                                                      LoRaMessagesQueueStorageArea,
                                                      &xStaticLoRaMessagesQueue);
-
     ttn_init();
     // Configure the SX127x pins
     ttn_configure_pins(TTN_SPI_HOST, TTN_PIN_NSS, TTN_PIN_RXTX, -1,
@@ -168,7 +159,6 @@ void LoRaWANInitJoinTask(void *pvParameter)
     BytesToStr((unsigned char*) &GetSysConf()->lorawanSettings.AppKey,
                (unsigned char*) appKey,
                16);
-
     // Register callback for received messages
     ttn_on_message(messageReceived);
 
