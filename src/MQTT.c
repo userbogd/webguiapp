@@ -41,11 +41,16 @@ mqtt_client_t mqtt[CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM] = { 0 };
 
 #define TAG "MQTTApp"
 
-static void mqtt_system_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
+static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
+
+static void mqtt1_system_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
+static void mqtt2_system_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
+static void mqtt1_user_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
+static void mqtt2_user_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
 
 void (*UserEventHandler)(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
 void regUserEventHandler(
-        void (*event_handler)(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data))
+                         void (*event_handler)(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data))
 {
     UserEventHandler = event_handler;
 }
@@ -93,13 +98,14 @@ void ComposeTopic(char *topic, int idx, char *service_name, char *direct)
     strcat((char*) topic, direct);  // Data direction UPLINK or DOWNLINK
 }
 
-static void mqtt_system_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
+static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
     xSemaphoreTake(xSemaphoreMQTTHandle, pdMS_TO_TICKS(1000));
     ESP_LOGI(TAG, "Event dispatched from event loop base=%s, event_id=%d", base, event_id);
     esp_mqtt_event_handle_t event = event_data;
     esp_mqtt_client_handle_t client = event->client;
-    mqtt_client_t *ctx = (mqtt_client_t*) event->user_context;
+
+    //mqtt_client_t *ctx = (mqtt_client_t*) event->user_context;
 
     int msg_id;
     static int MQTTReconnectCounter = 0; //Change network adapter every MQTT_RECONNECT_CHANGE_ADAPTER number attempts
@@ -107,22 +113,22 @@ static void mqtt_system_event_handler(void *handler_args, esp_event_base_t base,
     switch ((esp_mqtt_event_id_t) event_id)
     {
         case MQTT_EVENT_CONNECTED:
-            ctx->is_connected = true;
+            mqtt[idx].is_connected = true;
             MQTTReconnectCounter = 0;
-            ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED client %d", ctx->mqtt_index);
-            ComposeTopic(topic, ctx->mqtt_index, "SYSTEM", "DWLINK");
+            ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED client %d", idx);
+            ComposeTopic(topic, idx, "SYSTEM", "DWLINK");
             msg_id = esp_mqtt_client_subscribe(client, (const char*) topic, 0);
             ESP_LOGI(TAG, "Subscribe to %s", topic);
             ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
         break;
         case MQTT_EVENT_DISCONNECTED:
-            ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED client %d", ctx->mqtt_index);
+            ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED client %d", idx);
             if (++MQTTReconnectCounter > MQTT_RECONNECT_CHANGE_ADAPTER)
             {
                 MQTTReconnectCounter = 0;
                 NextDefaultNetIF();
             }
-            ctx->is_connected = false;
+            mqtt[idx].is_connected = false;
         break;
         case MQTT_EVENT_SUBSCRIBED:
             ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
@@ -134,17 +140,17 @@ static void mqtt_system_event_handler(void *handler_args, esp_event_base_t base,
             ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
         break;
         case MQTT_EVENT_DATA:
-            ESP_LOGI(TAG, "MQTT_EVENT_DATA, client %d", ctx->mqtt_index);
+            ESP_LOGI(TAG, "MQTT_EVENT_DATA, client %d", idx);
             //Check if topic is SYSTEM and pass data to handler
-            ComposeTopic(topic, ctx->mqtt_index, "SYSTEM", "DWLINK");
+            ComposeTopic(topic, idx, "SYSTEM", "DWLINK");
             if (!memcmp(topic, event->topic, event->topic_len))
             {
-                SystemDataHandler(event->data, event->data_len, ctx->mqtt_index);
-                ESP_LOGI(TAG, "Control data handler on client %d", ctx->mqtt_index);
+                SystemDataHandler(event->data, event->data_len, idx);
+                ESP_LOGI(TAG, "Control data handler on client %d", idx);
             }
         break;
         case MQTT_EVENT_ERROR:
-            ESP_LOGI(TAG, "MQTT_EVENT_ERROR, client %d", ctx->mqtt_index);
+            ESP_LOGI(TAG, "MQTT_EVENT_ERROR, client %d", idx);
             if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT)
             {
                 log_error_if_nonzero("reported from esp-tls", event->error_handle->esp_tls_last_esp_err);
@@ -264,11 +270,11 @@ static void start_mqtt()
             mqtt_cfg.client_id = tmp;
             mqtt[i].is_connected = false;
             mqtt[i].mqtt_index = i;
-            mqtt_cfg.user_context = (void*) &mqtt[i];
+            //mqtt_cfg.user_context = (void*) &mqtt[i];
             mqtt[i].mqtt = esp_mqtt_client_init(&mqtt_cfg);
             /* The last argument may be used to pass data to the event handler, in this example mqtt_system_event_handler */
-            esp_mqtt_client_register_event(mqtt[i].mqtt, ESP_EVENT_ANY_ID, mqtt_system_event_handler, &mqtt[i].mqtt);
-            esp_mqtt_client_register_event(mqtt[i].mqtt, ESP_EVENT_ANY_ID, UserEventHandler, &mqtt[i].mqtt);
+            esp_mqtt_client_register_event(mqtt[i].mqtt, ESP_EVENT_ANY_ID, mqtt[i].system_event_handler, &mqtt[i].mqtt);
+            esp_mqtt_client_register_event(mqtt[i].mqtt, ESP_EVENT_ANY_ID, mqtt[i].user_event_handler, &mqtt[i].mqtt);
             esp_mqtt_client_start(mqtt[i].mqtt);
             xTaskCreate(MQTTTaskTransmit, "MQTTTaskTransmit", 1024 * 4, (void*) &mqtt[i].mqtt_index, 3, NULL);
         }
@@ -298,7 +304,28 @@ void MQTTRun(void)
     mqtt[1].mqtt_queue = MQTT2MessagesQueueHandle;
 #endif
 
+    mqtt[0].system_event_handler = mqtt1_system_event_handler;
+    mqtt[0].user_event_handler = mqtt1_user_event_handler;
+    mqtt[1].system_event_handler = mqtt2_system_event_handler;
+    mqtt[1].user_event_handler = mqtt2_user_event_handler;
     start_mqtt();
+}
+
+static void mqtt1_system_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
+{
+    mqtt_system_event_handler(0, handler_args, base, event_id, event_data);
+}
+static void mqtt2_system_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
+{
+    mqtt_system_event_handler(1, handler_args, base, event_id, event_data);
+}
+static void mqtt1_user_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
+{
+    UserEventHandler(handler_args, base, event_id, event_data);
+}
+static void mqtt2_user_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
+{
+    UserEventHandler(handler_args, base, event_id, event_data);
 }
 
 #endif

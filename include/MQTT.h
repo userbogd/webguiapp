@@ -65,6 +65,8 @@ typedef struct
     QueueHandle_t mqtt_queue;   /// queue for data sending over current mqtt client
     int wait_delivery_bit;  /// is message delivered before timeout flag
     bool is_connected; /// is client connected flag
+    void (*system_event_handler)(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
+    void (*user_event_handler)(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
 } mqtt_client_t;
 
 mqtt_client_t* GetMQTTHandlesPool(int idx);
