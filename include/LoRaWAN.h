@@ -12,31 +12,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *  	 \file webguiapp.h
+ *  	 \file LoRaWAN.h
  *    \version 1.0
- * 		 \date 2022-08-21
+ * 		 \date 2022-12-19
  *     \author Bogdan Pilyugin
  * 	    \brief    
  *    \details 
  *	\copyright Apache License, Version 2.0
  */
 
-#ifndef COMPONENTS_WEBGUIAPPCOMPONENT_INCLUDE_WEBGUIAPP_H_
-#define COMPONENTS_WEBGUIAPPCOMPONENT_INCLUDE_WEBGUIAPP_H_
+#ifndef COMPONENTS_WEBGUIAPP_INCLUDE_LORAWAN_H_
+#define COMPONENTS_WEBGUIAPP_INCLUDE_LORAWAN_H_
 
-#include "HTTPServer.h"
-#include "MQTT.h"
-#include "LoRaWAN.h"
 
-#include "esp_log.h"
-#include "esp_event.h"
-#include "esp_netif.h"
-#include "esp_system.h"
-#include "driver/spi_master.h"
+typedef struct
+{
+    char *raw_data_ptr;
+    int data_length;
+}LORA_DATA_SEND_STRUCT;
 
-esp_err_t spi_device_polling_transmit_synchronized(spi_device_handle_t handle, spi_transaction_t *trans_desc);
+void LoRaWANInitJoinTask(void *pvParameter);
+void LoRaWANStop(void);
+void LoRaWANStart(void);
+esp_err_t LORASendData(LORA_DATA_SEND_STRUCT *pdss);
+void regLoRaUserReceiveHandler(
+        void (*user_handler)(const char *message, int length, int port));
 
-bool GetUserAppNeedReset(void);
-void SetUserAppNeedReset(bool res);
-
-#endif /* COMPONENTS_WEBGUIAPPCOMPONENT_INCLUDE_WEBGUIAPP_H_ */
+#endif /* COMPONENTS_WEBGUIAPP_INCLUDE_LORAWAN_H_ */

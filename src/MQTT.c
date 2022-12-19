@@ -25,7 +25,7 @@
 #include "NetTransport.h"
 #include "MQTT.h"
 
-#define CH_MESSAGE_BUFER_LENTH 32  //size of mqtt queue
+#define MQTT_MESSAGE_BUFER_LENTH 32  //size of mqtt queue
 #define MQTT_RECONNECT_CHANGE_ADAPTER   3
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
@@ -34,8 +34,8 @@ static SemaphoreHandle_t xSemaphoreMQTTHandle = NULL;
 static StaticSemaphore_t xSemaphoreMQTTBuf;
 static StaticQueue_t xStaticMQTT1MessagesQueue;
 static StaticQueue_t xStaticMQTT2MessagesQueue;
-uint8_t MQTT1MessagesQueueStorageArea[CH_MESSAGE_BUFER_LENTH * sizeof(DATA_SEND_STRUCT)];
-uint8_t MQTT2MessagesQueueStorageArea[CH_MESSAGE_BUFER_LENTH * sizeof(DATA_SEND_STRUCT)];
+uint8_t MQTT1MessagesQueueStorageArea[MQTT_MESSAGE_BUFER_LENTH * sizeof(MQTT_DATA_SEND_STRUCT)];
+uint8_t MQTT2MessagesQueueStorageArea[MQTT_MESSAGE_BUFER_LENTH * sizeof(MQTT_DATA_SEND_STRUCT)];
 
 mqtt_client_t mqtt[CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM] = { 0 };
 
@@ -207,7 +207,7 @@ void MQTTReconnect(void)
 
 void MQTTTaskTransmit(void *pvParameter)
 {
-    DATA_SEND_STRUCT DSS;
+    MQTT_DATA_SEND_STRUCT DSS;
     int idx = *(int*) pvParameter;
     while (!mqtt[idx].mqtt_queue)
         vTaskDelay(pdMS_TO_TICKS(300)); //wait for MQTT queue ready
@@ -283,16 +283,16 @@ void MQTTRun(void)
     MQTT1MessagesQueueHandle = NULL;
     MQTT2MessagesQueueHandle = NULL;
     if (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled)
-        MQTT1MessagesQueueHandle = xQueueCreateStatic(CH_MESSAGE_BUFER_LENTH,
-                                                      sizeof(DATA_SEND_STRUCT),
+        MQTT1MessagesQueueHandle = xQueueCreateStatic(MQTT_MESSAGE_BUFER_LENTH,
+                                                      sizeof(MQTT_DATA_SEND_STRUCT),
                                                       MQTT1MessagesQueueStorageArea,
                                                       &xStaticMQTT1MessagesQueue);
     mqtt[0].mqtt_queue = MQTT1MessagesQueueHandle;
 
 #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
     if (GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled)
-        MQTT2MessagesQueueHandle = xQueueCreateStatic(CH_MESSAGE_BUFER_LENTH,
-                                                      sizeof(DATA_SEND_STRUCT),
+        MQTT2MessagesQueueHandle = xQueueCreateStatic(MQTT_MESSAGE_BUFER_LENTH,
+                                                      sizeof(MQTT_DATA_SEND_STRUCT),
                                                       MQTT2MessagesQueueStorageArea,
                                                       &xStaticMQTT2MessagesQueue);
     mqtt[1].mqtt_queue = MQTT2MessagesQueueHandle;

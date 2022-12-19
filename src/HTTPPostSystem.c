@@ -22,6 +22,7 @@
  */
 
 #include "HTTPServer.h"
+#include "LoRaWAN.h"
 
 static const char *TAG = "HTTPServerPost";
 
@@ -104,26 +105,26 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
     if (httpd_query_key_value(PostData, "ethen", tmp, sizeof(tmp)) == ESP_OK)
     {
         if (!strcmp((const char*) tmp, (const char*) "1"))
-        TempIsETHEnabled = true;
+            TempIsETHEnabled = true;
     }
     if (httpd_query_key_value(PostData, "dhcp", tmp, sizeof(tmp)) == ESP_OK)
     {
         if (!strcmp((const char*) tmp, (const char*) "1"))
-        TempIsETHDHCPEnabled = true;
+            TempIsETHDHCPEnabled = true;
     }
 
     if (httpd_query_key_value(PostData, "ipa", tmp, 15) == ESP_OK)
-    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.IPAddr);
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.IPAddr);
     if (httpd_query_key_value(PostData, "mas", tmp, 15) == ESP_OK)
-    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Mask);
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Mask);
     if (httpd_query_key_value(PostData, "gte", tmp, 15) == ESP_OK)
-    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Gateway);
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Gateway);
     if (httpd_query_key_value(PostData, "dns1", tmp, 15) == ESP_OK)
-    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr1);
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr1);
     if (httpd_query_key_value(PostData, "dns2", tmp, 15) == ESP_OK)
-    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr2);
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr2);
     if (httpd_query_key_value(PostData, "dns3", tmp, 15) == ESP_OK)
-    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr3);
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr3);
 
 #endif
 
@@ -442,6 +443,58 @@ static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
             memcpy(PostData, "/reboot.html", sizeof "/reboot.html");
             return HTTP_IO_REDIRECT;
         }
+
+    }
+
+    if (httpd_query_key_value(PostData, "cmd", tmp, 4) == ESP_OK)
+    {
+        if (!strcmp(tmp, (const char*) "1"))
+        {
+            ESP_LOGI(TAG, "Got command F1 send test lora");
+            const char test[] = {"LoRaWAN test message"};
+            LORA_DATA_SEND_STRUCT dss;
+            dss.raw_data_ptr = test;
+            dss.data_length = sizeof(test)+1;
+            LORASendData(&dss);
+            return HTTP_IO_DONE_NOREFRESH;
+        }
+        else if (!strcmp(tmp, (const char*) "2"))
+        {
+            return HTTP_IO_DONE_NOREFRESH;
+        }
+        else if (!strcmp(tmp, (const char*) "3"))
+        {
+            return HTTP_IO_DONE_NOREFRESH;
+        }
+        else if (!strcmp(tmp, (const char*) "4"))
+        {
+            return HTTP_IO_DONE_NOREFRESH;
+        }
+        else if (!strcmp(tmp, (const char*) "5"))
+        {
+            return HTTP_IO_DONE_NOREFRESH;
+        }
+        else if (!strcmp(tmp, (const char*) "6"))
+        {
+            return HTTP_IO_DONE_NOREFRESH;
+        }
+        else if (!strcmp(tmp, (const char*) "7"))
+        {
+            return HTTP_IO_DONE_NOREFRESH;
+        }
+        else if (!strcmp(tmp, (const char*) "8"))
+        {
+            return HTTP_IO_DONE_NOREFRESH;
+        }
+        else if (!strcmp(tmp, (const char*) "9"))
+        {
+            return HTTP_IO_DONE_NOREFRESH;
+        }
+        else if (!strcmp(tmp, (const char*) "10"))
+        {
+            return HTTP_IO_DONE_NOREFRESH;
+        }
+
 
     }
 

@@ -11,7 +11,7 @@ idf_component_register(
     	 "src/WiFiTransport.c"
     	 "src/GSMTransport.c"
     	 "src/ETHTransport.c"
-    	 "src/LoRaWANTransport.c"
+    	 "src/LoRaWAN.c"
     	 "src/SNTP.c"
     	 "src/MQTT.c"
     	 "src/MQTTSysHandler.c"

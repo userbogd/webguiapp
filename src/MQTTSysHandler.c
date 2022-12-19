@@ -130,7 +130,7 @@ static mqtt_app_err_t ResponceWithError(int idx,
     if (buf)
     {
         memcpy(buf, JSONErrorMess, strlen(JSONErrorMess));
-        DATA_SEND_STRUCT DSS;
+        MQTT_DATA_SEND_STRUCT DSS;
         ComposeTopic(DSS.topic, idx, "SYSTEM", "UPLINK");
         DSS.raw_data_ptr = buf;
         DSS.data_length = strlen(JSONErrorMess);
@@ -217,7 +217,7 @@ static mqtt_app_err_t ResponceWithFile(int idx, espfs_file_t *file,
     const char tail[] = "}";
     strcat((fdata + readBytes), tail);
     free(filebuf);
-    DATA_SEND_STRUCT DSS;
+    MQTT_DATA_SEND_STRUCT DSS;
     ComposeTopic(DSS.topic, idx, "SYSTEM", "UPLINK");
     DSS.raw_data_ptr = outbuf;
     DSS.data_length = (fdata - outbuf) + readBytes + strlen(tail);

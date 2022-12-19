@@ -48,20 +48,7 @@ typedef struct
 
 QueueHandle_t MQTT1MessagesQueueHandle;
 QueueHandle_t MQTT2MessagesQueueHandle;
-
 EventGroupHandle_t transport_event_group;
-
-typedef enum
-{
-  MQTT = 0,
-} transport_data_type;
-
-typedef struct
-{
-    transport_data_type dType;
-    char *raw_data_ptr;
-    int data_length;
-} net_transport_data_t;
 
 void StartTimeGet(void);
 
@@ -70,10 +57,7 @@ void WiFiSTAStart(void);
 void EthStart(void);
 
 void WiFiTransportTask(void *prm);
-void LoRaWANInitJoinTask(void *pvParameter);
 
-void LoRaWANStop(void);
-void LoRaWANStart(void);
 
 void PPPModemColdStart(void);
 void PPPModemSoftRestart(void);
@@ -122,7 +106,6 @@ uint32_t GetUpTime(void);
 
 void RegEthReset(void (*eth_rst)(uint8_t level));
 void RegGSMReset(void (*gsm_rst)(uint8_t level));
-void regLoRaUserReceiveHandler(
-        void (*user_handler)(const char *message, int length, int port));
+
 
 #endif /* MAIN_INCLUDE_NETTRANSPORT_H_ */

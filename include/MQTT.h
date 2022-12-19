@@ -52,7 +52,7 @@ typedef struct
     char topic[CONFIG_WEBGUIAPP_MQTT_MAX_TOPIC_LENGTH];
     char *raw_data_ptr;
     int data_length;
-}DATA_SEND_STRUCT;
+}MQTT_DATA_SEND_STRUCT;
 
 /**
  * @brief wrapper around esp_mqtt_client_handle_t with additional info

@@ -28,6 +28,7 @@
 #include "SystemConfiguration.h"
 #include "NetTransport.h"
 #include "webguiapp.h"
+#include "LoRaWAN.h"
 
 // Pins and other resources
 /*Defined in global configuration*/
@@ -52,7 +53,7 @@ static const int LORA_WAIT_DELIVERY_BIT = BIT2;
 QueueHandle_t LORAMessagesQueueHandle;
 static StaticQueue_t xStaticLoRaMessagesQueue;
 uint8_t LoRaMessagesQueueStorageArea[LORAWAN_MESSAGE_BUFER_LENTH
-        * sizeof(DATA_SEND_STRUCT)];
+        * sizeof(LORA_DATA_SEND_STRUCT)];
 
 void (*LoRaUserReceiveHandler)(const char *message, int length, int port);
 void regLoRaUserReceiveHandler(
@@ -62,13 +63,13 @@ void regLoRaUserReceiveHandler(
 }
 
 
-esp_err_t LORASendData(DATA_SEND_STRUCT *pdss)
+esp_err_t LORASendData(LORA_DATA_SEND_STRUCT *pdss)
 {
     char *ptr = (char*) malloc(MESSAGE_LENGTH);
     if (ptr)
     {
         memcpy(ptr, pdss->raw_data_ptr, MESSAGE_LENGTH);
-        DATA_SEND_STRUCT DSS;
+        LORA_DATA_SEND_STRUCT DSS;
         DSS.raw_data_ptr = ptr;
         DSS.data_length = MESSAGE_LENGTH;
 
@@ -96,13 +97,14 @@ void messageReceived(const uint8_t *message, size_t length, ttn_port_t port)
         ESP_LOGI(TAG, "Received=%s", P);
     }
 #endif
-    //TODO Here registered from application handler must be called
+    if(LoRaUserReceiveHandler != NULL)
+        LoRaUserReceiveHandler((char*)message, length, (int)port);
 
 }
 
 void LoRaWANTransportTask(void *pvParameter)
 {
-    DATA_SEND_STRUCT DSS;
+    LORA_DATA_SEND_STRUCT DSS;
     while (!LORAMessagesQueueHandle)
         vTaskDelay(pdMS_TO_TICKS(300)); //wait for LORA queue ready
     while (1)
@@ -146,7 +148,7 @@ void LoRaWANInitJoinTask(void *pvParameter)
     LORAMessagesQueueHandle = NULL;
     if (GetSysConf()->lorawanSettings.Flags1.bIsLoRaWANEnabled)
         LORAMessagesQueueHandle = xQueueCreateStatic(LORAWAN_MESSAGE_BUFER_LENTH,
-                                                     sizeof(DATA_SEND_STRUCT),
+                                                     sizeof(LORA_DATA_SEND_STRUCT),
                                                      LoRaMessagesQueueStorageArea,
                                                      &xStaticLoRaMessagesQueue);
 
