@@ -54,6 +54,14 @@ static StaticQueue_t xStaticLoRaMessagesQueue;
 uint8_t LoRaMessagesQueueStorageArea[LORAWAN_MESSAGE_BUFER_LENTH
         * sizeof(DATA_SEND_STRUCT)];
 
+void (*LoRaUserReceiveHandler)(const char *message, int length, int port);
+void regLoRaUserReceiveHandler(
+        void (*user_handler)(const char *message, int length, int port))
+{
+    LoRaUserReceiveHandler = user_handler;
+}
+
+
 esp_err_t LORASendData(DATA_SEND_STRUCT *pdss)
 {
     char *ptr = (char*) malloc(MESSAGE_LENGTH);

@@ -122,5 +122,7 @@ uint32_t GetUpTime(void);
 
 void RegEthReset(void (*eth_rst)(uint8_t level));
 void RegGSMReset(void (*gsm_rst)(uint8_t level));
+void regLoRaUserReceiveHandler(
+        void (*user_handler)(const char *message, int length, int port));
 
 #endif /* MAIN_INCLUDE_NETTRANSPORT_H_ */
