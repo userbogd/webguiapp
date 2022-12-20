@@ -48,9 +48,9 @@ static void mqtt2_system_event_handler(void *handler_args, esp_event_base_t base
 static void mqtt1_user_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
 static void mqtt2_user_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
 
-void (*UserEventHandler)(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
+void (*UserEventHandler)(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
 void regUserEventHandler(
-                         void (*event_handler)(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data))
+                         void (*event_handler)(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data))
 {
     UserEventHandler = event_handler;
 }
@@ -321,11 +321,11 @@ static void mqtt2_system_event_handler(void *handler_args, esp_event_base_t base
 }
 static void mqtt1_user_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
-    UserEventHandler(handler_args, base, event_id, event_data);
+    UserEventHandler(0, handler_args, base, event_id, event_data);
 }
 static void mqtt2_user_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
-    UserEventHandler(handler_args, base, event_id, event_data);
+    UserEventHandler(1, handler_args, base, event_id, event_data);
 }
 
 #endif
