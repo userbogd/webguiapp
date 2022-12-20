@@ -57,6 +57,10 @@
 
 static SYS_CONFIG SysConfig;
 
+#define SPI_LOCK_TIMEOUT_MS (1000)
+SemaphoreHandle_t xSemaphoreSPIHandle = NULL;
+StaticSemaphore_t xSemaphoreSPIBuf;
+
 #define NETWORK_START_TIMEOUT (60)
 
 static int NetworkStartTimeout = 0;
@@ -65,6 +69,21 @@ static bool isUserAppNeedReset = false;
 static void InitSysIO(void);
 static void InitSysSPI(void);
 static void InitSysI2C(void);
+
+esp_err_t spi_device_polling_transmit_synchronized(spi_device_handle_t handle, spi_transaction_t *trans_desc)
+{
+    esp_err_t res;
+    if (xSemaphoreTake(xSemaphoreSPIHandle,pdMS_TO_TICKS(SPI_LOCK_TIMEOUT_MS)) == pdTRUE)
+    {
+        res = spi_device_polling_transmit(handle, trans_desc);
+        xSemaphoreGive(xSemaphoreSPIHandle);
+    }
+    else
+    {
+        res = ESP_ERR_TIMEOUT;
+    }
+    return res;
+}
 
 esp_err_t WebGuiAppInit(void)
 {
@@ -203,6 +222,8 @@ gpio_set_level(CONFIG_ETH_SPI_PHY_RST0_GPIO, 0);
 static void InitSysSPI(void)
 {
 #ifdef CONFIG_WEBGUIAPP_SPI_ENABLE
+xSemaphoreSPIHandle = xSemaphoreCreateBinaryStatic(&xSemaphoreSPIBuf);
+xSemaphoreGive(xSemaphoreSPIHandle);
 spi_bus_config_t buscfg =
 {
     .miso_io_num = CONFIG_SPI_MISO_GPIO,
@@ -436,3 +457,6 @@ void SetUserAppNeedReset(bool res)
 {
     isUserAppNeedReset = res;
 }
+
+
+
