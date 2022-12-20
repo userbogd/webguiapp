@@ -46,7 +46,7 @@
 #define MESSAGE_LENGTH 32
 #define TAG "LoRaWANApp"
 #define LORAWAN_APP_LOG_ENABLED 1
-#define LORAWAN_MESSAGE_BUFER_LENTH 32
+#define LORAWAN_MESSAGE_BUFER_LENTH 8
 
 QueueHandle_t LORAMessagesQueueHandle;
 static StaticQueue_t xStaticLoRaMessagesQueue;
@@ -59,7 +59,6 @@ void regLoRaUserReceiveHandler(
 {
     LoRaUserReceiveHandler = user_handler;
 }
-
 
 esp_err_t LORASendData(LORA_DATA_SEND_STRUCT *pdss)
 {
@@ -111,14 +110,13 @@ void LoRaWANTransportTask(void *pvParameter)
         if (ttn_is_provisioned())
         {
             xQueueReceive(LORAMessagesQueueHandle, &DSS, portMAX_DELAY);
-            ttn_transmit_message((const uint8_t*) DSS.raw_data_ptr, MESSAGE_LENGTH, 1, true);
-
 #if LORAWAN_APP_LOG_ENABLED == 1
             char P[MESSAGE_LENGTH * 2 + 1];
             BytesToStr((unsigned char*) DSS.raw_data_ptr, (unsigned char*) P, MESSAGE_LENGTH);
             P[MESSAGE_LENGTH * 2] = 0x00;
-            ESP_LOGI(TAG, "Sent=%s", P);
+            ESP_LOGI(TAG, "Send=%s", P);
 #endif
+            ttn_transmit_message((const uint8_t*) DSS.raw_data_ptr, MESSAGE_LENGTH, 1, true);
         }
         else
         {

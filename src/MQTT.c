@@ -25,7 +25,7 @@
 #include "NetTransport.h"
 #include "MQTT.h"
 
-#define MQTT_MESSAGE_BUFER_LENTH 32  //size of mqtt queue
+#define MQTT_MESSAGE_BUFER_LENTH 8  //size of mqtt queue
 #define MQTT_RECONNECT_CHANGE_ADAPTER   3
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
@@ -221,7 +221,7 @@ void MQTTTaskTransmit(void *pvParameter)
     {
         while (!mqtt[idx].is_connected)
             vTaskDelay(pdMS_TO_TICKS(1000));
-        xQueuePeek(mqtt[idx].mqtt_queue, &DSS, portMAX_DELAY);
+        xQueueReceive(mqtt[idx].mqtt_queue, &DSS, portMAX_DELAY);
         if (mqtt[idx].mqtt)
         {
             esp_mqtt_client_publish(mqtt[idx].mqtt,
@@ -232,12 +232,7 @@ void MQTTTaskTransmit(void *pvParameter)
         }
         else
             ESP_LOGE(TAG, "MQTT client not initialized");
-
-        //Here, if need, can be added repeat transmission after delivery timeout.
-        //In this case, follow code must be skipped here and executed on delivery confirm or on exceeded retry attempts
-        xQueueReceive(mqtt[idx].mqtt_queue, &DSS, 0);
         free(DSS.raw_data_ptr);
-
     }
 }
 

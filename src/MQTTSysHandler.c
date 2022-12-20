@@ -40,7 +40,7 @@
 #include "romfs.h"
 #include "HTTPServer.h"
 
-#define MESSAGE_LENGTH 32          //base message length, mainly depended by radio requirements
+#define PANEL_MESSAGE_LENGTH 32          //base message length, mainly depended by radio requirements
 #define MAX_JSON_MESSAGE 256       //max size of mqtt message to publish
 #define MAX_FILE_PUBLISH    4096   //bufer for mqtt data publish
 #define MAX_DYNVAR_LENTH  64
