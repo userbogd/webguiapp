@@ -63,6 +63,8 @@ void PPPModemColdStart(void);
 void PPPModemSoftRestart(void);
 void PPPModemStart(void);
 
+void PPPModemGetRSSI(void);
+
 void MQTTRun(void);
 
 MODEM_INFO* GetPPPModemInfo(void);

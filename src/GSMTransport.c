@@ -237,12 +237,22 @@ static void GSMInitTask(void *pvParameter)
     }
     ESP_LOGI(TAG, "IMEI:%s", mod_info.imei);
 
-    while (esp_modem_set_mode(dce, ESP_MODEM_MODE_DATA) != ESP_OK)
+    while (esp_modem_set_mode(dce, ESP_MODEM_MODE_CMUX) != ESP_OK)
     {
         if (++GSMConnectTimeout >= PPP_MODEM_TIMEOUT)
             goto modem_init_fail;
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
+/*
+    while (esp_modem_set_mode(dce, ESP_MODEM_MODE_CMUX_MANUAL_DATA) != ESP_OK)
+    {
+        if (++GSMConnectTimeout >= PPP_MODEM_TIMEOUT)
+            goto modem_init_fail;
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+*/
+
+
 
     ESP_LOGI(TAG, "PPP data mode OK");
 
@@ -286,6 +296,13 @@ static void GSMRunTask(void *pvParameter)
 void PPPModemStart(void)
 {
     xTaskCreate(GSMRunTask, "GSMRunTask", 1024 * 4, &ResetType, 3, NULL);
+}
+
+void PPPModemGetRSSI(void)
+{
+    int rssi, ber;
+    esp_modem_get_signal_quality(dce, &rssi, &ber);
+    ESP_LOGW(TAG, "Signal %d, ber %d", rssi, ber);
 }
 
 #endif
