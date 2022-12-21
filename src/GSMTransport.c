@@ -243,16 +243,6 @@ static void GSMInitTask(void *pvParameter)
             goto modem_init_fail;
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
-/*
-    while (esp_modem_set_mode(dce, ESP_MODEM_MODE_CMUX_MANUAL_DATA) != ESP_OK)
-    {
-        if (++GSMConnectTimeout >= PPP_MODEM_TIMEOUT)
-            goto modem_init_fail;
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
-*/
-
-
 
     ESP_LOGI(TAG, "PPP data mode OK");
 

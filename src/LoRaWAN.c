@@ -117,6 +117,7 @@ void LoRaWANTransportTask(void *pvParameter)
             ESP_LOGI(TAG, "Send=%s", P);
 #endif
             ttn_transmit_message((const uint8_t*) DSS.raw_data_ptr, MESSAGE_LENGTH, 1, true);
+            free(DSS.raw_data_ptr);
         }
         else
         {

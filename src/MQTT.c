@@ -224,6 +224,7 @@ void MQTTTaskTransmit(void *pvParameter)
         xQueueReceive(mqtt[idx].mqtt_queue, &DSS, portMAX_DELAY);
         if (mqtt[idx].mqtt)
         {
+            ESP_LOGW(TAG,"MQTT data send:%.*s", DSS.data_length, DSS.raw_data_ptr);
             esp_mqtt_client_publish(mqtt[idx].mqtt,
                                     (const char*) DSS.topic,
                                     (const char*) DSS.raw_data_ptr,
