@@ -450,17 +450,13 @@ static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
     {
         if (!strcmp(tmp, (const char*) "1"))
         {
-            ESP_LOGI(TAG, "Got command F1 send test lora");
-            const char test[] = { "LoRaWAN test message" };
-            LORA_DATA_SEND_STRUCT dss;
-            dss.raw_data_ptr = test;
-            dss.data_length = sizeof(test) + 1;
-            LORASendData(&dss);
             return HTTP_IO_DONE_NOREFRESH;
         }
         else if (!strcmp(tmp, (const char*) "2"))
         {
+#if CONFIG_WEBGUIAPP_GPRS_ENABLE
             PPPModemGetRSSI();
+#endif
             return HTTP_IO_DONE_NOREFRESH;
         }
         else if (!strcmp(tmp, (const char*) "3"))

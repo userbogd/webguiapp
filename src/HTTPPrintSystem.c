@@ -625,7 +625,11 @@ static void HTTPPrint_hide_mqtt2(char *VarData, void *arg)
 
 static void HTTPPrint_hide_lora(char *VarData, void *arg)
 {
+#ifdef CONFIG_WEBGUIAPP_LORAWAN_ENABLE
     snprintf(VarData, MAX_DYNVAR_LENGTH, " ");
+#else
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "hide");
+#endif
 }
 
 static void HTTPPrint_hide_eth(char *VarData, void *arg)
