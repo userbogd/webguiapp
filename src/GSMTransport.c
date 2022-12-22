@@ -152,6 +152,7 @@ static void GSMInitTask(void *pvParameter)
     gpio_set_level(CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN, 0);
     vTaskDelay(pdMS_TO_TICKS(1000));
     gpio_set_level(CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN, 1);
+    vTaskDelay(pdMS_TO_TICKS(5000));
 #else
         if (gsm_reset)
         {
