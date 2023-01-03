@@ -1,0 +1,6 @@
+[submodule "extlibs/jReadWrite"]
+	path = extlibs/jReadWrite
+	url = https://github.com/userbogd/jReadWrite.git
+[submodule "extlibs/libespfs"]
+	path = extlibs/libespfs
+	url = https://github.com/userbogd/libespfs.git
