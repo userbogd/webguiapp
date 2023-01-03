@@ -634,12 +634,20 @@ static void HTTPPrint_hide_lora(char *VarData, void *arg)
 
 static void HTTPPrint_hide_eth(char *VarData, void *arg)
 {
+#if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
     snprintf(VarData, MAX_DYNVAR_LENGTH, " ");
+#else
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "hide");
+#endif
 }
 
 static void HTTPPrint_hide_wifi(char *VarData, void *arg)
 {
+#if CONFIG_WEBGUIAPP_WIFI_ENABLE
     snprintf(VarData, MAX_DYNVAR_LENGTH, " ");
+#else
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "hide");
+#endif
 }
 
 static void HTTPPrint_testvariable(char *VarData, void *arg)
