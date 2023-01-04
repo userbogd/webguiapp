@@ -129,7 +129,7 @@ esp_err_t WebGuiAppInit(void)
 #endif
 
     /*LoRaWAN start if enabled*/
-#if !CONFIG_TTN_LORA_FREQ_DISABLED
+#if CONFIG_WEBGUIAPP_LORAWAN_ENABLE
     if (GetSysConf()->lorawanSettings.Flags1.bIsLoRaWANEnabled)
     {
         LoRaWANStart();

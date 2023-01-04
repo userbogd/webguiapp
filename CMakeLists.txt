@@ -1,10 +1,17 @@
 include(${CMAKE_CURRENT_LIST_DIR}/extlibs/jReadWrite/include.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/extlibs/libespfs/cmake/include.cmake)
 
+if(CONFIG_WEBGUIAPP_LORAWAN_ENABLE)
+    set(lora_SRCS "src/LoRaWAN.c")
+    set(lora_REQUIRES ttn-esp32)
+endif()
+
 idf_component_register(
 	
 	SRCS ${jreadwrite_SRCS}
     INCLUDE_DIRS ${jreadwrite_INCLUDE_DIRS}
+    
+    SRCS ${lora_SRCS}
     
     SRCS ${libespfs_SRCS}
     INCLUDE_DIRS ${libespfs_INCLUDE_DIRS}
@@ -23,12 +30,12 @@ idf_component_register(
     	 "src/WiFiTransport.c"
     	 "src/GSMTransport.c"
     	 "src/ETHTransport.c"
-    	 "src/LoRaWAN.c"
     	 "src/SNTP.c"
     	 "src/MQTT.c"
     	 "src/MQTTSysHandler.c"
     	 "src/OTA.c"
-    			   
+   	 
+    	    
     INCLUDE_DIRS  "."
     			  "include"
     			  "src"
@@ -37,7 +44,6 @@ idf_component_register(
     EMBED_FILES "upload_script.html"			  
     			   
     REQUIRES nvs_flash 
-    		 #libespfs
     		 spiffs
     		 esp_http_server
     		 mbedtls
@@ -46,6 +52,6 @@ idf_component_register(
     		 esp_modem
     		 esp_https_ota
     		 app_update
-    		 #jReadWrite
-    		 ttn-esp32
+	REQUIRES ${lora_REQUIRES}
+
 ) 
