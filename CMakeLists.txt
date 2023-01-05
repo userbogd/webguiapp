@@ -2,14 +2,8 @@ include(${CMAKE_CURRENT_LIST_DIR}/extlibs/jReadWrite/include.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/extlibs/libespfs/cmake/include.cmake)
 
 if(CONFIG_WEBGUIAPP_LORAWAN_ENABLE)
-    set(lora_SRCS "lorawan/LoRaWAN.c")
-        set(lora_PRIV_REQUIRES
-        ttn-esp32
-    )
-    set(lora_INCLUDE_DIRS 
-    "../ttn-esp32/include"
-    "../ttn-esp32/src/hal"
-    ) 
+include(${CMAKE_CURRENT_LIST_DIR}/extlibs/ttn-esp32/include.cmake)
+ set(lora_SRCS "lorawan/LoRaWAN.c")
 endif()
 
 
@@ -19,6 +13,7 @@ idf_component_register(
     INCLUDE_DIRS ${jreadwrite_INCLUDE_DIRS}
     
     SRCS ${lora_SRCS}
+    SRC_DIRS ${lora_SRC_DIRS}
     PRIV_REQUIRES ${lora_PRIV_REQUIRES}
 	INCLUDE_DIRS ${lora_INCLUDE_DIRS}
 

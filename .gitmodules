@@ -4,6 +4,3 @@
 [submodule "extlibs/libespfs"]
 	path = extlibs/libespfs
 	url = https://github.com/userbogd/libespfs.git
-[submodule "extlibs/ttn-esp32"]
-	path = extlibs/ttn-esp32
-	url = https://github.com/userbogd/ttn-esp32.git
