@@ -444,31 +444,31 @@ static void wifi_init_apsta(void *pvParameter)
     ESP_LOGI(TAG, "wifi_init_softap_sta finished");
 
     /* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or connection failed for the maximum
-      * number of re-tries (WIFI_FAIL_BIT). The bits are set by event_handler() (see above) */
-     EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
-     WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
-                                            pdFALSE,
-                                            pdFALSE,
-                                            portMAX_DELAY);
+     * number of re-tries (WIFI_FAIL_BIT). The bits are set by event_handler() (see above) */
+    EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
+    WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
+                                           pdFALSE,
+                                           pdFALSE,
+                                           portMAX_DELAY);
 
-     /* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually
-      * happened. */
-     if (bits & WIFI_CONNECTED_BIT)
-     {
-         ESP_LOGI(TAG, "connected to ap SSID:%s password:%s",
-                  GetSysConf()->wifiSettings.InfSSID,
-                  GetSysConf()->wifiSettings.InfSecurityKey);
-     }
-     else if (bits & WIFI_FAIL_BIT)
-     {
-         ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
-                  GetSysConf()->wifiSettings.InfSSID,
-                  GetSysConf()->wifiSettings.InfSecurityKey);
-     }
-     else
-     {
-         ESP_LOGE(TAG, "UNEXPECTED EVENT");
-     }
+    /* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually
+     * happened. */
+    if (bits & WIFI_CONNECTED_BIT)
+    {
+        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s",
+                 GetSysConf()->wifiSettings.InfSSID,
+                 GetSysConf()->wifiSettings.InfSecurityKey);
+    }
+    else if (bits & WIFI_FAIL_BIT)
+    {
+        ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
+                 GetSysConf()->wifiSettings.InfSSID,
+                 GetSysConf()->wifiSettings.InfSecurityKey);
+    }
+    else
+    {
+        ESP_LOGE(TAG, "UNEXPECTED EVENT");
+    }
 
     vTaskDelete(NULL);
 }
@@ -484,3 +484,23 @@ void WiFiSTAStart(void)
     xTaskCreate(wifi_init_sta, "InitStationTask", 1024 * 4, (void*) 0, 3, NULL);
 }
 
+#define DEFAULT_SCAN_LIST_SIZE 20
+
+void WiFiScan(void)
+{
+    uint16_t number = DEFAULT_SCAN_LIST_SIZE;
+    wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
+    uint16_t ap_count = 0;
+    memset(ap_info, 0, sizeof(ap_info));
+
+    esp_wifi_scan_start(NULL, true);
+    ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&number, ap_info));
+    ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(&ap_count));
+    ESP_LOGI(TAG, "Total APs scanned = %u", ap_count);
+    for (int i = 0; (i < DEFAULT_SCAN_LIST_SIZE) && (i < ap_count); i++)
+    {
+        ESP_LOGI(TAG, "SSID \t\t%s", ap_info[i].ssid);
+        ESP_LOGI(TAG, "RSSI \t\t%d", ap_info[i].rssi);
+        ESP_LOGI(TAG, "Channel \t\t%d\n", ap_info[i].primary);
+    }
+}
