@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *  	 \file SystemConfiguration.c
+ *  	 \file WebGUIAppMain.c
  *    \version 1.0
  * 		 \date 2022-08-13
  *     \author Bogdan Pilyugin
@@ -20,6 +20,8 @@
  *    \details 
  *	\copyright Apache License, Version 2.0
  */
+
+#include "WebGUIAppMain.h"
 
 #include <webguiapp.h>
 #include "stdlib.h"
@@ -31,7 +33,6 @@
 #include "driver/adc.h"
 #include "driver/i2c.h"
 
-#include "SystemConfiguration.h"
 #include "romfs.h"
 #include "spifs.h"
 #include "NetTransport.h"
@@ -167,9 +168,16 @@ esp_err_t WebGuiAppInit(void)
         {
             //start all services
             /*Wait for interfaces connected*/
-            while (!(isPPPConnected() ||
+            while (!(
+#ifdef CONFIG_WEBGUIAPP_GPRS_ENABLE
+                    isPPPConnected() ||
+#endif
+#ifdef CONFIG_WEBGUIAPP_WIFI_ENABLE
                     isWIFIConnected() ||
+#endif
+#ifdef CONFIG_WEBGUIAPP_ETHERNET_ENABLE
                     isETHConnected() ||
+#endif
                     ++NetworkStartTimeout >= NETWORK_START_TIMEOUT))
                 vTaskDelay(pdMS_TO_TICKS(1000));
 

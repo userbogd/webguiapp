@@ -20,6 +20,8 @@
  */
 
 #include <string.h>
+
+#include "../include/WebGUIAppMain.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "freertos/task.h"
@@ -29,7 +31,6 @@
 #include "esp_modem_api.h"
 #include "esp_log.h"
 #include "driver/gpio.h"
-#include "SystemConfiguration.h"
 #include "NetTransport.h"
 
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE

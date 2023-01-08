@@ -19,8 +19,8 @@
  * Description:	
  */
 
+#include <WebGUIAppMain.h>
 #include "NetTransport.h"
-#include "SystemConfiguration.h"
 #include "sdkconfig.h"
 #include "lwip/netif.h"
 

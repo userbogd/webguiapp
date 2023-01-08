@@ -25,10 +25,10 @@
 #include "freertos/task.h"
 #include "driver/gpio.h"
 #include "Helpers.h"
-#include "SystemConfiguration.h"
 #include "NetTransport.h"
 #include "webguiapp.h"
 #include "LoRaWAN.h"
+#include "../include/WebGUIAppMain.h"
 
 // Pins and other resources
 /*Defined in global configuration*/

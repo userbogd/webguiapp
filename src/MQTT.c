@@ -18,10 +18,9 @@
  *      Author: Bogdan Pilyugin
  * Description:	
  */
+#include <WebGUIAppMain.h>
 #include "esp_log.h"
 #include "Helpers.h"
-#include "SystemConfiguration.h"
-
 #include "NetTransport.h"
 #include "MQTT.h"
 

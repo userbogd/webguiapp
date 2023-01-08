@@ -34,7 +34,6 @@
 #include <sys/stat.h>
 
 #include "Helpers.h"
-#include "SystemConfiguration.h"
 #include "romfs.h"
 #include "NetTransport.h"
 
@@ -42,6 +41,7 @@
 #include "esp_netif.h"
 #include "esp_eth.h"
 #include "mbedtls/base64.h"
+#include "WebGUIAppMain.h"
 
 #define MAX_DYNVAR_NAME_LENGTH 32
 #define MAX_DYNVAR_LENGTH 256

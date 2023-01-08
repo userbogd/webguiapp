@@ -29,10 +29,10 @@
 #include "esp_https_ota.h"
 #include <string.h>
 #include "sdkconfig.h"
-#include "SystemConfiguration.h"
 #include "romfs.h"
 
 #include <sys/socket.h>
+#include <WebGUIAppMain.h>
 #include "NetTransport.h"
 
 TaskHandle_t ota_task_handle;

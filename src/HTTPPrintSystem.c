@@ -397,13 +397,12 @@ static void HTTPPrint_emacadr(char *VarData, void *arg)
 
 #endif
 
+#if CONFIG_WEBGUIAPP_GPRS_ENABLE
+/*GSM MODEM*/
 void HTTPPrint_gsmstat(char *VarData, void *arg)
 {
     PrintInterfaceState(VarData, arg, GetPPPNetifAdapter());
 }
-
-#if CONFIG_WEBGUIAPP_GPRS_ENABLE
-/*GSM MODEM*/
 void HTTPPrint_gsmen(char *VarData, void *arg)
 {
     PrintCheckbox(VarData, arg, GetSysConf()->gsmSettings.Flags1.bIsGSMEnabled);
@@ -720,12 +719,12 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "emacadr", sizeof("emacadr") - 1, &HTTPPrint_emacadr },
         #endif
 
-        { "gsmstat", sizeof("gsmstat") - 1, &HTTPPrint_gsmstat },
+
 
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
         /*GSM modem*/
         { "gsmen", sizeof("gsmen") - 1, &HTTPPrint_gsmen },
-
+        { "gsmstat", sizeof("gsmstat") - 1, &HTTPPrint_gsmstat },
         { "gsmmod", sizeof("gsmmod") - 1, &HTTPPrint_gsmmod },
         { "gsmopr", sizeof("gsmopr") - 1, &HTTPPrint_gsmopr },
         { "gimei", sizeof("gimei") - 1, &HTTPPrint_gimei },

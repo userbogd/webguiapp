@@ -19,9 +19,9 @@
  * Description:	
  */
 
-#include "SystemConfiguration.h"
 #include <stdio.h>
 #include <string.h>
+#include <WebGUIAppMain.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_netif.h"
