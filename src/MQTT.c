@@ -40,7 +40,8 @@ mqtt_client_t mqtt[CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM] = { 0 };
 
 #define TAG "MQTTApp"
 
-static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
+static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_base_t base, int32_t event_id,
+                                      void *event_data);
 
 static void mqtt1_system_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
 static void mqtt2_system_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
@@ -49,7 +50,7 @@ static void mqtt2_user_event_handler(void *handler_args, esp_event_base_t base, 
 
 void (*UserEventHandler)(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
 void regUserEventHandler(
-                         void (*event_handler)(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data))
+        void (*event_handler)(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data))
 {
     UserEventHandler = event_handler;
 }
@@ -97,7 +98,8 @@ void ComposeTopic(char *topic, int idx, char *service_name, char *direct)
     strcat((char*) topic, direct);  // Data direction UPLINK or DOWNLINK
 }
 
-static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
+static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_base_t base, int32_t event_id,
+                                      void *event_data)
 {
     xSemaphoreTake(xSemaphoreMQTTHandle, pdMS_TO_TICKS(1000));
     ESP_LOGI(TAG, "Event dispatched from event loop base=%s, event_id=%d", base, event_id);
@@ -223,7 +225,7 @@ void MQTTTaskTransmit(void *pvParameter)
         xQueueReceive(mqtt[idx].mqtt_queue, &DSS, portMAX_DELAY);
         if (mqtt[idx].mqtt)
         {
-            ESP_LOGW(TAG,"MQTT data send:%.*s", DSS.data_length, DSS.raw_data_ptr);
+            ESP_LOGI(TAG, "MQTT client %d data send:%.*s", idx, DSS.data_length, DSS.raw_data_ptr);
             esp_mqtt_client_publish(mqtt[idx].mqtt,
                                     (const char*) DSS.topic,
                                     (const char*) DSS.raw_data_ptr,
