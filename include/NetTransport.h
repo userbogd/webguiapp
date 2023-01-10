@@ -93,9 +93,6 @@ void NextDefaultNetIF(void);
 void PrintDefaultNetIF(void);
 void GetDefaultNetIFName(char *name);
 
-void InitRS485(void);
-void RS485Task(void *pvParameter);
-
 void PrintNetifs(void);
 void GotEthIF(void);
 
