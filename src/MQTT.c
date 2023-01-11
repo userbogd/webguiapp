@@ -24,7 +24,7 @@
 #include "NetTransport.h"
 #include "MQTT.h"
 
-#define MQTT_MESSAGE_BUFER_LENTH 8  //size of mqtt queue
+#define MQTT_MESSAGE_BUFER_LENTH 5  //size of mqtt queue
 #define MQTT_RECONNECT_CHANGE_ADAPTER   3
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
