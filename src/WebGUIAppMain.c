@@ -39,6 +39,8 @@
 #include "Helpers.h"
 #include "HTTPServer.h"
 
+#include "mbedtls/md.h"
+
 #define STORAGE_NAMESPACE "storage"
 #define TAG "SystemConfiguration"
 
@@ -70,6 +72,8 @@ static bool isUserAppNeedReset = false;
 static void InitSysIO(void);
 static void InitSysSPI(void);
 static void InitSysI2C(void);
+
+static esp_err_t SHA256SysConfig(SYS_CONFIG *SysConf, unsigned char *res);
 
 esp_err_t spi_device_polling_transmit_synchronized(spi_device_handle_t handle, spi_transaction_t *trans_desc)
 {
@@ -403,6 +407,19 @@ esp_err_t WriteNVSSysConfig(SYS_CONFIG *SysConf)
     if (err != ESP_OK)
         return err;
 
+    unsigned char sha256[32];
+    unsigned char sha_print[32 * 2 + 1];
+
+    SHA256SysConfig(SysConf, sha256);
+    BytesToStr(sha256,  sha_print, 32);
+    sha_print[32 * 2] = 0x00;
+    ESP_LOGI(TAG, "SHA256 of structure to write is %s", sha_print);
+
+
+    err = nvs_set_blob(my_handle, "sys_conf_sha256", sha256, 32);
+    if (err != ESP_OK)
+        return err;
+
 // Commit
     err = nvs_commit(my_handle);
     if (err != ESP_OK)
@@ -466,5 +483,16 @@ void SetUserAppNeedReset(bool res)
     isUserAppNeedReset = res;
 }
 
-
+static esp_err_t SHA256SysConfig(SYS_CONFIG *SysConf, unsigned char *res)
+{
+    mbedtls_md_context_t ctx;
+    mbedtls_md_type_t md_type = MBEDTLS_MD_SHA256;
+    mbedtls_md_init(&ctx);
+    mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(md_type), 0);
+    mbedtls_md_starts(&ctx);
+    mbedtls_md_update(&ctx, (const unsigned char *) &SysConf, sizeof(SYS_CONFIG));
+    mbedtls_md_finish(&ctx, res);
+    mbedtls_md_free(&ctx);
+    return ESP_OK;
+}
 
