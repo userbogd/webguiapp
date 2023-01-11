@@ -501,6 +501,13 @@ menu "WebGUIApp"
 	                Pin to unlock the SIM
 	    
 	        menu "UART Configuration"
+	            config MODEM_UART_PORT_NUM
+	            	int "Modem UART port number"
+	            	default 1
+	            	range 0 2
+	            	help
+	            		UART port number dedicated to modem
+	            
 	            config MODEM_UART_TX_PIN
 	                int "TXD Pin Number"
 	                default 17

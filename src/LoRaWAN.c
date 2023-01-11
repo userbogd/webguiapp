@@ -46,7 +46,7 @@
 #define MESSAGE_LENGTH 32
 #define TAG "LoRaWANApp"
 #define LORAWAN_APP_LOG_ENABLED 1
-#define LORAWAN_MESSAGE_BUFER_LENTH 8
+#define LORAWAN_MESSAGE_BUFER_LENTH 5
 
 QueueHandle_t LORAMessagesQueueHandle;
 static StaticQueue_t xStaticLoRaMessagesQueue;
