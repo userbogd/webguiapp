@@ -21,6 +21,7 @@
 #include "Helpers.h"
 #include "esp_mac.h"
 #include "esp_rom_crc.h"
+#include "mbedtls/md.h"
 
 uint32_t crc32(uint32_t crc, uint8_t const *buf, uint32_t len)
 {
@@ -174,5 +175,18 @@ void UnencodeURL(char* URL)
     }
 }
 
+esp_err_t SHA256Hash(unsigned char *data, int datalen,
+                                 unsigned char *res)
+{
+    mbedtls_md_context_t ctx;
+    mbedtls_md_type_t md_type = MBEDTLS_MD_SHA256;
+    mbedtls_md_init(&ctx);
+    mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(md_type), 0);
+    mbedtls_md_starts(&ctx);
+    mbedtls_md_update(&ctx, (const unsigned char*) data, datalen);
+    mbedtls_md_finish(&ctx, res);
+    mbedtls_md_free(&ctx);
+    return ESP_OK;
+}
 
 

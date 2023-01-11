@@ -23,6 +23,7 @@
 #define MAIN_INCLUDE_HELPERS_H_
 
 #include "common_types.h"
+#include "esp_err.h"
 
 uint32_t crc32(uint32_t crc, uint8_t const *buf, uint32_t len);
 void GetChipId(uint8_t *i);
@@ -32,5 +33,7 @@ bool StrToBytes(unsigned char *StrIn, unsigned char *StrOut);
 bool StrToBytesLen(unsigned char *StrIn, unsigned char *StrOut, uint16_t InputSymbols);
 void bin_to_hex_str(const uint8_t *buf, int len, char *hex);
 void UnencodeURL(char* URL);
+esp_err_t SHA256Hash(unsigned char *data, int datalen,
+                                 unsigned char *res);
 
 #endif /* MAIN_INCLUDE_HELPERS_H_ */
