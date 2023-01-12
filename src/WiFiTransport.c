@@ -167,7 +167,7 @@ static void wifi_init_softap(void *pvParameter)
                     .authmode = WIFI_AUTH_WPA_WPA2_PSK
             },
     };
-    if (strlen(DEFAULT_WIFI_SSID_AP_KEY) == 0)
+    if (strlen(CONFIG_WEBGUIAPP_WIFI_KEY_AP) == 0)
     {
         wifi_config.ap.authmode = WIFI_AUTH_OPEN;
     }
@@ -367,7 +367,7 @@ static void wifi_init_apsta(void *pvParameter)
                     .authmode = WIFI_AUTH_WPA_WPA2_PSK
             },
     };
-    if (strlen(DEFAULT_WIFI_SSID_AP_KEY) == 0)
+    if (strlen(CONFIG_WEBGUIAPP_WIFI_KEY_AP) == 0)
     {
         ap_wifi_config.ap.authmode = WIFI_AUTH_OPEN;
     }

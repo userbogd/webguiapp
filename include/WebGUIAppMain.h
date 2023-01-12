@@ -29,54 +29,6 @@
 #include "esp_netif.h"
 #include "sdkconfig.h"
 
-#define DEFAULT_HOST_NAME               "DEVICE_HOSTNAME"     ///<Default host name of device
-
-#define SYSTEM_DEFAULT_USERNAME         "user"
-#define SYSTEM_DEFAULT_PASSWORD         "password"
-#define SYSTEM_DEFAULT_OTAURL           "https://iotronic.cloud/firmware/HB75ControllerFirmware.bin"
-
-#define DEFAULT_SNTP_SERVERNAME         "ntp5.stratum2.ru"
-#define DEFAULT_SNTP_TIMEZONE           2
-#define DEFAULT_SNTP_ETH_IS_ENABLED     false
-#define DEFAULT_SNTP_WIFI_IS_ENABLED    false
-#define DEFAULT_SNTP_GLOBAL_ENABLED     true
-
-#define DEFAULT_MQTT_SERVERNAME             "iotronic.cloud"
-#define DEFAULT_MQTT_SERVERPORT              1883
-#define DEFAULT_MQTT_CLIENTID               "HB75_DISP1"
-#define DEFAULT_MQTT_CLIENTID2              "HB75_DISP2"
-#define DEFAULT_MQTT_USERNAME               "hb75_username"
-#define DEFAULT_MQTT_USERPASS               "hb75_pass"
-#define DEFAULT_MQTT_ROOTTOPIC              "HB75_CONTROLLER"
-#define DEFAULT_MQTT_GLOBAL_ENABLED         true
-
-//WIFI interface related constatnts
-#define DEFAULT_WIFI_SSID_INF_NAME               "wifiapname"
-#define DEFAULT_WIFI_SSID_INF_KEY                "wifikey"
-#define DEFAULT_WIFI_SSID_AP_NAME                "HB75"
-#define DEFAULT_WIFI_SSID_AP_KEY                 "123456789"
-
-#define DEFAULT_WIFI_IP_ADDR_INF                "192.168.150.1"
-#define DEFAULT_WIFI_MASK                       "255.255.255.0"
-#define DEFAULT_WIFI_GATE                       "192.168.150.1"
-#define DEFAULT_WIFI_IP_ADDR_AP                 "192.168.150.1"
-
-#define DEFAULT_WIFI_FLAG_ISAP                   true
-#define DEFAULT_WIFI_FLAG_DHCP_ENABLED           true
-#define DEFAULT_WIFI_FLAG_ISWIFI_ENABLED         true
-
-#define DEFAULT_ETH_IP_ADDR                   "192.168.150.2"
-#define DEFAULT_ETH_MASK                      "255.255.255.0"
-#define DEFAULT_ETH_GATE                      "192.168.150.1"
-
-#define DEFAULT_ETH_FLAG_DHCP_ENABLED     true
-#define DEFAULT_ETH_FLAG_ISETH_ENABLED    true
-
-#define DEFAULT_DNS1                "8.8.8.8"
-#define DEFAULT_DNS2                "4.4.8.8"
-#define DEFAULT_DNS3                "1.1.1.1"
-
-
 // Application-dependent structure used to contain address information
 
     /**
@@ -115,8 +67,8 @@
             char SntpServerAdr[33];
             struct
             {
-                char bIsWifiEnabled :1;
-                char bIsEthEnabled :1;
+                char b1 :1;
+                char b2 :1;
                 char b3 :1;
                 char b4 :1;
                 char b5 :1;

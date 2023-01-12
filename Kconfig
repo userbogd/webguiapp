@@ -40,6 +40,55 @@ menu "WebGUIApp"
         default n
              help
         		This will reset to default settings on every startup
+        		
+	menu "OTA settings"
+		config WEBGUIAPP_OTA_AUTOUPDATE_ENABLE
+			bool "Enabled OTA autoupdate firmware"
+	        default y
+             	
+			
+		config WEBGUIAPP_OTA_HOST
+            string "URL of firmware for OTA update"
+            default "https://iotronic.cloud/firmware/firmware.bin"
+	            help
+	                URL of firmware file for OTA update
+        		
+        config WEBGUIAPP_OTA_AUTOUPDATE_PERIOD
+            int "OTA autoupdate period in seconds"
+            range 1 100000
+            default 3600
+	            help	
+	            	Autoupdate period for OTA  		
+
+	endmenu  
+	
+	menu "SNTP client settings"
+		config WEBGUIAPP_SNTP_AUTOUPDATE_ENABLE
+			bool "Enabled SNTP time update"
+	        default y
+
+		config WEBGUIAPP_SNTP_HOST
+            string "URL of SNTP server"
+            default "2.pool.ntp.org"
+	            help
+	                URL of firmware file for OTA update	             
+        		
+        config WEBGUIAPP_SNTP_AUTOUPDATE_PERIOD
+            int "SNTP autoupdate period in seconds"
+            range 1 100000
+            default 3600
+	            help	
+	            	Autoupdate period for SNTP client  		
+			
+        config WEBGUIAPP_SNTP_TIMEZONE
+            int "Timezone"
+            range -12 12
+            default 2
+	            help	
+	            	Timezone in hours. Positive for East and negative for the West                   
+	endmenu  	
+	      		
+        		
 	
 	menu "SPI settings"
 		config WEBGUIAPP_SPI_ENABLE

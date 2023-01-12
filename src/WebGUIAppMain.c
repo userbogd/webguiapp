@@ -156,48 +156,37 @@ esp_err_t WebGuiAppInit(void)
     }
 #endif
 
-    bool WiFiApOnly = false;
-#if   !CONFIG_WEBGUIAPP_GPRS_ENABLE && !CONFIG_WEBGUIAPP_ETHERNET_ENABLE && CONFIG_WEBGUIAPP_WIFI_ENABLE
-    if (GetSysConf()->wifiSettings.Flags1.bIsAP)
-        WiFiApOnly = true;
-#endif
-
     /*Start services depends on client connection*/
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE || CONFIG_WEBGUIAPP_ETHERNET_ENABLE || CONFIG_WEBGUIAPP_WIFI_ENABLE
-    {
-        ESP_ERROR_CHECK(start_file_server());
-        if (!WiFiApOnly)
-        {
-            //start all services
-            /*Wait for interfaces connected*/
-            while (!(
-            #ifdef CONFIG_WEBGUIAPP_GPRS_ENABLE
+    //start all services no depends on network ready
+    ESP_ERROR_CHECK(start_file_server());
+    //Wait for network ready
+    while (!(
+
+#ifdef CONFIG_WEBGUIAPP_GPRS_ENABLE
                     isPPPConnected() ||
 #endif
 #ifdef CONFIG_WEBGUIAPP_WIFI_ENABLE
-            isWIFIConnected() ||
-                    #endif
+    isWIFIConnected() ||
+            #endif
 #ifdef CONFIG_WEBGUIAPP_ETHERNET_ENABLE
                     isETHConnected() ||
 #endif
-                    ++NetworkStartTimeout >= NETWORK_START_TIMEOUT))
-                vTaskDelay(pdMS_TO_TICKS(1000));
+            ++NetworkStartTimeout >= NETWORK_START_TIMEOUT))
+        vTaskDelay(pdMS_TO_TICKS(1000));
 
-            //Start all services needed internet connection
-            StartTimeGet();
+    //Network ready or network not available now, but maybe restore later
+    StartTimeGet();
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
-            if (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled
-                    || GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled)
-            {
-                MQTTRun();
-            }
-#endif
-        }
-
-#endif
-
+    if (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled
+            || GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled)
+    {
+        MQTTRun();
     }
+#endif
+#endif
+
     return ESP_OK;
 }
 
@@ -280,9 +269,9 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
            sizeof(CONFIG_WEBGUIAPP_USERNAME));
     memcpy(Conf->SysPass, CONFIG_WEBGUIAPP_USERPASS,
            sizeof(CONFIG_WEBGUIAPP_USERPASS));
-//memcpy(Conf->OTAURL, CONFIG_WEBGUIAPP_, sizeof(SYSTEM_DEFAULT_OTAURL));
 
-    memcpy(Conf->OTAURL, SYSTEM_DEFAULT_OTAURL, sizeof(SYSTEM_DEFAULT_OTAURL));
+    memcpy(Conf->OTAURL, CONFIG_WEBGUIAPP_OTA_HOST, sizeof(CONFIG_WEBGUIAPP_OTA_HOST));
+
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
     Conf->wifiSettings.Flags1.bIsWiFiEnabled = CONFIG_WEBGUIAPP_WIFI_ON;
     memcpy(Conf->wifiSettings.ApSSID, CONFIG_WEBGUIAPP_WIFI_SSID_AP,
@@ -363,12 +352,10 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
     memcpy(Conf->mqttStation[1].UserPass, CONFIG_WEBGUIAPP_MQTT_PASSWORD, sizeof(CONFIG_WEBGUIAPP_MQTT_PASSWORD));
 #endif
 #endif
-    memcpy(Conf->sntpClient.SntpServerAdr, DEFAULT_SNTP_SERVERNAME,
-           sizeof(DEFAULT_SNTP_SERVERNAME));
-    Conf->sntpClient.Flags1.bIsEthEnabled = DEFAULT_SNTP_ETH_IS_ENABLED;
-    Conf->sntpClient.Flags1.bIsWifiEnabled = DEFAULT_SNTP_WIFI_IS_ENABLED;
-    Conf->sntpClient.Flags1.bIsGlobalEnabled = DEFAULT_SNTP_GLOBAL_ENABLED;
-    Conf->sntpClient.TimeZone = DEFAULT_SNTP_TIMEZONE;
+    memcpy(Conf->sntpClient.SntpServerAdr, CONFIG_WEBGUIAPP_SNTP_HOST,
+           sizeof(CONFIG_WEBGUIAPP_SNTP_HOST));
+    Conf->sntpClient.Flags1.bIsGlobalEnabled = CONFIG_WEBGUIAPP_SNTP_AUTOUPDATE_ENABLE;
+    Conf->sntpClient.TimeZone = CONFIG_WEBGUIAPP_SNTP_TIMEZONE;
 
 #ifdef CONFIG_WEBGUIAPP_LORAWAN_ENABLE
     Conf->lorawanSettings.Flags1.bIsLoRaWANEnabled = true;
@@ -397,7 +384,7 @@ esp_err_t ReadNVSSysConfig(SYS_CONFIG *SysConf)
     ESP_LOGI(TAG, "Size of structure to read is %d", L);
     err = nvs_get_blob(my_handle, "sys_conf", SysConf, &L);
     if (err != ESP_OK)
-        return err;
+        goto nvs_operation_err;
 
     unsigned char sha256_saved[32];
     unsigned char sha256_calculated[32];
@@ -406,17 +393,26 @@ esp_err_t ReadNVSSysConfig(SYS_CONFIG *SysConf)
     L = 32;
     err = nvs_get_blob(my_handle, "sys_conf_sha256", sha256_saved, &L);
     if (err != ESP_OK)
-        return err;
-    SHA256Hash((unsigned char*) SysConf, sizeof(SYS_CONFIG), sha256_calculated);
+        goto nvs_operation_err;
 
+    SHA256Hash((unsigned char*) SysConf, sizeof(SYS_CONFIG), sha256_calculated);
     BytesToStr(sha256_saved, sha_print, 32);
     ESP_LOGI(TAG, "Saved hash of structure is %s", sha_print);
-
     BytesToStr(sha256_calculated, sha_print, 32);
     ESP_LOGI(TAG, "Calculated hash of structure is %s", sha_print);
 
+    if (memcmp(sha256_calculated, sha256_saved, L))
+    {
+        err = ESP_ERR_INVALID_CRC;
+        goto nvs_operation_err;
+    }
+
     nvs_close(my_handle);
     return ESP_OK;
+
+nvs_operation_err:
+    nvs_close(my_handle);
+    return err;
 }
 
 esp_err_t WriteNVSSysConfig(SYS_CONFIG *SysConf)
@@ -432,7 +428,7 @@ esp_err_t WriteNVSSysConfig(SYS_CONFIG *SysConf)
     ESP_LOGI(TAG, "Size of structure to write is %d", L);
     err = nvs_set_blob(my_handle, "sys_conf", SysConf, L);
     if (err != ESP_OK)
-        return err;
+        goto nvs_wr_oper_err;
 
     unsigned char sha256[32];
     unsigned char sha_print[32 * 2 + 1];
@@ -444,16 +440,20 @@ esp_err_t WriteNVSSysConfig(SYS_CONFIG *SysConf)
     L = 32;
     err = nvs_set_blob(my_handle, "sys_conf_sha256", sha256, L);
     if (err != ESP_OK)
-        return err;
+        goto nvs_wr_oper_err;
 
 // Commit
     err = nvs_commit(my_handle);
     if (err != ESP_OK)
-        return err;
-// Close
-    nvs_close(my_handle);
+        goto nvs_wr_oper_err;
 
+    nvs_close(my_handle);
     return ESP_OK;
+
+nvs_wr_oper_err:
+    nvs_close(my_handle);
+    return err;
+
 }
 
 SYS_CONFIG* GetSysConf(void)
@@ -465,20 +465,19 @@ esp_err_t InitSysConfig(void)
 {
     esp_err_t err;
     err = ReadNVSSysConfig(&SysConfig);
-    if (err != ESP_ERR_NVS_NOT_FOUND)
+    if (err == ESP_ERR_INVALID_CRC || err == ESP_ERR_NVS_NOT_FOUND)
     {
-        if (err == ESP_OK)
-        {
-            ESP_LOGI(TAG, "Read system configuration OK");
-        }
-        return err;
-    }
-    else
-    {
-        ESP_LOGI(TAG, "Reset and write default system configuration");
+        ESP_LOGW(TAG, "Reset and write default system configuration");
         ResetSysConfig(&SysConfig);
         err = WriteNVSSysConfig(&SysConfig);
+        return err;
     }
+    else if (err == ESP_OK)
+    {
+        ESP_LOGI(TAG, "Read system configuration OK");
+    }
+    else
+        ESP_LOGW(TAG, "Error reading NVS configuration:%s", esp_err_to_name(err));
     return err;
 }
 
@@ -497,7 +496,7 @@ void DelayedRestartTask(void *pvParameter)
 void DelayedRestart(void)
 {
     xTaskCreate(DelayedRestartTask, "RestartTask", 1024 * 4, (void*) 0, 3,
-                NULL);
+    NULL);
 }
 
 bool GetUserAppNeedReset(void)
