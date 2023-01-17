@@ -411,7 +411,7 @@ static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
 
         if (!strcmp(tmp, (const char*) "prs"))
         {
-            //StartOTA();
+            StartOTA();
         }
 
     }
