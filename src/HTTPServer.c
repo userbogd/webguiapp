@@ -173,10 +173,10 @@ static esp_err_t POSTHandler(httpd_req_t *req)
     ESP_LOGI(TAG, "POST request handle");
 #endif
 
-    if (memmem(req->uri, strlen(req->uri), "/files/upload/", sizeof("/files/upload/")-1))
+    if (memmem(req->uri, strlen(req->uri), "/storage/upload/", sizeof("/storage/upload/")-1))
         return upload_post_handler(req);
 
-    if (memmem(req->uri, strlen(req->uri), "/files/delete/", sizeof("/files/delete/")-1))
+    if (memmem(req->uri, strlen(req->uri), "/storage/delete/", sizeof("/storage/delete/")-1))
         return delete_post_handler(req);
 
     char *buf = ((struct file_server_data*) req->user_ctx)->scratch;
@@ -263,7 +263,7 @@ static esp_err_t GETHandler(httpd_req_t *req)
 #endif
 
     //Route to file server GET handler
-    if (memmem(req->uri, strlen(req->uri), "/files/", sizeof("/files/") - 1))
+    if (memmem(req->uri, strlen(req->uri), "/storage/", sizeof("/storage/") - 1))
         return download_get_handler(req);
 
     char filepath[FILE_PATH_MAX];

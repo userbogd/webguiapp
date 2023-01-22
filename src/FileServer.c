@@ -103,7 +103,7 @@ static const char* get_path_from_uri(char *dest, const char *base_path,
 
     /* Construct full path (base + path) */
     strcpy(dest, base_path);
-    strlcpy(dest + base_pathlen, uri + (sizeof("/files")-1), pathlen + 1 - (sizeof("/files")-1));
+    strlcpy(dest + base_pathlen, uri + (sizeof("/storage")-1), pathlen + 1 - (sizeof("/storage")-1));
 
     /* Return pointer to path, skipping the base */
     return dest + base_pathlen;
@@ -184,7 +184,7 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath)
         httpd_resp_sendstr_chunk(req, "</td><td>");
         httpd_resp_sendstr_chunk(req, entrysize);
         httpd_resp_sendstr_chunk(req, "</td><td>");
-        httpd_resp_sendstr_chunk(req, "<form method=\"post\" action=\"/files/delete/");
+        httpd_resp_sendstr_chunk(req, "<form method=\"post\" action=\"/storage/delete/");
         //httpd_resp_sendstr_chunk(req, req->uri);
         httpd_resp_sendstr_chunk(req, entry->d_name);
         httpd_resp_sendstr_chunk(req, "\"><button type=\"submit\">Delete</button></form>");
@@ -418,7 +418,7 @@ esp_err_t upload_post_handler(httpd_req_t *req)
 
     /* Redirect onto root to see the updated file list */
     httpd_resp_set_status(req, "303 See Other");
-    httpd_resp_set_hdr(req, "Location", "/files/");
+    httpd_resp_set_hdr(req, "Location", "/storage/");
 #ifdef CONFIG_EXAMPLE_HTTPD_CONN_CLOSE_HEADER
     httpd_resp_set_hdr(req, "Connection", "close");
 #endif
@@ -466,7 +466,7 @@ esp_err_t delete_post_handler(httpd_req_t *req)
 
     /* Redirect onto root to see the updated file list */
     httpd_resp_set_status(req, "303 See Other");
-    httpd_resp_set_hdr(req, "Location", "/files/");
+    httpd_resp_set_hdr(req, "Location", "/storage/");
 #ifdef CONFIG_EXAMPLE_HTTPD_CONN_CLOSE_HEADER
     httpd_resp_set_hdr(req, "Connection", "close");
 #endif
