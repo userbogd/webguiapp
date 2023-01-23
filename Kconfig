@@ -44,8 +44,11 @@ menu "WebGUIApp"
 	menu "OTA settings"
 		config WEBGUIAPP_OTA_AUTOUPDATE_ENABLE
 			bool "Enabled OTA autoupdate firmware"
-	        default y
-             	
+	        default n
+           
+        config WEBGUIAPP_OTA_RESET_ENABLE
+			bool "Enabled reset config on OTA update"
+	        default n     	
 			
 		config WEBGUIAPP_OTA_HOST
             string "URL of firmware for OTA update"

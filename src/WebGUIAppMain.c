@@ -271,6 +271,19 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
            sizeof(CONFIG_WEBGUIAPP_USERPASS));
 
     memcpy(Conf->OTAURL, CONFIG_WEBGUIAPP_OTA_HOST, sizeof(CONFIG_WEBGUIAPP_OTA_HOST));
+    Conf->OTAAutoInt = CONFIG_WEBGUIAPP_OTA_AUTOUPDATE_PERIOD;
+
+#if CONFIG_WEBGUIAPP_OTA_AUTOUPDATE_ENABLE
+    Conf->Flags1.bIsOTAEnabled = true;
+#else
+    Conf->Flags1.bIsOTAEnabled = false;
+#endif
+
+#if   CONFIG_WEBGUIAPP_OTA_RESET_ENABLE
+    Conf->Flags1.bIsResetOTAEnabled = true;
+#else
+    Conf->Flags1.bIsResetOTAEnabled = false;
+#endif
 
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
     Conf->wifiSettings.Flags1.bIsWiFiEnabled = CONFIG_WEBGUIAPP_WIFI_ON;

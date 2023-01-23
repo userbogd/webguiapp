@@ -40,8 +40,10 @@ static const char *TAG = "OTAmodule";
 extern const uint8_t server_cert_pem_start[] asm("_binary_ca_cert_pem_start");
 extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_pem_end");
 
+char AvailFwVersion[32] = "Unknown";
+char FwUpdStatus[32] = "Updated";
+
 #define HASH_LEN 32
-//#define CONFIG_FIRMWARE_UPGRADE_URL "https://iotronic.cloud:443/firmware/MStation2.bin"
 #define REPORT_PACKETS_EVERY 100
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
@@ -156,6 +158,7 @@ esp_err_t my_esp_https_ota(const esp_http_client_config_t *config)
     ESP_LOGI(TAG, "********************************");
 
     //Here compare new and old firmware and make decision of update needed
+    strcpy(AvailFwVersion, new_app_info.version);
     ESP_LOGI(TAG, "Compare versions: current build is %d, update build is :%d",
              GetBuildNumber(cur_app_info.version),
              GetBuildNumber(new_app_info.version));
@@ -174,7 +177,8 @@ esp_err_t my_esp_https_ota(const esp_http_client_config_t *config)
             }
             if (++countPackets >= REPORT_PACKETS_EVERY)
             {
-                ESP_LOGI(TAG, "Updated %d bytes", esp_https_ota_get_image_len_read(https_ota_handle));
+                sprintf(FwUpdStatus, "Updated %d bytes", esp_https_ota_get_image_len_read(https_ota_handle));
+                ESP_LOGI(TAG, "%s", FwUpdStatus);
                 countPackets = 0;
             }
         }
@@ -182,12 +186,14 @@ esp_err_t my_esp_https_ota(const esp_http_client_config_t *config)
         if (err != ESP_OK)
         {
             esp_https_ota_abort(https_ota_handle);
+            strcpy(FwUpdStatus,"Error update");
             return err;
         }
     }
     else
     {
         ESP_LOGI(TAG, "New firmware has NOT newer build, SKIP update firmware");
+        strcpy(FwUpdStatus,"Updated actual");
     }
 
     esp_err_t ota_finish_err = esp_https_ota_finish(https_ota_handle);
@@ -198,6 +204,7 @@ esp_err_t my_esp_https_ota(const esp_http_client_config_t *config)
     if (need_to_update)
     {
         ESP_LOGI(TAG, "Firmware updated and now restarting...");
+
         esp_restart();
     }
     return ESP_OK;
@@ -282,4 +289,12 @@ esp_err_t StartOTA(void)
     return ESP_OK;
 }
 
+char* GetAvailVersion()
+{
+    return AvailFwVersion;
+}
+char* GetUpdateStatus()
+{
+    return FwUpdStatus;
+}
 

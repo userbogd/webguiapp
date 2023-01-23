@@ -152,6 +152,15 @@ static void HTTPPrint_ota(char *VarData, void *arg)
 {
     PrintCheckbox(VarData, arg, GetSysConf()->Flags1.bIsOTAEnabled);
 }
+static void HTTPPrint_otarst(char *VarData, void *arg)
+{
+    PrintCheckbox(VarData, arg, GetSysConf()->Flags1.bIsResetOTAEnabled);
+}
+
+static void HTTPPrint_otaint(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", GetSysConf()->OTAAutoInt);
+}
 
 static void HTTPPrint_serial(char *VarData, void *arg)
 {
@@ -170,6 +179,18 @@ static void HTTPPrint_fver(char *VarData, void *arg)
         snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", cur_app_info.version);
     }
 }
+
+static void HTTPPrint_fverav(char *VarData, void *arg)
+{
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetAvailVersion());
+}
+
+static void HTTPPrint_updstat(char *VarData, void *arg)
+{
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetUpdateStatus());
+}
+
+
 static void HTTPPrint_idfver(char *VarData, void *arg)
 {
     esp_app_desc_t cur_app_info;
@@ -668,7 +689,13 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "login", sizeof("login") - 1, &HTTPPrint_login },
         { "pass", sizeof("pass") - 1, &HTTPPrint_pass },
         { "ota", sizeof("ota") - 1, &HTTPPrint_ota },
+        { "otarst", sizeof("otarst") - 1, &HTTPPrint_otarst },
+        { "otaint", sizeof("otaint") - 1, &HTTPPrint_otaint },
         { "fver", sizeof("fver") - 1, &HTTPPrint_fver },
+        { "fverav", sizeof("fverav") - 1, &HTTPPrint_fverav },
+        { "updstat", sizeof("updstat") - 1, &HTTPPrint_updstat },
+
+
         { "idfver", sizeof("idfver") - 1, &HTTPPrint_idfver },
         { "builddate", sizeof("builddate") - 1, &HTTPPrint_builddate },
         { "serial", sizeof("serial") - 1, &HTTPPrint_serial },

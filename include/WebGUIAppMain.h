@@ -45,6 +45,7 @@
         char SysName[32];       ///< User Name
         char SysPass[32];       ///< User Password
         char OTAURL[64];        ///< OTA URL
+        int  OTAAutoInt;
 
         char SN[11];        ///< String of serial number (decimal ID)
         char ID[9];        ///< String of ID ( last 4 bytes of MAC)
@@ -52,10 +53,10 @@
         struct
         {
             char bIsOTAEnabled :1;
+            char bIsResetOTAEnabled :1;
             char bIsLedsEnabled :1;  ///< Indication LEDs enable
             char bIsLoRaConfirm :1;  ///< Enable send back confirmation in LoRa channel
             char bIsTCPConfirm :1;   ///< Enable send back confirmation in TCP channel
-            char bit4 :1;
             char bit5 :1;
             char bit6 :1;
             char bit7 :1;

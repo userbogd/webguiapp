@@ -100,6 +100,8 @@ void GetRFC3339Time(char *t);
 void StartTimeGet(void);
 
 esp_err_t StartOTA(void);
+char* GetAvailVersion();
+char* GetUpdateStatus();
 
 void StartSystemTimer(void);
 uint32_t GetUpTime(void);
