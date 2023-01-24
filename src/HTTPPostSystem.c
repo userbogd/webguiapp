@@ -377,7 +377,7 @@ static HTTP_IO_RESULT HTTPPostServicesSettings(httpd_req_t *req, char *PostData)
 
 static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
 {
-    char tmp[64];
+    char tmp[128];
     bool TempIsOTAEnabled = false;
     bool TempIsRstEnabled = false;
     if (httpd_query_key_value(PostData, "nam", tmp, sizeof(tmp)) == ESP_OK)

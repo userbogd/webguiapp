@@ -44,7 +44,7 @@
         char NetBIOSName[32];   ///< NetBIOS name
         char SysName[32];       ///< User Name
         char SysPass[32];       ///< User Password
-        char OTAURL[64];        ///< OTA URL
+        char OTAURL[128];        ///< OTA URL
         int  OTAAutoInt;
 
         char SN[11];        ///< String of serial number (decimal ID)

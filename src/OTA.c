@@ -1,4 +1,4 @@
- /* Copyright 2022 Bogdan Pilyugin
+/* Copyright 2022 Bogdan Pilyugin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,8 @@
 #include <string.h>
 #include "sdkconfig.h"
 #include "romfs.h"
+#include "nvs_flash.h"
+#include "nvs.h"
 
 #include <sys/socket.h>
 #include <WebGUIAppMain.h>
@@ -41,7 +43,7 @@ extern const uint8_t server_cert_pem_start[] asm("_binary_ca_cert_pem_start");
 extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_pem_end");
 
 char AvailFwVersion[32] = "Unknown";
-char FwUpdStatus[32] = "Updated";
+char FwUpdStatus[64] = "<div class='clok'>Updated</div>";
 
 #define HASH_LEN 32
 #define REPORT_PACKETS_EVERY 100
@@ -177,7 +179,8 @@ esp_err_t my_esp_https_ota(const esp_http_client_config_t *config)
             }
             if (++countPackets >= REPORT_PACKETS_EVERY)
             {
-                sprintf(FwUpdStatus, "Updated %d bytes", esp_https_ota_get_image_len_read(https_ota_handle));
+                sprintf(FwUpdStatus, "<div class='clok'>Updated %d bytes...</div>",
+                        esp_https_ota_get_image_len_read(https_ota_handle));
                 ESP_LOGI(TAG, "%s", FwUpdStatus);
                 countPackets = 0;
             }
@@ -186,14 +189,14 @@ esp_err_t my_esp_https_ota(const esp_http_client_config_t *config)
         if (err != ESP_OK)
         {
             esp_https_ota_abort(https_ota_handle);
-            strcpy(FwUpdStatus,"Error update");
+            strcpy(FwUpdStatus, "<div class='clerr'>Error update</div>");
             return err;
         }
     }
     else
     {
         ESP_LOGI(TAG, "New firmware has NOT newer build, SKIP update firmware");
-        strcpy(FwUpdStatus,"Updated actual");
+        strcpy(FwUpdStatus, "<div class='clok'>Updated actual</div>");
     }
 
     esp_err_t ota_finish_err = esp_https_ota_finish(https_ota_handle);
@@ -203,8 +206,16 @@ esp_err_t my_esp_https_ota(const esp_http_client_config_t *config)
     }
     if (need_to_update)
     {
-        ESP_LOGI(TAG, "Firmware updated and now restarting...");
-
+        ESP_LOGI(TAG, "Firmware updated");
+        strcpy(FwUpdStatus, "<div class='clok'>Updated ok. Restart...</div>");
+        if (GetSysConf()->Flags1.bIsResetOTAEnabled)
+        {
+            ESP_ERROR_CHECK(nvs_flash_erase());
+            ESP_ERROR_CHECK(nvs_flash_init());
+            ESP_ERROR_CHECK(ResetInitSysConfig());
+        }
+        ESP_LOGI(TAG, "Firmware now restarting...");
+        vTaskDelay(pdMS_TO_TICKS(3000));
         esp_restart();
     }
     return ESP_OK;
@@ -225,7 +236,7 @@ static void OTATask(void *pvParameter)
     }
     //get file info
     espfs_stat(fs, "res/ca_cert.pem", &stat);
-    uint32_t  fileSize;
+    uint32_t fileSize;
     fileSize = stat.size;
     char *certbuf = (char*) malloc(fileSize);
     if (certbuf)
@@ -258,11 +269,11 @@ static void OTATask(void *pvParameter)
     else
     {
         ESP_LOGE(TAG, "Firmware upgrade failed");
+        strcpy(FwUpdStatus, "<div class='clerr'>Error update</div>");
     }
     free(certbuf);
     espfs_fclose(file);
-    update_error:
-
+update_error:
 
     vTaskDelete(NULL);
 }
@@ -285,6 +296,7 @@ esp_err_t StartOTA(void)
         return ESP_ERR_NOT_FINISHED;
     }
     ESP_LOGI(TAG, "Starting OTA Task");
+    strcpy(FwUpdStatus, "<div class='clwarn'>Start update...</div>");
     xTaskCreate(OTATask, "OTATask", 1024 * 8, (void*) 0, 3, NULL);
     return ESP_OK;
 }
