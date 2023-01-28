@@ -50,6 +50,8 @@ QueueHandle_t MQTT1MessagesQueueHandle;
 QueueHandle_t MQTT2MessagesQueueHandle;
 EventGroupHandle_t transport_event_group;
 
+wifi_ap_record_t* GetWiFiAPRecord(uint8_t n);
+
 void StartTimeGet(void);
 
 void WiFiAPStart(void);

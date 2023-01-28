@@ -216,6 +216,14 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
     }
 #endif
 
+    if (httpd_query_key_value(PostData, "wifisc", tmp, 4) == ESP_OK)
+    {
+        if (!strcmp(tmp, (const char*) "prs"))
+        {
+            WiFiScan();
+        }
+    }
+
     if (httpd_query_key_value(PostData, "save", tmp, 5) == ESP_OK ||
             httpd_query_key_value(PostData, "apply", tmp, 5) == ESP_OK)
     {

@@ -48,6 +48,19 @@ static EventGroupHandle_t s_wifi_event_group;
 static int s_retry_num = 0;
 static bool isWiFiGotIp = false;
 
+#define DEFAULT_SCAN_LIST_SIZE 20
+static wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
+static bool isScanReady = false;
+
+wifi_ap_record_t* GetWiFiAPRecord(uint8_t n)
+{
+    if (n < DEFAULT_SCAN_LIST_SIZE)
+    {
+        return &ap_info[n];
+    }
+    return NULL;
+}
+
 esp_netif_t* GetSTANetifAdapter(void)
 {
     return sta_netif;
@@ -484,23 +497,21 @@ void WiFiSTAStart(void)
     xTaskCreate(wifi_init_sta, "InitStationTask", 1024 * 4, (void*) 0, 3, NULL);
 }
 
-#define DEFAULT_SCAN_LIST_SIZE 20
-
-void WiFiScan(void)
+static void wifi_scan(void *arg)
 {
     uint16_t number = DEFAULT_SCAN_LIST_SIZE;
-    wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
     uint16_t ap_count = 0;
     memset(ap_info, 0, sizeof(ap_info));
-
     esp_wifi_scan_start(NULL, true);
     ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&number, ap_info));
     ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(&ap_count));
     ESP_LOGI(TAG, "Total APs scanned = %u", ap_count);
-    for (int i = 0; (i < DEFAULT_SCAN_LIST_SIZE) && (i < ap_count); i++)
-    {
-        ESP_LOGI(TAG, "SSID \t\t%s", ap_info[i].ssid);
-        ESP_LOGI(TAG, "RSSI \t\t%d", ap_info[i].rssi);
-        ESP_LOGI(TAG, "Channel \t\t%d\n", ap_info[i].primary);
-    }
+    isScanReady = true;
+    vTaskDelete(NULL);
+}
+
+void WiFiScan(void)
+{
+    isScanReady = false;
+    xTaskCreate(wifi_scan, "ScanWiFiTask", 1024 * 4, (void*) 0, 3, NULL);
 }

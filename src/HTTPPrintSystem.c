@@ -182,14 +182,13 @@ static void HTTPPrint_fver(char *VarData, void *arg)
 
 static void HTTPPrint_fverav(char *VarData, void *arg)
 {
-        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetAvailVersion());
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetAvailVersion());
 }
 
 static void HTTPPrint_updstat(char *VarData, void *arg)
 {
-        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetUpdateStatus());
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetUpdateStatus());
 }
-
 
 static void HTTPPrint_idfver(char *VarData, void *arg)
 {
@@ -347,6 +346,15 @@ static void HTTPPrint_apmacadr(char *VarData, void *arg)
 {
     PrintMACFromInterface(VarData, arg, GetAPNetifAdapter());
 }
+static void HTTPPrint_wifisc(char *VarData, void *arg)
+{
+    wifi_ap_record_t *R = GetWiFiAPRecord(*(uint8_t*) (arg));
+    if (!R)
+        return;
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "{\"ssid\":\"%s\",\"rssi\":%i,\"ch\":%d}", R->ssid, R->rssi,
+             R->primary);
+}
+
 #endif
 
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
@@ -480,7 +488,6 @@ void HTTPPrint_gsmmac(char *VarData, void *arg)
     PrintMACFromInterface(VarData, arg, GetPPPNetifAdapter());
 }
 #endif
-
 
 #ifdef CONFIG_WEBGUIAPP_LORAWAN_ENABLE
 /*LORAWAN settings*/
@@ -639,7 +646,7 @@ static void HTTPPrint_hide_mqtt2(char *VarData, void *arg)
 #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
     snprintf(VarData, MAX_DYNVAR_LENGTH, " ");
 #else
-        snprintf(VarData, MAX_DYNVAR_LENGTH, "hide");
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "hide");
 #endif
 }
 
@@ -695,7 +702,6 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "fverav", sizeof("fverav") - 1, &HTTPPrint_fverav },
         { "updstat", sizeof("updstat") - 1, &HTTPPrint_updstat },
 
-
         { "idfver", sizeof("idfver") - 1, &HTTPPrint_idfver },
         { "builddate", sizeof("builddate") - 1, &HTTPPrint_builddate },
         { "serial", sizeof("serial") - 1, &HTTPPrint_serial },
@@ -730,6 +736,7 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "dns3", sizeof("dns3") - 1, &HTTPPrint_dns3 },
         { "macadr", sizeof("macadr") - 1, &HTTPPrint_macadr },
         { "apmacadr", sizeof("apmacadr") - 1, &HTTPPrint_apmacadr },
+        { "wifisc", sizeof("wifisc") - 1, &HTTPPrint_wifisc },
         #endif
 
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
@@ -745,8 +752,6 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "fledns", sizeof("fledns") - 1, &HTTPPrint_fledns },
         { "emacadr", sizeof("emacadr") - 1, &HTTPPrint_emacadr },
         #endif
-
-
 
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
         /*GSM modem*/
