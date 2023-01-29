@@ -29,6 +29,7 @@
 #include "esp_ota_ops.h"
 #include "ROMFS.h"
 #include "esp_idf_version.h"
+#include "jWrite.h"
 
 static const char *TAG = "HTTPServerPrint";
 
@@ -886,3 +887,26 @@ int HTTPPrint(httpd_req_t *req, char *buf, char *var)
     return dLen;
 
 }
+
+
+void GenerateSystemSettingsJSONFile(void)
+{
+    char *buf = malloc(2048);
+    if(!buf) return;
+
+    jwOpen(buf, 2048, JW_OBJECT, JW_PRETTY);
+    for (int i = 0; i < (sizeof(HANDLERS_ARRAY) / sizeof(HANDLERS_ARRAY[0])); ++i)
+    {
+        char val[18];
+        val[0] = 0x00;
+        strcat(val, "~");
+        strcat(val, HANDLERS_ARRAY[i].tag);
+        strcat(val, "~");
+        jwObj_string(HANDLERS_ARRAY[i].tag, val);
+    }
+    jwEnd();
+    jwClose();
+    ESP_LOGI(TAG, "%s", buf);
+    free(buf);
+}
+

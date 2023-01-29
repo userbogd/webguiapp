@@ -224,6 +224,16 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
         }
     }
 
+    if (httpd_query_key_value(PostData, "wifisave", tmp, 4) == ESP_OK)
+    {
+        if (!strcmp(tmp, (const char*) "prs"))
+        {
+            WriteNVSSysConfig(GetSysConf());
+            memcpy(PostData, "/reboot.html", sizeof "/reboot.html");
+            return HTTP_IO_REDIRECT;
+        }
+    }
+
     if (httpd_query_key_value(PostData, "save", tmp, 5) == ESP_OK ||
             httpd_query_key_value(PostData, "apply", tmp, 5) == ESP_OK)
     {
@@ -512,6 +522,7 @@ static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
         }
         else if (!strcmp(tmp, (const char*) "10"))
         {
+            GenerateSystemSettingsJSONFile();
             return HTTP_IO_DONE_NOREFRESH;
         }
 
