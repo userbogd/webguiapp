@@ -27,29 +27,32 @@
 
 static const char *TAG = "mDNS";
 
+#define EXAMPLE_MDNS_INSTANCE "msdn_esp32_inst"
+
 void mDNSServiceStart(void)
 {
-    //char temp_str[32] = { 0 };
-    uint8_t sta_mac[6] = { 0 };
-    ESP_ERROR_CHECK(esp_read_mac(sta_mac, ESP_MAC_WIFI_STA));
-    char *hostname = GetSysConf()->NetBIOSName;
+    const char hostname[] = "test_host_name";
     //initialize mDNS
-    ESP_ERROR_CHECK(mdns_init());
+    ESP_ERROR_CHECK( mdns_init() );
     //set mDNS hostname (required if you want to advertise services)
-    ESP_ERROR_CHECK(mdns_hostname_set(hostname));
+    ESP_ERROR_CHECK( mdns_hostname_set(hostname) );
     ESP_LOGI(TAG, "mdns hostname set to: [%s]", hostname);
-
     //set default mDNS instance name
-    ESP_ERROR_CHECK(mdns_instance_name_set("testboard"));
+    ESP_ERROR_CHECK( mdns_instance_name_set("esp_32") );
 
     //structure with TXT records
-    mdns_txt_item_t serviceTxtData[] = {
-            { "board", "your_bord_id" }
+    mdns_txt_item_t serviceTxtData[3] = {
+        {"board", "esp32"},
+        {"u", "user"},
+        {"p", "password"}
     };
 
     //initialize service
-    ESP_ERROR_CHECK(mdns_service_add("WebServer", "_http", "_tcp", 80, serviceTxtData, 1));
-    ESP_ERROR_CHECK( mdns_service_txt_item_set("_http", "_tcp", "path", "/index.html") );
-    free(hostname);
+    ESP_ERROR_CHECK( mdns_service_add("ESP32-WebServer", "_http", "_tcp", 80, serviceTxtData, 3) );
+    ESP_ERROR_CHECK( mdns_service_add("ESP32-WebServer1", "_http", "_tcp", 80, NULL, 0) );
+
+    ESP_ERROR_CHECK( mdns_service_txt_item_set("_http", "_tcp", "path", "/foobar") );
+
+    ESP_ERROR_CHECK( mdns_service_txt_item_set_with_explicit_value_len("_http", "_tcp", "u", "admin", strlen("admin")) );
 }
 
