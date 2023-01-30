@@ -40,7 +40,7 @@ idf_component_register(
     	 "src/MQTT.c"
     	 "src/MQTTSysHandler.c"
     	 "src/OTA.c"
-   	 
+   	 	 "src/mDNS.c"
     	    
     INCLUDE_DIRS  "."
     			  "include"
@@ -55,6 +55,7 @@ idf_component_register(
     		 mqtt
     		 esp_https_ota
     		 app_update
+    		 mdns
 		
 	EMBED_FILES "upload_script.html"
 

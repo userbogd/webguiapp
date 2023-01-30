@@ -125,6 +125,10 @@ esp_err_t WebGuiAppInit(void)
     init_rom_fs("/espfs");
     init_spi_fs("/data");
 
+    mDNSServiceStart();
+
+
+
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
     /*Start PPP modem*/
     if (GetSysConf()->gsmSettings.Flags1.bIsGSMEnabled)
@@ -186,6 +190,8 @@ esp_err_t WebGuiAppInit(void)
     }
 #endif
 #endif
+
+
 
     return ESP_OK;
 }

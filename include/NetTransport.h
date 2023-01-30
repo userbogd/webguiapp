@@ -112,5 +112,6 @@ void RegEthReset(void (*eth_rst)(uint8_t level));
 void RegGSMReset(void (*gsm_rst)(uint8_t level));
 
 void GenerateSystemSettingsJSONFile(void);
+void mDNSServiceStart(void);
 
 #endif /* MAIN_INCLUDE_NETTRANSPORT_H_ */
