@@ -45,7 +45,6 @@ static EventGroupHandle_t s_wifi_event_group;
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
 
-static int s_retry_num = 0;
 static bool isWiFiGotIp = false;
 
 #define DEFAULT_SCAN_LIST_SIZE 20
@@ -82,32 +81,42 @@ static void event_handler(void *arg, esp_event_base_t event_base,
 {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
     {
+        ESP_LOGI(TAG, "WiFi STA started, connecting to AP...");
         esp_wifi_connect();
+    }
+    else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_STOP)
+    {
+        isWiFiGotIp = false;
+        ESP_LOGI(TAG, "WiFi STA stopped");
+    }
+    else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_CONNECTED)
+    {
+
+        ESP_LOGI(TAG, "Connected to AP");
+
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
     {
-        if (s_retry_num < EXAMPLE_ESP_MAXIMUM_RETRY)
-        {
-            esp_wifi_connect();
-            s_retry_num++;
-            ESP_LOGI(TAG, "retry to connect to the AP");
-        }
-        else
-        {
-            xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
-        }
         isWiFiGotIp = false;
-        ESP_LOGI(TAG, "connect to the AP fail");
+        esp_wifi_connect();
+        ESP_LOGI(TAG, "Disconnected from AP, try reconnect...");
     }
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
     {
         ip_event_got_ip_t *event = (ip_event_got_ip_t*) event_data;
+        const esp_netif_ip_info_t *ip_info = &event->ip_info;
         ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
-        s_retry_num = 0;
-
         memcpy(&GetSysConf()->wifiSettings.InfIPAddr, &event->ip_info.ip, sizeof(event->ip_info.ip));
         memcpy(&GetSysConf()->wifiSettings.InfMask, &event->ip_info.netmask, sizeof(event->ip_info.netmask));
         memcpy(&GetSysConf()->wifiSettings.InfGateway, &event->ip_info.gw, sizeof(event->ip_info.gw));
+
+        ESP_LOGI(TAG, "WIFI Got IP Address");
+        ESP_LOGI(TAG, "~~~~~~~~~~~");
+        ESP_LOGI(TAG, "WIFIIP:" IPSTR, IP2STR(&ip_info->ip));
+        ESP_LOGI(TAG, "WIFIMASK:" IPSTR, IP2STR(&ip_info->netmask));
+        ESP_LOGI(TAG, "WIFIGW:" IPSTR, IP2STR(&ip_info->gw));
+        ESP_LOGI(TAG, "~~~~~~~~~~~");
+
         isWiFiGotIp = true;
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
     }
@@ -115,88 +124,86 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     if (event_id == WIFI_EVENT_AP_STACONNECTED)
     {
         wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t*) event_data;
-        ESP_LOGI(TAG, "station "MACSTR" join, AID=%d",
-                 MAC2STR(event->mac),
-                 event->aid);
+        ESP_LOGI(TAG, "station "MACSTR" join, AID=%d", MAC2STR(event->mac), event->aid);
     }
     else if (event_id == WIFI_EVENT_AP_STADISCONNECTED)
     {
         wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t*) event_data;
-        ESP_LOGI(TAG, "station "MACSTR" leave, AID=%d",
-                 MAC2STR(event->mac),
-                 event->aid);
+        ESP_LOGI(TAG, "station "MACSTR" leave, AID=%d", MAC2STR(event->mac), event->aid);
     }
 }
 
-static void wifi_init_softap(void *pvParameter)
-{
-    char if_key_str[24];
-    esp_netif_inherent_config_t esp_netif_conf = ESP_NETIF_INHERENT_DEFAULT_WIFI_AP()
-            ;
+/*
+ static void wifi_init_softap(void *pvParameter)
+ {
+ char if_key_str[24];
+ esp_netif_inherent_config_t esp_netif_conf = ESP_NETIF_INHERENT_DEFAULT_WIFI_AP()
+ ;
 
-    strcpy(if_key_str, "WIFI_AP_USER");
-    esp_netif_conf.if_key = if_key_str;
-    esp_netif_conf.route_prio = AP_PRIO;
+ strcpy(if_key_str, "WIFI_AP_USER");
+ esp_netif_conf.if_key = if_key_str;
+ esp_netif_conf.route_prio = AP_PRIO;
 
-    esp_netif_config_t cfg_netif = {
-            .base = &esp_netif_conf,
-            .stack = ESP_NETIF_NETSTACK_DEFAULT_WIFI_AP
-    };
+ esp_netif_config_t cfg_netif = {
+ .base = &esp_netif_conf,
+ .stack = ESP_NETIF_NETSTACK_DEFAULT_WIFI_AP
+ };
 
-    ap_netif = esp_netif_new(&cfg_netif);
-    assert(ap_netif);
+ ap_netif = esp_netif_new(&cfg_netif);
+ assert(ap_netif);
 
-    esp_netif_ip_info_t ip_info;
-    memcpy(&ip_info.ip, &GetSysConf()->wifiSettings.ApIPAddr, 4);
-    memcpy(&ip_info.gw, &GetSysConf()->wifiSettings.ApIPAddr, 4);
-    memcpy(&ip_info.netmask, &GetSysConf()->wifiSettings.InfMask, 4);
+ esp_netif_ip_info_t ip_info;
+ memcpy(&ip_info.ip, &GetSysConf()->wifiSettings.ApIPAddr, 4);
+ memcpy(&ip_info.gw, &GetSysConf()->wifiSettings.ApIPAddr, 4);
+ memcpy(&ip_info.netmask, &GetSysConf()->wifiSettings.InfMask, 4);
 
-    esp_netif_dns_info_t dns_info;
-    memcpy(&dns_info, &GetSysConf()->wifiSettings.ApIPAddr, 4);
+ esp_netif_dns_info_t dns_info;
+ memcpy(&dns_info, &GetSysConf()->wifiSettings.ApIPAddr, 4);
 
-    esp_netif_dhcps_stop(ap_netif);
-    esp_netif_set_ip_info(ap_netif, &ip_info);
-    esp_netif_set_dns_info(ap_netif, ESP_NETIF_DNS_MAIN, &dns_info);
-    esp_netif_dhcps_start(ap_netif);
+ esp_netif_dhcps_stop(ap_netif);
+ esp_netif_set_ip_info(ap_netif, &ip_info);
+ esp_netif_set_dns_info(ap_netif, ESP_NETIF_DNS_MAIN, &dns_info);
+ esp_netif_dhcps_start(ap_netif);
 
-    esp_netif_attach_wifi_ap(ap_netif);
-    esp_wifi_set_default_wifi_ap_handlers();
+ esp_netif_attach_wifi_ap(ap_netif);
+ esp_wifi_set_default_wifi_ap_handlers();
 
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT()
-            ;
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+ wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT()
+ ;
+ ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
-                    ESP_EVENT_ANY_ID,
-                    &event_handler,
-                    NULL,
-                    NULL));
+ ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
+ ESP_EVENT_ANY_ID,
+ &event_handler,
+ NULL,
+ NULL));
 
-    wifi_config_t wifi_config = {
-            .ap = {
+ wifi_config_t wifi_config = {
+ .ap = {
 
-            .channel = EXAMPLE_ESP_WIFI_CHANNEL,
-                    .max_connection = EXAMPLE_MAX_STA_CONN,
-                    .authmode = WIFI_AUTH_WPA_WPA2_PSK
-            },
-    };
-    if (strlen(CONFIG_WEBGUIAPP_WIFI_KEY_AP) == 0)
-    {
-        wifi_config.ap.authmode = WIFI_AUTH_OPEN;
-    }
+ .channel = EXAMPLE_ESP_WIFI_CHANNEL,
+ .max_connection = EXAMPLE_MAX_STA_CONN,
+ .authmode = WIFI_AUTH_WPA_WPA2_PSK
+ },
+ };
+ if (strlen(CONFIG_WEBGUIAPP_WIFI_KEY_AP) == 0)
+ {
+ wifi_config.ap.authmode = WIFI_AUTH_OPEN;
+ }
 
-    memcpy(wifi_config.ap.ssid, GetSysConf()->wifiSettings.ApSSID, strlen(GetSysConf()->wifiSettings.ApSSID));
-    memcpy(wifi_config.ap.password, GetSysConf()->wifiSettings.ApSecurityKey,
-           strlen(GetSysConf()->wifiSettings.ApSecurityKey));
-    wifi_config.ap.ssid_len = strlen(GetSysConf()->wifiSettings.ApSSID);
+ memcpy(wifi_config.ap.ssid, GetSysConf()->wifiSettings.ApSSID, strlen(GetSysConf()->wifiSettings.ApSSID));
+ memcpy(wifi_config.ap.password, GetSysConf()->wifiSettings.ApSecurityKey,
+ strlen(GetSysConf()->wifiSettings.ApSecurityKey));
+ wifi_config.ap.ssid_len = strlen(GetSysConf()->wifiSettings.ApSSID);
 
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
-    ESP_ERROR_CHECK(esp_wifi_start());
+ ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+ ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
+ ESP_ERROR_CHECK(esp_wifi_start());
 
-    ESP_LOGI(TAG, "wifi_init_softap finished");
-    vTaskDelete(NULL);
-}
+ ESP_LOGI(TAG, "wifi_init_softap finished");
+ vTaskDelete(NULL);
+ }
+ */
 
 static void wifi_init_sta(void *pvParameter)
 {
@@ -286,23 +293,24 @@ static void wifi_init_sta(void *pvParameter)
 
     /* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually
      * happened. */
-    if (bits & WIFI_CONNECTED_BIT)
-    {
-        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s",
-                 GetSysConf()->wifiSettings.InfSSID,
-                 GetSysConf()->wifiSettings.InfSecurityKey);
-    }
-    else if (bits & WIFI_FAIL_BIT)
-    {
-        ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
-                 GetSysConf()->wifiSettings.InfSSID,
-                 GetSysConf()->wifiSettings.InfSecurityKey);
-    }
-    else
-    {
-        ESP_LOGE(TAG, "UNEXPECTED EVENT");
-    }
-
+    /*
+     if (bits & WIFI_CONNECTED_BIT)
+     {
+     ESP_LOGI(TAG, "connected to ap SSID:%s password:%s",
+     GetSysConf()->wifiSettings.InfSSID,
+     GetSysConf()->wifiSettings.InfSecurityKey);
+     }
+     else if (bits & WIFI_FAIL_BIT)
+     {
+     ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
+     GetSysConf()->wifiSettings.InfSSID,
+     GetSysConf()->wifiSettings.InfSecurityKey);
+     }
+     else
+     {
+     ESP_LOGE(TAG, "UNEXPECTED EVENT");
+     }
+     */
     /* The event will not be processed after unregister */
     // ESP_ERROR_CHECK(esp_event_handler_instance_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, instance_got_ip));
     // ESP_ERROR_CHECK(esp_event_handler_instance_unregister( WIFI_EVENT, ESP_EVENT_ANY_ID, instance_any_id));
@@ -466,29 +474,30 @@ static void wifi_init_apsta(void *pvParameter)
 
     /* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually
      * happened. */
-    if (bits & WIFI_CONNECTED_BIT)
-    {
-        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s",
-                 GetSysConf()->wifiSettings.InfSSID,
-                 GetSysConf()->wifiSettings.InfSecurityKey);
-    }
-    else if (bits & WIFI_FAIL_BIT)
-    {
-        ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
-                 GetSysConf()->wifiSettings.InfSSID,
-                 GetSysConf()->wifiSettings.InfSecurityKey);
-    }
-    else
-    {
-        ESP_LOGE(TAG, "UNEXPECTED EVENT");
-    }
+    /*
+     if (bits & WIFI_CONNECTED_BIT)
+     {
+     ESP_LOGI(TAG, "connected to ap SSID:%s password:%s",
+     GetSysConf()->wifiSettings.InfSSID,
+     GetSysConf()->wifiSettings.InfSecurityKey);
+     }
+     else if (bits & WIFI_FAIL_BIT)
+     {
+     ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
+     GetSysConf()->wifiSettings.InfSSID,
+     GetSysConf()->wifiSettings.InfSecurityKey);
+     }
+     else
+     {
+     ESP_LOGE(TAG, "UNEXPECTED EVENT");
+     }
+     */
 
     vTaskDelete(NULL);
 }
 
 void WiFiAPStart(void)
 {
-    //xTaskCreate(wifi_init_softap, "InitSoftAPTask", 1024 * 4, (void*) 0, 3, NULL);
     xTaskCreate(wifi_init_apsta, "InitSoftAPTask", 1024 * 4, (void*) 0, 3, NULL);
 }
 
@@ -497,10 +506,14 @@ void WiFiSTAStart(void)
     xTaskCreate(wifi_init_sta, "InitStationTask", 1024 * 4, (void*) 0, 3, NULL);
 }
 
-void WiFiStop(void)
+void WiFiDisconnect(void)
 {
-    esp_wifi_scan_stop();
-    esp_wifi_deinit();
+    esp_wifi_disconnect();
+}
+
+void WiFiConnect(void)
+{
+    esp_wifi_connect();
 }
 
 static void wifi_scan(void *arg)

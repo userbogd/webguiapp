@@ -56,7 +56,10 @@ void StartTimeGet(void);
 
 void WiFiAPStart(void);
 void WiFiSTAStart(void);
-void WiFiStop(void);
+
+void WiFiDisconnect(void);
+void WiFiConnect(void);
+
 void WiFiScan(void);
 void EthStart(void);
 
