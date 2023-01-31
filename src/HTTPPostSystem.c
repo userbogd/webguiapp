@@ -482,14 +482,12 @@ static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
     {
         if (!strcmp(tmp, (const char*) "1"))
         {
-            WiFiScan();
+            WiFiAPStart();
             return HTTP_IO_DONE_NOREFRESH;
         }
         else if (!strcmp(tmp, (const char*) "2"))
         {
-#if CONFIG_WEBGUIAPP_GPRS_ENABLE
-            PPPModemGetRSSI();
-#endif
+            WiFiStop();
             return HTTP_IO_DONE_NOREFRESH;
         }
         else if (!strcmp(tmp, (const char*) "3"))

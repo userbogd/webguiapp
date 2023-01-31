@@ -497,6 +497,12 @@ void WiFiSTAStart(void)
     xTaskCreate(wifi_init_sta, "InitStationTask", 1024 * 4, (void*) 0, 3, NULL);
 }
 
+void WiFiStop(void)
+{
+    esp_wifi_scan_stop();
+    esp_wifi_deinit();
+}
+
 static void wifi_scan(void *arg)
 {
     uint16_t number = DEFAULT_SCAN_LIST_SIZE;
