@@ -137,13 +137,6 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
         if (!strcmp((const char*) tmp, (const char*) "1"))
             TempIsWiFiEnabled = true;
     }
-    if (httpd_query_key_value(PostData, "netm", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        if (!strcmp((const char*) tmp, (const char*) "1"))
-            GetSysConf()->wifiSettings.Flags1.bIsAP = true;
-        else if (!strcmp((const char*) tmp, (const char*) "2"))
-            GetSysConf()->wifiSettings.Flags1.bIsAP = false;
-    }
     if (httpd_query_key_value(PostData, "wfmode", tmp, sizeof(tmp)) == ESP_OK)
     {
         if (!strcmp((const char*) tmp, (const char*) "sta"))
@@ -491,7 +484,6 @@ static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
     {
         if (!strcmp(tmp, (const char*) "1"))
         {
-            WiFiConnect();
             return HTTP_IO_DONE_NOREFRESH;
         }
         else if (!strcmp(tmp, (const char*) "2"))

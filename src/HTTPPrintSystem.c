@@ -245,18 +245,18 @@ static void HTTPPrint_wfen(char *VarData, void *arg)
 }
 static void HTTPPrint_wfstat(char *VarData, void *arg)
 {
-    if (GetSysConf()->wifiSettings.Flags1.bIsAP)
+    if (GetSysConf()->wifiSettings.WiFiMode == WIFI_MODE_AP)
         PrintInterfaceState(VarData, arg, GetAPNetifAdapter());
     else
         PrintInterfaceState(VarData, arg, GetSTANetifAdapter());
 }
 static void HTTPPrint_cln(char *VarData, void *arg)
 {
-    PrintCheckbox(VarData, arg, !GetSysConf()->wifiSettings.Flags1.bIsAP);
+    //PrintCheckbox(VarData, arg, !GetSysConf()->wifiSettings.Flags1.bIsAP);
 }
 static void HTTPPrint_apn(char *VarData, void *arg)
 {
-    PrintCheckbox(VarData, arg, GetSysConf()->wifiSettings.Flags1.bIsAP);
+    //PrintCheckbox(VarData, arg, GetSysConf()->wifiSettings.Flags1.bIsAP);
 }
 
 static void HTTPPrint_wfmode(char *VarData, void *arg)

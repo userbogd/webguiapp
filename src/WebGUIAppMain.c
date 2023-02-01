@@ -161,11 +161,6 @@ esp_err_t WebGuiAppInit(void)
                 WiFiAPSTAStart();
             break;
         }
-
-        if (GetSysConf()->wifiSettings.Flags1.bIsAP)
-            WiFiAPStart();
-        else
-            WiFiSTAStart();
     }
 #endif
 
@@ -314,7 +309,7 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
                          (esp_ip4_addr_t*) &Conf->wifiSettings.InfGateway);
     esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_WIFI_IP_AP,
                          (esp_ip4_addr_t*) &Conf->wifiSettings.ApIPAddr);
-    Conf->wifiSettings.Flags1.bIsAP = true;
+
     Conf->wifiSettings.WiFiMode = 3; //AP+STA mode
     memcpy(Conf->wifiSettings.ApSecurityKey, CONFIG_WEBGUIAPP_WIFI_KEY_AP,
            sizeof(CONFIG_WEBGUIAPP_WIFI_KEY_AP));

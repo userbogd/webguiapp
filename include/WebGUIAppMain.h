@@ -152,7 +152,7 @@
             struct
             {
                 char bIsDHCPEnabled :1;
-                char bIsAP :1;
+                char b1 :1;
                 char b2 :1;
                 char b3 :1;
                 char b4 :1;

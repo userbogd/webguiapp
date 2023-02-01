@@ -133,7 +133,7 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     }
 }
 
-/*
+
  static void wifi_init_softap(void *pvParameter)
  {
  char if_key_str[24];
@@ -203,7 +203,7 @@ static void event_handler(void *arg, esp_event_base_t event_base,
  ESP_LOGI(TAG, "wifi_init_softap finished");
  vTaskDelete(NULL);
  }
- */
+
 
 static void wifi_init_sta(void *pvParameter)
 {
@@ -498,7 +498,7 @@ static void wifi_init_apsta(void *pvParameter)
 
 void WiFiAPStart(void)
 {
-    xTaskCreate(wifi_init_apsta, "InitSoftAPTask", 1024 * 4, (void*) 0, 3, NULL);
+    xTaskCreate(wifi_init_softap, "InitSoftAPTask", 1024 * 4, (void*) 0, 3, NULL);
 }
 
 void WiFiAPSTAStart(void)
