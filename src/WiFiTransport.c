@@ -488,8 +488,12 @@ static void wifi_init_apsta(void *pvParameter)
 
 void WiFiAPStart(void)
 {
-    //xTaskCreate(wifi_init_softap, "InitSoftAPTask", 1024 * 4, (void*) 0, 3, NULL);
     xTaskCreate(wifi_init_apsta, "InitSoftAPTask", 1024 * 4, (void*) 0, 3, NULL);
+}
+
+void WiFiAPSTAStart(void)
+{
+    xTaskCreate(wifi_init_apsta, "InitSoftAPSTATask", 1024 * 4, (void*) 0, 3, NULL);
 }
 
 void WiFiSTAStart(void)

@@ -132,6 +132,7 @@
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
         struct
         {
+            uint8_t WiFiMode;
             esp_ip4_addr_t InfIPAddr; // IP address in infrastructure(INF) mode
             esp_ip4_addr_t InfMask; // network mask in INF mode
             esp_ip4_addr_t InfGateway; // gateway IP in INF mode

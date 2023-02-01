@@ -149,6 +149,19 @@ esp_err_t WebGuiAppInit(void)
     /*Start WiFi connection*/
     if (GetSysConf()->wifiSettings.Flags1.bIsWiFiEnabled)
     {
+        switch (GetSysConf()->wifiSettings.WiFiMode)
+        {
+            case WIFI_MODE_STA:
+                WiFiSTAStart();
+            break;
+            case WIFI_MODE_AP:
+                WiFiAPStart();
+            break;
+            case WIFI_MODE_APSTA:
+                WiFiAPSTAStart();
+            break;
+        }
+
         if (GetSysConf()->wifiSettings.Flags1.bIsAP)
             WiFiAPStart();
         else
@@ -177,6 +190,7 @@ esp_err_t WebGuiAppInit(void)
 
     //Network ready or network not available now, but maybe restore later
     StartTimeGet();
+    mDNSServiceStart();
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
     if (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled
@@ -186,8 +200,6 @@ esp_err_t WebGuiAppInit(void)
     }
 #endif
 #endif
-
-
 
     return ESP_OK;
 }
@@ -303,6 +315,7 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
     esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_WIFI_IP_AP,
                          (esp_ip4_addr_t*) &Conf->wifiSettings.ApIPAddr);
     Conf->wifiSettings.Flags1.bIsAP = true;
+    Conf->wifiSettings.WiFiMode = 3; //AP+STA mode
     memcpy(Conf->wifiSettings.ApSecurityKey, CONFIG_WEBGUIAPP_WIFI_KEY_AP,
            sizeof(CONFIG_WEBGUIAPP_WIFI_KEY_AP));
     memcpy(Conf->wifiSettings.InfSSID, CONFIG_WEBGUIAPP_WIFI_SSID_STA,

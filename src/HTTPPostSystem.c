@@ -144,6 +144,15 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
         else if (!strcmp((const char*) tmp, (const char*) "2"))
             GetSysConf()->wifiSettings.Flags1.bIsAP = false;
     }
+    if (httpd_query_key_value(PostData, "wfmode", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (!strcmp((const char*) tmp, (const char*) "sta"))
+            GetSysConf()->wifiSettings.WiFiMode = WIFI_MODE_STA;
+        else if (!strcmp((const char*) tmp, (const char*) "ap"))
+            GetSysConf()->wifiSettings.WiFiMode = WIFI_MODE_AP;
+        else if (!strcmp((const char*) tmp, (const char*) "apsta"))
+            GetSysConf()->wifiSettings.WiFiMode = WIFI_MODE_APSTA;
+    }
     /*AP section*/
     httpd_query_key_value(PostData, "wfiap", GetSysConf()->wifiSettings.ApSSID,
                           sizeof(GetSysConf()->wifiSettings.ApSSID));

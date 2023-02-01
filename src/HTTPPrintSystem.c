@@ -259,6 +259,14 @@ static void HTTPPrint_apn(char *VarData, void *arg)
     PrintCheckbox(VarData, arg, GetSysConf()->wifiSettings.Flags1.bIsAP);
 }
 
+static void HTTPPrint_wfmode(char *VarData, void *arg)
+{
+    if ((*(uint8_t*) arg) == GetSysConf()->wifiSettings.WiFiMode)
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "selected");
+    else
+        snprintf(VarData, MAX_DYNVAR_LENGTH, " ");
+}
+
 static void HTTPPrint_ssidap(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->wifiSettings.ApSSID);
@@ -723,6 +731,7 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "wfstat", sizeof("wfstat") - 1, &HTTPPrint_wfstat },
         { "cln", sizeof("cln") - 1, &HTTPPrint_cln },
         { "apn", sizeof("apn") - 1, &HTTPPrint_apn },
+        { "wfmode", sizeof("wfmode") - 1, &HTTPPrint_wfmode },
         { "ssidap", sizeof("ssidap") - 1, &HTTPPrint_ssidap },
         { "wkeyap", sizeof("wkeyap") - 1, &HTTPPrint_wkeyap },
         { "ipap", sizeof("ipap") - 1, &HTTPPrint_ipap },
