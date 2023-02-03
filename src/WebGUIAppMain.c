@@ -185,7 +185,7 @@ esp_err_t WebGuiAppInit(void)
 
     //Network ready or network not available now, but maybe restore later
     StartTimeGet();
-    mDNSServiceStart();
+    //mDNSServiceStart();
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
     if (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled

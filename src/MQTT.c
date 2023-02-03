@@ -273,7 +273,7 @@ static void start_mqtt()
             esp_mqtt_client_register_event(mqtt[i].mqtt, ESP_EVENT_ANY_ID, mqtt[i].system_event_handler, &mqtt[i].mqtt);
             esp_mqtt_client_register_event(mqtt[i].mqtt, ESP_EVENT_ANY_ID, mqtt[i].user_event_handler, &mqtt[i].mqtt);
             esp_mqtt_client_start(mqtt[i].mqtt);
-            xTaskCreate(MQTTTaskTransmit, "MQTTTaskTransmit", 1024 * 4, (void*) &mqtt[i].mqtt_index, 3, NULL);
+            xTaskCreate(MQTTTaskTransmit, "MQTTTaskTransmit", 1024 * 1, (void*) &mqtt[i].mqtt_index, 3, NULL);
         }
     }
 }
