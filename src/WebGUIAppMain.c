@@ -149,18 +149,7 @@ esp_err_t WebGuiAppInit(void)
     /*Start WiFi connection*/
     if (GetSysConf()->wifiSettings.Flags1.bIsWiFiEnabled)
     {
-        switch (GetSysConf()->wifiSettings.WiFiMode)
-        {
-            case WIFI_MODE_STA:
-                WiFiSTAStart();
-            break;
-            case WIFI_MODE_AP:
-                WiFiAPStart();
-            break;
-            case WIFI_MODE_APSTA:
-                WiFiAPSTAStart();
-            break;
-        }
+        WiFiStart();
     }
 #endif
 
@@ -348,7 +337,10 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
 #endif
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
-    Conf->mqttStation[0].Flags1.bIsGlobalEnabled = CONFIG_WEBGUIAPP_MQTT_ON;
+    Conf->mqttStation[0].Flags1.bIsGlobalEnabled = false;
+#if CONFIG_WEBGUIAPP_MQTT_ON
+    Conf->mqttStation[0].Flags1.bIsGlobalEnabled = true;
+#endif
     memcpy(Conf->mqttStation[0].ServerAddr, CONFIG_WEBGUIAPP_MQTT_SERVER_URL,
            sizeof(CONFIG_WEBGUIAPP_MQTT_SERVER_URL));
     Conf->mqttStation[0].ServerPort = CONFIG_WEBGUIAPP_MQTT_SERVER_PORT;
@@ -364,7 +356,10 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
     memcpy(Conf->mqttStation[0].UserPass, CONFIG_WEBGUIAPP_MQTT_PASSWORD,
            sizeof(CONFIG_WEBGUIAPP_MQTT_PASSWORD));
 #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
-    Conf->mqttStation[1].Flags1.bIsGlobalEnabled = CONFIG_WEBGUIAPP_MQTT_ON;
+    Conf->mqttStation[1].Flags1.bIsGlobalEnabled = false;
+#if CONFIG_WEBGUIAPP_MQTT_ON
+    Conf->mqttStation[1].Flags1.bIsGlobalEnabled = true;
+#endif
     memcpy(Conf->mqttStation[1].ServerAddr, CONFIG_WEBGUIAPP_MQTT_SERVER_URL, sizeof(CONFIG_WEBGUIAPP_MQTT_SERVER_URL));
     Conf->mqttStation[1].ServerPort = CONFIG_WEBGUIAPP_MQTT_SERVER_PORT;
     memcpy(Conf->mqttStation[1].SystemName, CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME,
@@ -519,7 +514,7 @@ void DelayedRestartTask(void *pvParameter)
 void DelayedRestart(void)
 {
     xTaskCreate(DelayedRestartTask, "RestartTask", 1024 * 4, (void*) 0, 3,
-    NULL);
+                NULL);
 }
 
 bool GetUserAppNeedReset(void)

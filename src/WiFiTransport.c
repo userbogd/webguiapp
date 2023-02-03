@@ -30,6 +30,8 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "NetTransport.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 esp_netif_t *sta_netif;
 esp_netif_t *ap_netif;
@@ -45,6 +47,7 @@ static EventGroupHandle_t s_wifi_event_group;
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
 
+static int s_retry_num = 0;
 static bool isWiFiGotIp = false;
 
 #define DEFAULT_SCAN_LIST_SIZE 20
@@ -91,21 +94,30 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_CONNECTED)
     {
-
         ESP_LOGI(TAG, "Connected to AP");
-
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
     {
+        if (s_retry_num < EXAMPLE_ESP_MAXIMUM_RETRY)
+        {
+            esp_wifi_connect();
+            s_retry_num++;
+            ESP_LOGI(TAG, "retry to connect to the AP");
+        }
+        else
+        {
+            xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
+        }
         isWiFiGotIp = false;
-        esp_wifi_connect();
-        ESP_LOGI(TAG, "Disconnected from AP, try reconnect...");
+        ESP_LOGI(TAG, "connect to the AP fail");
+
     }
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
     {
         ip_event_got_ip_t *event = (ip_event_got_ip_t*) event_data;
         const esp_netif_ip_info_t *ip_info = &event->ip_info;
         ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
+        s_retry_num = 0;
         memcpy(&GetSysConf()->wifiSettings.InfIPAddr, &event->ip_info.ip, sizeof(event->ip_info.ip));
         memcpy(&GetSysConf()->wifiSettings.InfMask, &event->ip_info.netmask, sizeof(event->ip_info.netmask));
         memcpy(&GetSysConf()->wifiSettings.InfGateway, &event->ip_info.gw, sizeof(event->ip_info.gw));
@@ -137,8 +149,7 @@ static void event_handler(void *arg, esp_event_base_t event_base,
  static void wifi_init_softap(void *pvParameter)
  {
  char if_key_str[24];
- esp_netif_inherent_config_t esp_netif_conf = ESP_NETIF_INHERENT_DEFAULT_WIFI_AP()
- ;
+ esp_netif_inherent_config_t esp_netif_conf = ESP_NETIF_INHERENT_DEFAULT_WIFI_AP();
 
  strcpy(if_key_str, "WIFI_AP_USER");
  esp_netif_conf.if_key = if_key_str;
@@ -291,30 +302,6 @@ static void wifi_init_sta(void *pvParameter)
                                            pdFALSE,
                                            portMAX_DELAY);
 
-    /* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually
-     * happened. */
-    /*
-     if (bits & WIFI_CONNECTED_BIT)
-     {
-     ESP_LOGI(TAG, "connected to ap SSID:%s password:%s",
-     GetSysConf()->wifiSettings.InfSSID,
-     GetSysConf()->wifiSettings.InfSecurityKey);
-     }
-     else if (bits & WIFI_FAIL_BIT)
-     {
-     ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
-     GetSysConf()->wifiSettings.InfSSID,
-     GetSysConf()->wifiSettings.InfSecurityKey);
-     }
-     else
-     {
-     ESP_LOGE(TAG, "UNEXPECTED EVENT");
-     }
-     */
-    /* The event will not be processed after unregister */
-    // ESP_ERROR_CHECK(esp_event_handler_instance_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, instance_got_ip));
-    // ESP_ERROR_CHECK(esp_event_handler_instance_unregister( WIFI_EVENT, ESP_EVENT_ANY_ID, instance_any_id));
-    // vEventGroupDelete(s_wifi_event_group);
     vTaskDelete(NULL);
 }
 
@@ -466,49 +453,9 @@ static void wifi_init_apsta(void *pvParameter)
 
     /* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or connection failed for the maximum
      * number of re-tries (WIFI_FAIL_BIT). The bits are set by event_handler() (see above) */
-    EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
-    WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
-                                           pdFALSE,
-                                           pdFALSE,
-                                           portMAX_DELAY);
 
-    /* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually
-     * happened. */
-    /*
-     if (bits & WIFI_CONNECTED_BIT)
-     {
-     ESP_LOGI(TAG, "connected to ap SSID:%s password:%s",
-     GetSysConf()->wifiSettings.InfSSID,
-     GetSysConf()->wifiSettings.InfSecurityKey);
-     }
-     else if (bits & WIFI_FAIL_BIT)
-     {
-     ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
-     GetSysConf()->wifiSettings.InfSSID,
-     GetSysConf()->wifiSettings.InfSecurityKey);
-     }
-     else
-     {
-     ESP_LOGE(TAG, "UNEXPECTED EVENT");
-     }
-     */
 
     vTaskDelete(NULL);
-}
-
-void WiFiAPStart(void)
-{
-    xTaskCreate(wifi_init_softap, "InitSoftAPTask", 1024 * 4, (void*) 0, 3, NULL);
-}
-
-void WiFiAPSTAStart(void)
-{
-    xTaskCreate(wifi_init_apsta, "InitSoftAPSTATask", 1024 * 4, (void*) 0, 3, NULL);
-}
-
-void WiFiSTAStart(void)
-{
-    xTaskCreate(wifi_init_sta, "InitStationTask", 1024 * 4, (void*) 0, 3, NULL);
 }
 
 void WiFiDisconnect(void)
@@ -519,6 +466,53 @@ void WiFiDisconnect(void)
 void WiFiConnect(void)
 {
     esp_wifi_connect();
+}
+
+static void WiFiControlTask(void* arg)
+{
+    //WiFi init and start block
+    switch (GetSysConf()->wifiSettings.WiFiMode)
+    {
+        case WIFI_MODE_STA:
+            xTaskCreate(wifi_init_sta, "InitStationTask", 1024 * 4, (void*) 0, 3, NULL);
+        break;
+        case WIFI_MODE_AP:
+            xTaskCreate(wifi_init_softap, "InitSoftAPTask", 1024 * 4, (void*) 0, 3, NULL);
+        break;
+        case WIFI_MODE_APSTA:
+            xTaskCreate(wifi_init_apsta, "InitSoftAPSTATask", 1024 * 4, (void*) 0, 3, NULL);
+        break;
+    }
+    //WiFi in work service
+    while(1)
+    {
+        EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
+        WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
+                                               pdFALSE,
+                                               pdFALSE,
+                                               portMAX_DELAY);
+        if (bits & WIFI_CONNECTED_BIT)
+        {
+
+        }
+        else if (bits & WIFI_FAIL_BIT)
+        {
+
+        }
+        else
+        {
+
+        }
+
+
+
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+}
+
+void WiFiStart(void)
+{
+    xTaskCreate(WiFiControlTask, "WiFiCtrlTask", 1024 * 4, (void*) 0, 3, NULL);
 }
 
 static void wifi_scan(void *arg)

@@ -54,9 +54,10 @@ wifi_ap_record_t* GetWiFiAPRecord(uint8_t n);
 
 void StartTimeGet(void);
 
-void WiFiAPStart(void);
-void WiFiSTAStart(void);
-void WiFiAPSTAStart(void);
+//void WiFiAPStart(void);
+//void WiFiSTAStart(void);
+//void WiFiAPSTAStart(void);
+void WiFiStart(void);
 void WiFiDisconnect(void);
 void WiFiScan(void);
 void EthStart(void);
