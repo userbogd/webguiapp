@@ -206,7 +206,6 @@ static void wifi_init_softap(void *pvParameter)
 
 static void wifi_init_sta(void *pvParameter)
 {
-    //s_wifi_event_group = xEventGroupCreate();
     //sta_netif = esp_netif_create_default_wifi_sta();
     char if_key_str[24];
     esp_netif_inherent_config_t esp_netif_conf = ESP_NETIF_INHERENT_DEFAULT_WIFI_STA();
@@ -281,21 +280,11 @@ static void wifi_init_sta(void *pvParameter)
     ESP_ERROR_CHECK(esp_wifi_start());
 
     ESP_LOGI(TAG, "wifi_init_sta finished.");
-
-    /* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or connection failed for the maximum
-     * number of re-tries (WIFI_FAIL_BIT). The bits are set by event_handler() (see above) */
-    EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
-    WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
-                                           pdFALSE,
-                                           pdFALSE,
-                                           portMAX_DELAY);
-
     vTaskDelete(NULL);
 }
 
 static void wifi_init_apsta(void *pvParameter)
 {
-    //s_wifi_event_group = xEventGroupCreate();
     //BEGIN AP MODE IF
     char ap_if_key_str[24];
     esp_netif_inherent_config_t ap_esp_netif_conf = ESP_NETIF_INHERENT_DEFAULT_WIFI_AP()
@@ -493,8 +482,9 @@ static void WiFiControlTask(void *arg)
         {
             if (--reconnect_counter <= 0)
             {
+                ESP_LOGI(TAG, "WiFi STA started, reconnecting to AP...");
                 esp_wifi_connect();
-                reconnect_interval *= 1.5;
+                reconnect_interval += BASE_RECONNECT_INTERVAL;
                 if (reconnect_interval >= BASE_RECONNECT_INTERVAL * 10)
                     reconnect_interval = BASE_RECONNECT_INTERVAL * 10;
                 reconnect_counter = reconnect_interval;
