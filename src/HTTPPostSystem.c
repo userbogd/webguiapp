@@ -51,7 +51,7 @@ HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostDat
     const char *pt = filename + 1;
 
 #if HTTP_SERVER_DEBUG_LEVEL > 0
-    ESP_LOGI(TAG, "URI for POST processing:%s", req->uri);
+    //ESP_LOGI(TAG, "URI for POST processing:%s", req->uri);
     ESP_LOGI(TAG, "Filename:%s", pt);
     ESP_LOGI(TAG, "DATA for POST processing:%s", PostData);
 #endif

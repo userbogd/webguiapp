@@ -33,6 +33,17 @@
  * }
  */
 
+/*
+{
+ "messid":12345,
+ "api":"2.0",
+ "request":"GET",
+ "url":"api/status.json",
+ "postdata":"param1=value&param2=value",
+ "reload":"true"
+}
+*/
+
 #include "MQTT.h"
 #include "jWrite.h"
 #include "jRead.h"
@@ -45,7 +56,7 @@
 #define MAX_JSON_MESSAGE 256       //max size of mqtt message to publish
 #define MAX_FILE_PUBLISH    4096   //bufer for mqtt data publish
 #define MAX_DYNVAR_LENTH  64
-#define MAX_FILENAME_LENTH 15
+#define MAX_FILENAME_LENTH 32
 #define MAX_ERROR_MESSAGE 32
 #define MAX_ERROR_JSON  256
 #define MAX_MESSAGE_ID 15
@@ -345,7 +356,9 @@ void SystemDataHandler(char *data, uint32_t len, int idx)
                 goto api_json_err;
             }
 
+            ESP_LOGW(TAG, "URL=%s, DATA=%s", URL, POST_DATA);
             HTTPPostApp(NULL, URL, POST_DATA);
+
 
             jRead(data, "{'reload'", &result);
             if (result.elements == 1 && !memcmp("true", result.pValue, result.bytelen))
