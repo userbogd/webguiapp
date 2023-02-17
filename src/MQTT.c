@@ -242,8 +242,8 @@ static void start_mqtt()
 {
     esp_mqtt_client_config_t mqtt_cfg = { 0 };
 
-    char url[40];
-    char tmp[40];
+    char url[72];
+    char tmp[72];
 
     for (int i = 0; i < CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM; ++i)
     {

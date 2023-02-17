@@ -82,7 +82,7 @@
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
         struct
         {
-            char ServerAddr[32];
+            char ServerAddr[64];
             uint16_t ServerPort;
             char SystemName[32];
             char GroupName[32];

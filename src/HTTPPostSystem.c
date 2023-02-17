@@ -279,7 +279,7 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
 
 static HTTP_IO_RESULT HTTPPostServicesSettings(httpd_req_t *req, char *PostData)
 {
-    char tmp[33];
+    char tmp[64];
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
     bool TempIsMQTT1Enabled = false;
 #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
