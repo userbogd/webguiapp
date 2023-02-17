@@ -155,24 +155,7 @@ esp_err_t WebGuiAppInit(void)
 
     /*Start services depends on client connection*/
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE || CONFIG_WEBGUIAPP_ETHERNET_ENABLE || CONFIG_WEBGUIAPP_WIFI_ENABLE
-    //start all services no depends on network ready
     ESP_ERROR_CHECK(start_file_server());
-    //Wait for network ready
-    while (!(
-
-#ifdef CONFIG_WEBGUIAPP_GPRS_ENABLE
-                    isPPPConnected() ||
-#endif
-#ifdef CONFIG_WEBGUIAPP_WIFI_ENABLE
-    isWIFIConnected() ||
-            #endif
-#ifdef CONFIG_WEBGUIAPP_ETHERNET_ENABLE
-                    isETHConnected() ||
-#endif
-            ++NetworkStartTimeout >= NETWORK_START_TIMEOUT))
-        vTaskDelay(pdMS_TO_TICKS(1000));
-
-    //Network ready or network not available now, but maybe restore later
     StartTimeGet();
     //mDNSServiceStart();
 
@@ -184,7 +167,6 @@ esp_err_t WebGuiAppInit(void)
     }
 #endif
 #endif
-
     return ESP_OK;
 }
 
