@@ -62,7 +62,7 @@ static SYS_CONFIG SysConfig;
 SemaphoreHandle_t xSemaphoreSPIHandle = NULL;
 StaticSemaphore_t xSemaphoreSPIBuf;
 
-#define NETWORK_START_TIMEOUT (60)
+#define NETWORK_START_TIMEOUT (5)
 
 static int NetworkStartTimeout = 0;
 static bool isUserAppNeedReset = false;
