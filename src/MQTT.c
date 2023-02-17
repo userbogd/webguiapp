@@ -24,6 +24,8 @@
 #include "NetTransport.h"
 #include "MQTT.h"
 
+#define MQTT_DEBUG_MODE  1
+
 #define MQTT_MESSAGE_BUFER_LENTH 5  //size of mqtt queue
 #define MQTT_RECONNECT_CHANGE_ADAPTER   3
 
@@ -102,11 +104,11 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
                                       void *event_data)
 {
     xSemaphoreTake(xSemaphoreMQTTHandle, pdMS_TO_TICKS(1000));
+#if MQTT_DEBUG_MODE > 0
     ESP_LOGI(TAG, "Event dispatched from event loop base=%s, event_id=%d", base, event_id);
+#endif
     esp_mqtt_event_handle_t event = event_data;
     esp_mqtt_client_handle_t client = event->client;
-
-    //mqtt_client_t *ctx = (mqtt_client_t*) event->user_context;
 
     int msg_id;
     static int MQTTReconnectCounter = 0; //Change network adapter every MQTT_RECONNECT_CHANGE_ADAPTER number attempts
@@ -116,14 +118,21 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
         case MQTT_EVENT_CONNECTED:
             mqtt[idx].is_connected = true;
             MQTTReconnectCounter = 0;
+#if MQTT_DEBUG_MODE > 0
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED client %d", idx);
+#endif
             ComposeTopic(topic, idx, "SYSTEM", "DWLINK");
             msg_id = esp_mqtt_client_subscribe(client, (const char*) topic, 0);
+#if MQTT_DEBUG_MODE > 0
             ESP_LOGI(TAG, "Subscribe to %s", topic);
             ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
+#endif
         break;
         case MQTT_EVENT_DISCONNECTED:
+
+#if MQTT_DEBUG_MODE > 0
             ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED client %d", idx);
+#endif
             if (++MQTTReconnectCounter > MQTT_RECONNECT_CHANGE_ADAPTER)
             {
                 MQTTReconnectCounter = 0;
@@ -132,26 +141,39 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
             mqtt[idx].is_connected = false;
         break;
         case MQTT_EVENT_SUBSCRIBED:
+
+#if MQTT_DEBUG_MODE > 0
             ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
+#endif
         break;
         case MQTT_EVENT_UNSUBSCRIBED:
+
+#if MQTT_DEBUG_MODE > 0
             ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
+#endif
         break;
         case MQTT_EVENT_PUBLISHED:
+            #if MQTT_DEBUG_MODE > 0
             ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
+#endif
         break;
         case MQTT_EVENT_DATA:
+
+#if MQTT_DEBUG_MODE > 0
             ESP_LOGI(TAG, "MQTT_EVENT_DATA, client %d", idx);
+#endif
             //Check if topic is SYSTEM and pass data to handler
             ComposeTopic(topic, idx, "SYSTEM", "DWLINK");
             if (!memcmp(topic, event->topic, event->topic_len))
             {
                 SystemDataHandler(event->data, event->data_len, idx);
+#if MQTT_DEBUG_MODE > 0
                 ESP_LOGI(TAG, "Control data handler on client %d", idx);
+#endif
             }
         break;
         case MQTT_EVENT_ERROR:
-            ESP_LOGI(TAG, "MQTT_EVENT_ERROR, client %d", idx);
+            ESP_LOGE(TAG, "MQTT_EVENT_ERROR, client %d", idx);
             if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT)
             {
                 log_error_if_nonzero("reported from esp-tls", event->error_handle->esp_tls_last_esp_err);
@@ -162,7 +184,7 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
             }
         break;
         default:
-            ESP_LOGI(TAG, "Other event id:%d", event->event_id);
+            ESP_LOGW(TAG, "Other event id:%d", event->event_id);
         break;
     }
     xSemaphoreGive(xSemaphoreMQTTHandle);
@@ -225,7 +247,9 @@ void MQTTTaskTransmit(void *pvParameter)
         xQueueReceive(mqtt[idx].mqtt_queue, &DSS, portMAX_DELAY);
         if (mqtt[idx].mqtt)
         {
+#if MQTT_DEBUG_MODE > 1
             ESP_LOGI(TAG, "MQTT client %d data send:%.*s", idx, DSS.data_length, DSS.raw_data_ptr);
+#endif
             esp_mqtt_client_publish(mqtt[idx].mqtt,
                                     (const char*) DSS.topic,
                                     (const char*) DSS.raw_data_ptr,
