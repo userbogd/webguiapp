@@ -58,5 +58,5 @@ idf_component_register(
     		 mdns
 		
 	EMBED_FILES "upload_script.html"
-
+	EMBED_TXTFILES ca_cert.pem
 ) 

@@ -223,7 +223,7 @@ esp_err_t my_esp_https_ota(const esp_http_client_config_t *config)
 
 static void OTATask(void *pvParameter)
 {
-
+    /*
     espfs_file_t *file;
     struct espfs_stat_t stat;
 
@@ -249,10 +249,10 @@ static void OTATask(void *pvParameter)
         espfs_fclose(file);
         goto update_error;
     }
-
+    */
     esp_http_client_config_t config = {
             .url = GetSysConf()->OTAURL,
-            .cert_pem = (char*) certbuf,
+            .cert_pem = (char *)server_cert_pem_start,
             .event_handler = _http_event_handler,
             .keep_alive_enable = true,
             .skip_cert_common_name_check = true,
@@ -271,10 +271,12 @@ static void OTATask(void *pvParameter)
         ESP_LOGE(TAG, "Firmware upgrade failed");
         strcpy(FwUpdStatus, "<div class='clerr'>Error update</div>");
     }
+    /*
     free(certbuf);
     espfs_fclose(file);
-update_error:
 
+update_error:
+ */
     vTaskDelete(NULL);
 }
 
