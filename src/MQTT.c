@@ -184,7 +184,9 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
             }
         break;
         default:
-            ESP_LOGW(TAG, "Other event id:%d", event->event_id);
+#if MQTT_DEBUG_MODE > 0
+            ESP_LOGI(TAG, "Other event id:%d", event->event_id);
+#endif
         break;
     }
     xSemaphoreGive(xSemaphoreMQTTHandle);
