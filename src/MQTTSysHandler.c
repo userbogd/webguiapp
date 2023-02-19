@@ -51,6 +51,7 @@
 #include "romfs.h"
 #include "HTTPServer.h"
 
+extern espfs_fs_t *fs;
 
 #define PANEL_MESSAGE_LENGTH 32          //base message length, mainly depended by radio requirements
 #define MAX_JSON_MESSAGE 256       //max size of mqtt message to publish

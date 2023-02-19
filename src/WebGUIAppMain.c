@@ -173,7 +173,7 @@ esp_err_t WebGuiAppInit(void)
 static void InitSysIO(void)
 {
 #if (MAIN_FUNCTIONAL_BUTTON_GPIO >= 0)
-    gpio_pad_select_gpio(MAIN_FUNCTIONAL_BUTTON_GPIO);
+    esp_rom_gpio_pad_select_gpio(MAIN_FUNCTIONAL_BUTTON_GPIO);
     gpio_set_direction(MAIN_FUNCTIONAL_BUTTON_GPIO, GPIO_MODE_INPUT);
     gpio_set_pull_mode(MAIN_FUNCTIONAL_BUTTON_GPIO, GPIO_PULLUP_ONLY);
     gpio_pullup_en(MAIN_FUNCTIONAL_BUTTON_GPIO);
@@ -241,7 +241,7 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
 
     UINT32_VAL d;
     GetChipId((uint8_t*) d.v);
-    snprintf(Conf->SN, 11, "%010u", swap(d.Val));
+    snprintf(Conf->SN, 11, "%010d", (int)swap(d.Val));
 
     memcpy(Conf->NetBIOSName, CONFIG_WEBGUIAPP_HOSTNAME,
            sizeof(CONFIG_WEBGUIAPP_HOSTNAME));

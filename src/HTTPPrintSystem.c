@@ -33,6 +33,8 @@
 
 static const char *TAG = "HTTPServerPrint";
 
+extern espfs_fs_t *fs;
+
 typedef enum
 {
     IP,
@@ -122,11 +124,11 @@ static void HTTPPrint_time(char *VarData, void *arg)
 {
     time_t now;
     time(&now);
-    snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", (uint32_t) now);
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", (int) now);
 }
 static void HTTPPrint_uptime(char *VarData, void *arg)
 {
-    snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", GetUpTime());
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", (int)GetUpTime());
 }
 
 static void HTTPPrint_status_fail(char *VarData, void *arg)

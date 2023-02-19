@@ -28,7 +28,7 @@
 #include "libespfs/espfs_format.h"
 #include "libespfs/vfs.h"
 
-espfs_fs_t *fs;
+
 void init_rom_fs(const char *root);
 
 #endif /* COMPONENTS_WEB_GUI_APPLICATION_INCLUDE_ROMFS_H_ */

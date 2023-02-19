@@ -24,12 +24,16 @@
 #include "NetTransport.h"
 #include "MQTT.h"
 
+
 #define MQTT_DEBUG_MODE  1
 
 #define MQTT_MESSAGE_BUFER_LENTH 5  //size of mqtt queue
 #define MQTT_RECONNECT_CHANGE_ADAPTER   3
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
+
+QueueHandle_t MQTT1MessagesQueueHandle;
+QueueHandle_t MQTT2MessagesQueueHandle;
 
 static SemaphoreHandle_t xSemaphoreMQTTHandle = NULL;
 static StaticSemaphore_t xSemaphoreMQTTBuf;
@@ -105,7 +109,7 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
 {
     xSemaphoreTake(xSemaphoreMQTTHandle, pdMS_TO_TICKS(1000));
 #if MQTT_DEBUG_MODE > 0
-    ESP_LOGI(TAG, "Event dispatched from event loop base=%s, event_id=%d", base, event_id);
+    ESP_LOGI(TAG, "Event dispatched from event loop base=%s, event_id=%d", base, (int)event_id);
 #endif
     esp_mqtt_event_handle_t event = event_data;
     esp_mqtt_client_handle_t client = event->client;
@@ -284,13 +288,17 @@ static void start_mqtt()
             itoa(GetSysConf()->mqttStation[i].ServerPort, tmp, 10);
             strcat(url, ":");
             strcat(url, tmp);
-            mqtt_cfg.uri = url;
-            mqtt_cfg.username = GetSysConf()->mqttStation[i].UserName;
-            mqtt_cfg.password = GetSysConf()->mqttStation[i].UserPass;
+            //mqtt_cfg.uri = url;
+            mqtt_cfg.broker.address.uri = url;
+            //mqtt_cfg.username = GetSysConf()->mqttStation[i].UserName;
+            mqtt_cfg.credentials.username = GetSysConf()->mqttStation[i].UserName;
+            //mqtt_cfg.password = GetSysConf()->mqttStation[i].UserPass;
+            mqtt_cfg.credentials.authentication.password = GetSysConf()->mqttStation[i].UserPass;
             strcpy(tmp, GetSysConf()->mqttStation[i].ClientID);
             strcat(tmp, "-");
             strcat(tmp, GetSysConf()->ID);
-            mqtt_cfg.client_id = tmp;
+            //mqtt_cfg.client_id = tmp;
+            mqtt_cfg.credentials.client_id = tmp;
             mqtt[i].is_connected = false;
             mqtt[i].mqtt_index = i;
             //mqtt_cfg.user_context = (void*) &mqtt[i];

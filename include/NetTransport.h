@@ -30,6 +30,7 @@
 #include "mqtt_client.h"
 #include "esp_netif.h"
 #include "esp_log.h"
+#include "esp_wifi_types.h"
 
 typedef struct
 {
@@ -46,9 +47,9 @@ typedef struct
 
 //#define DEFAULT_FALLBACK_DNS  "8.8.8.8"
 
-QueueHandle_t MQTT1MessagesQueueHandle;
-QueueHandle_t MQTT2MessagesQueueHandle;
-EventGroupHandle_t transport_event_group;
+//QueueHandle_t MQTT1MessagesQueueHandle;
+//QueueHandle_t MQTT2MessagesQueueHandle;
+//EventGroupHandle_t transport_event_group;
 
 wifi_ap_record_t* GetWiFiAPRecord(uint8_t n);
 
