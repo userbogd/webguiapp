@@ -1,4 +1,18 @@
 menu "WebGUIApp"            
+	
+	
+	config GPIO_RANGE_MIN
+        int
+        default 0
+
+    config GPIO_RANGE_MAX
+        int
+        default 36 if IDF_TARGET_ESP32
+        default 46 if IDF_TARGET_ESP32S2
+        default 19 if IDF_TARGET_ESP32C3
+        default 48 if IDF_TARGET_ESP32S3    
+    
+    
     config APP_PROJECT_VER
         string "Device firmware version"
         default "0.0.0.0000"
@@ -101,7 +115,9 @@ menu "WebGUIApp"
         		Set enabled SPI bus
         
         if WEBGUIAPP_SPI_ENABLE	
-			
+
+
+		        			
 			config SPI_HOST
 	            int "SPI Host Number"
 	            range 0 2
@@ -111,22 +127,25 @@ menu "WebGUIApp"
 	
 	        config SPI_SCLK_GPIO
 	            int "SPI SCLK GPIO number"
-	            range 0 33
-	            default 18
+	            range GPIO_RANGE_MIN GPIO_RANGE_MAX
+	            default 18 if IDF_TARGET_ESP32
+	            default 36 if IDF_TARGET_ESP32S3
 	            help
 	                Set the GPIO number used by SPI SCLK.
 	
 	        config SPI_MOSI_GPIO
 	            int "SPI MOSI GPIO number"
-	            range 0 33
-	            default 23
+	            range GPIO_RANGE_MIN GPIO_RANGE_MAX
+	            default 23 if IDF_TARGET_ESP32
+	            default 35 if IDF_TARGET_ESP32S3
 	            help
 	                Set the GPIO number used by SPI MOSI.
 	
 	        config SPI_MISO_GPIO
 	            int "SPI MISO GPIO number"
-	            range 0 33
-	            default 19
+	            range GPIO_RANGE_MIN GPIO_RANGE_MAX
+	            default 19 if IDF_TARGET_ESP32
+	            default 37 if IDF_TARGET_ESP32S3
 	            help
 	                Set the GPIO number used by SPI MISO.
 	                
@@ -151,13 +170,15 @@ menu "WebGUIApp"
 	            
 	        config I2C_SCL_GPIO
 	            int "I2C SCL GPIO number"
-	            range 0 34
-	            default 22   
+	            range GPIO_RANGE_MIN GPIO_RANGE_MAX
+	            default 22 if IDF_TARGET_ESP32
+	            default 15 if IDF_TARGET_ESP32S3
 	            
 	        config I2C_SDA_GPIO
 	            int "I2C SDA GPIO number"
-	            range 0 34
-	            default 21   
+	            range GPIO_RANGE_MIN GPIO_RANGE_MAX
+	            default 21 if IDF_TARGET_ESP32
+	            default 16 if IDF_TARGET_ESP32S3   
 	            
 	        config I2C_CLOCK
 	            int "I2C clock"
@@ -260,17 +281,6 @@ menu "WebGUIApp"
 	        config WEBGUIAPP_ETHERNET_DHCP_DEFAULT
 				bool "Default Ethernet DHCP client on"
 	        	default n
-	        	
-			config GPIO_RANGE_MIN
-		        int
-		        default 0
-		
-		    config GPIO_RANGE_MAX
-		        int
-		        default 36 if IDF_TARGET_ESP32
-		        default 46 if IDF_TARGET_ESP32S2
-		        default 19 if IDF_TARGET_ESP32C3
-		        default 48 if IDF_TARGET_ESP32S3
 		
 		    config USE_INTERNAL_ETHERNET
 		        depends on IDF_TARGET_ESP32
