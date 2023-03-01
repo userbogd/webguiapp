@@ -484,19 +484,22 @@ static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
     {
         if (!strcmp(tmp, (const char*) "1"))
         {
+            ModemSendAT("AT\r");
             return HTTP_IO_DONE_NOREFRESH;
         }
         else if (!strcmp(tmp, (const char*) "2"))
         {
-            WiFiDisconnect();
+            ModemSendAT("AT+CCLK?\r");
             return HTTP_IO_DONE_NOREFRESH;
         }
         else if (!strcmp(tmp, (const char*) "3"))
         {
+            ModemSendAT("ATD+79022518532;\r");
             return HTTP_IO_DONE_NOREFRESH;
         }
         else if (!strcmp(tmp, (const char*) "4"))
         {
+            ModemSendAT("ATH\r");
             return HTTP_IO_DONE_NOREFRESH;
         }
         else if (!strcmp(tmp, (const char*) "5"))
