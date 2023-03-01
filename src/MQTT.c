@@ -29,6 +29,8 @@
 #define MQTT_MESSAGE_BUFER_LENTH 5  //size of mqtt queue
 #define MQTT_RECONNECT_CHANGE_ADAPTER   3
 
+#define MQTT_RECONNECT_TIMEOUT 40
+
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
 
 static SemaphoreHandle_t xSemaphoreMQTTHandle = NULL;
@@ -291,6 +293,7 @@ static void start_mqtt()
             strcat(tmp, "-");
             strcat(tmp, GetSysConf()->ID);
             mqtt_cfg.client_id = tmp;
+            mqtt_cfg.reconnect_timeout_ms = MQTT_RECONNECT_TIMEOUT * 1000;
             mqtt[i].is_connected = false;
             mqtt[i].mqtt_index = i;
             //mqtt_cfg.user_context = (void*) &mqtt[i];
