@@ -484,9 +484,9 @@ static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
     {
         if (!strcmp(tmp, (const char*) "1"))
         {
-            ModemSendAT("AT\r");
             return HTTP_IO_DONE_NOREFRESH;
         }
+#if CONFIG_WEBGUIAPP_GPRS_ENABLE
         else if (!strcmp(tmp, (const char*) "2"))
         {
             ModemSendAT("AT+CCLK?\r");
@@ -502,6 +502,7 @@ static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
             ModemSendAT("ATH\r");
             return HTTP_IO_DONE_NOREFRESH;
         }
+#endif
         else if (!strcmp(tmp, (const char*) "5"))
         {
             return HTTP_IO_DONE_NOREFRESH;
