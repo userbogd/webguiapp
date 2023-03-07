@@ -23,6 +23,7 @@
 
 #include "HTTPServer.h"
 #include "LoRaWAN.h"
+#include "Helpers.h"
 
 static const char *TAG = "HTTPServerPost";
 
@@ -97,7 +98,7 @@ static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, c
 
 static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
 {
-    char tmp[32];
+    char tmp[33];
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
 
     bool TempIsETHEnabled = false;
@@ -105,26 +106,26 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
     if (httpd_query_key_value(PostData, "ethen", tmp, sizeof(tmp)) == ESP_OK)
     {
         if (!strcmp((const char*) tmp, (const char*) "1"))
-        TempIsETHEnabled = true;
+            TempIsETHEnabled = true;
     }
     if (httpd_query_key_value(PostData, "dhcp", tmp, sizeof(tmp)) == ESP_OK)
     {
         if (!strcmp((const char*) tmp, (const char*) "1"))
-        TempIsETHDHCPEnabled = true;
+            TempIsETHDHCPEnabled = true;
     }
 
     if (httpd_query_key_value(PostData, "ipa", tmp, 15) == ESP_OK)
-    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.IPAddr);
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.IPAddr);
     if (httpd_query_key_value(PostData, "mas", tmp, 15) == ESP_OK)
-    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Mask);
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Mask);
     if (httpd_query_key_value(PostData, "gte", tmp, 15) == ESP_OK)
-    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Gateway);
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Gateway);
     if (httpd_query_key_value(PostData, "dns1", tmp, 15) == ESP_OK)
-    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr1);
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr1);
     if (httpd_query_key_value(PostData, "dns2", tmp, 15) == ESP_OK)
-    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr2);
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr2);
     if (httpd_query_key_value(PostData, "dns3", tmp, 15) == ESP_OK)
-    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr3);
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr3);
 
 #endif
 
@@ -218,6 +219,30 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
     }
 #endif
 
+#if   CONFIG_WEBGUIAPP_LORAWAN_ENABLE
+    bool TempIsLoRaEnabled = false;
+    if (httpd_query_key_value(PostData, "lren", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (!strcmp((const char*) tmp, (const char*) "1"))
+            TempIsLoRaEnabled = true;
+    }
+    if (httpd_query_key_value(PostData, "lrdvid", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (strlen(tmp) == 16)
+            StrToBytesLen((unsigned char*) tmp, (unsigned char*) GetSysConf()->lorawanSettings.DevEui, 16);
+    }
+    if (httpd_query_key_value(PostData, "lrapid", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (strlen(tmp) == 16)
+            StrToBytesLen((unsigned char*) tmp, (unsigned char*) GetSysConf()->lorawanSettings.AppEui, 16);
+    }
+    if (httpd_query_key_value(PostData, "lrapkey", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (strlen(tmp) == 32)
+            StrToBytesLen((unsigned char*) tmp, (unsigned char*) GetSysConf()->lorawanSettings.AppKey, 32);
+    }
+#endif
+
     if (httpd_query_key_value(PostData, "wifisc", tmp, 4) == ESP_OK)
     {
         if (!strcmp(tmp, (const char*) "prs"))
@@ -259,6 +284,13 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
             GetSysConf()->gsmSettings.Flags1.bIsGSMEnabled = TempIsGSMEnabled;
 #endif
         }
+        else if (!strcmp(tmp, (const char*) "lora"))
+        {
+#if    CONFIG_WEBGUIAPP_LORAWAN_ENABLE
+            GetSysConf()->lorawanSettings.Flags1.bIsLoRaWANEnabled = TempIsLoRaEnabled;
+#endif
+        }
+
 
         if (httpd_query_key_value(PostData, "apply", tmp, 5) == ESP_OK)
         {
@@ -317,29 +349,29 @@ static HTTP_IO_RESULT HTTPPostServicesSettings(httpd_req_t *req, char *PostData)
 
 #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
     httpd_query_key_value(PostData, "mqurl2", GetSysConf()->mqttStation[1].ServerAddr,
-            sizeof(GetSysConf()->mqttStation[1].ServerAddr));
+                          sizeof(GetSysConf()->mqttStation[1].ServerAddr));
     httpd_query_key_value(PostData, "mqid2", GetSysConf()->mqttStation[1].ClientID,
-            sizeof(GetSysConf()->mqttStation[1].ClientID));
+                          sizeof(GetSysConf()->mqttStation[1].ClientID));
     httpd_query_key_value(PostData, "mqsys2", GetSysConf()->mqttStation[1].SystemName,
-            sizeof(GetSysConf()->mqttStation[1].SystemName));
+                          sizeof(GetSysConf()->mqttStation[1].SystemName));
     httpd_query_key_value(PostData, "mqgrp2", GetSysConf()->mqttStation[1].GroupName,
-            sizeof(GetSysConf()->mqttStation[1].GroupName));
+                          sizeof(GetSysConf()->mqttStation[1].GroupName));
     httpd_query_key_value(PostData, "mqname2", GetSysConf()->mqttStation[1].UserName,
-            sizeof(GetSysConf()->mqttStation[1].UserName));
+                          sizeof(GetSysConf()->mqttStation[1].UserName));
 
     if (httpd_query_key_value(PostData, "mqen2", tmp, sizeof(tmp)) == ESP_OK)
     {
         if (!strcmp((const char*) tmp, (const char*) "1"))
-        TempIsMQTT2Enabled = true;
+            TempIsMQTT2Enabled = true;
     }
 
     if (httpd_query_key_value(PostData, "mqport2", tmp, sizeof(tmp)) == ESP_OK)
-    if (httpd_query_key_value(PostData, "mqport2", tmp, sizeof(tmp)) == ESP_OK)
-    {
-        uint16_t tp = atoi((const char*) tmp);
-        if (tp < 65535 && tp >= 1000)
-        GetSysConf()->mqttStation[1].ServerPort = tp;
-    }
+        if (httpd_query_key_value(PostData, "mqport2", tmp, sizeof(tmp)) == ESP_OK)
+        {
+            uint16_t tp = atoi((const char*) tmp);
+            if (tp < 65535 && tp >= 1000)
+                GetSysConf()->mqttStation[1].ServerPort = tp;
+        }
 
     if (httpd_query_key_value(PostData, "mqpass2", tmp, sizeof(tmp)) == ESP_OK &&
             strcmp(tmp, (const char*) "******"))

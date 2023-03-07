@@ -55,13 +55,15 @@ uint8_t LoRaMessagesQueueStorageArea[LORAWAN_MESSAGE_BUFER_LENTH
 
 void (*LoRaUserReceiveHandler)(const char *message, int length, int port);
 void regLoRaUserReceiveHandler(
-        void (*user_handler)(const char *message, int length, int port))
+                               void (*user_handler)(const char *message, int length, int port))
 {
     LoRaUserReceiveHandler = user_handler;
 }
 
 esp_err_t LORASendData(LORA_DATA_SEND_STRUCT *pdss)
 {
+    if (LORAMessagesQueueHandle == NULL)
+        return ESP_ERR_INVALID_ARG;
     char *ptr = (char*) malloc(MESSAGE_LENGTH);
     if (ptr)
     {
@@ -93,8 +95,8 @@ void messageReceived(const uint8_t *message, size_t length, ttn_port_t port)
         ESP_LOGI(TAG, "Received=%s", P);
     }
 #endif
-    if(LoRaUserReceiveHandler != NULL)
-        LoRaUserReceiveHandler((char*)message, length, (int)port);
+    if (LoRaUserReceiveHandler != NULL)
+        LoRaUserReceiveHandler((char*) message, length, (int) port);
 
 }
 
@@ -127,7 +129,6 @@ void LoRaWANTransportTask(void *pvParameter)
         }
     }
 }
-
 
 void LoRaWANRejoin(void)
 {
@@ -173,7 +174,6 @@ void LoRaWANInitJoinTask(void *pvParameter)
     vTaskDelete(NULL);
 }
 #endif
-
 
 void LoRaWANStart(void)
 {
