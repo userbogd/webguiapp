@@ -27,7 +27,7 @@
 #include "esp_wifi.h"
 #include "NetTransport.h"
 #include "esp_ota_ops.h"
-#include "ROMFS.h"
+#include "romfs.h"
 #include "esp_idf_version.h"
 #include "jWrite.h"
 
