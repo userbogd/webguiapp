@@ -241,7 +241,7 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
 
     UINT32_VAL d;
     GetChipId((uint8_t*) d.v);
-    snprintf(Conf->SN, 11, "%010d", (int)swap(d.Val));
+    snprintf(Conf->SN, 11, "%010u", (unsigned int)swap(d.Val));
 
     memcpy(Conf->NetBIOSName, CONFIG_WEBGUIAPP_HOSTNAME,
            sizeof(CONFIG_WEBGUIAPP_HOSTNAME));
