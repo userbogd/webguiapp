@@ -30,6 +30,8 @@
 #define MQTT_MESSAGE_BUFER_LENTH 5  //size of mqtt queue
 #define MQTT_RECONNECT_CHANGE_ADAPTER   3
 
+#define MQTT_RECONNECT_TIMEOUT 40
+
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
 
 QueueHandle_t MQTT1MessagesQueueHandle;
@@ -297,8 +299,13 @@ static void start_mqtt()
             strcpy(tmp, GetSysConf()->mqttStation[i].ClientID);
             strcat(tmp, "-");
             strcat(tmp, GetSysConf()->ID);
+<<<<<<< src/MQTT.c
             //mqtt_cfg.client_id = tmp;
             mqtt_cfg.credentials.client_id = tmp;
+=======
+            mqtt_cfg.client_id = tmp;
+            mqtt_cfg.reconnect_timeout_ms = MQTT_RECONNECT_TIMEOUT * 1000;
+>>>>>>> src/MQTT.c
             mqtt[i].is_connected = false;
             mqtt[i].mqtt_index = i;
             //mqtt_cfg.user_context = (void*) &mqtt[i];
