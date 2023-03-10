@@ -304,10 +304,12 @@ static void start_mqtt()
             strcat(tmp, GetSysConf()->ID);
 #if ESP_IDF_VERSION_MAJOR >= 5
             mqtt_cfg.credentials.client_id = tmp;
+            mqtt_cfg.network.reconnect_timeout_ms = MQTT_RECONNECT_TIMEOUT * 1000;
 #else
             mqtt_cfg.client_id = tmp;
-#endif
             mqtt_cfg.reconnect_timeout_ms = MQTT_RECONNECT_TIMEOUT * 1000;
+#endif
+
             mqtt[i].is_connected = false;
             mqtt[i].mqtt_index = i;
             //mqtt_cfg.user_context = (void*) &mqtt[i];
