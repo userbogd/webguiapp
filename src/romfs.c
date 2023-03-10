@@ -23,6 +23,8 @@
 
 #include "romfs.h"
 
+espfs_fs_t *fs;
+
 extern const uint8_t espfs_bin[];
 espfs_fs_t *fs;
 espfs_config_t espfs_config = {

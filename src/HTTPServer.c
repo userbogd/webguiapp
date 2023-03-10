@@ -24,6 +24,8 @@
 #include "HTTPServer.h"
 #include "sdkconfig.h"
 
+extern espfs_fs_t *fs;
+
 const char GZIP_SIGN[] = { 0x1f, 0x8b, 0x08 };
 
 static esp_err_t GETHandler(httpd_req_t *req);

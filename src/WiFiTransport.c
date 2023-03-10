@@ -32,6 +32,7 @@
 #include "NetTransport.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_mac.h"
 
 esp_netif_t *sta_netif;
 esp_netif_t *ap_netif;
