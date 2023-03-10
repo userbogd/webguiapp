@@ -298,10 +298,10 @@ void PPPModemGetRSSI(void)
     ESP_LOGW(TAG, "Signal %d, ber %d", rssi, ber);
 }
 
-void ModemSendAT(char *cmd)
+void ModemSendAT(char *cmd, char *resp, int timeout)
 {
-    char resp[128] = {0};
-    esp_modem_at(dce, cmd, resp, 5000);
+    esp_modem_at(dce, cmd, resp, timeout);
+    ESP_LOGI(TAG, "Command:%s", cmd);
     ESP_LOGW(TAG, "%s", resp);
 }
 

@@ -67,6 +67,7 @@ esp_err_t LORASendData(LORA_DATA_SEND_STRUCT *pdss)
     char *ptr = (char*) malloc(MESSAGE_LENGTH);
     if (ptr)
     {
+        ESP_LOGW(TAG, "memory allocate %d byte", MESSAGE_LENGTH);
         memcpy(ptr, pdss->raw_data_ptr, MESSAGE_LENGTH);
         LORA_DATA_SEND_STRUCT DSS;
         DSS.raw_data_ptr = ptr;
@@ -77,6 +78,7 @@ esp_err_t LORASendData(LORA_DATA_SEND_STRUCT *pdss)
         else
         {
             free(ptr);
+            ESP_LOGW(TAG, "memory free (queue full) %d byte", MESSAGE_LENGTH);
             return ESP_ERR_TIMEOUT;
         }
     }
@@ -120,6 +122,7 @@ void LoRaWANTransportTask(void *pvParameter)
 #endif
             ttn_transmit_message((const uint8_t*) DSS.raw_data_ptr, MESSAGE_LENGTH, 1, true);
             free(DSS.raw_data_ptr);
+            ESP_LOGW(TAG, "memory free (transmitted) %d byte", MESSAGE_LENGTH);
         }
         else
         {

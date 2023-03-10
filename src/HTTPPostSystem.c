@@ -516,22 +516,26 @@ static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
     {
         if (!strcmp(tmp, (const char*) "1"))
         {
+
             return HTTP_IO_DONE_NOREFRESH;
         }
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
         else if (!strcmp(tmp, (const char*) "2"))
         {
-            ModemSendAT("AT+CCLK?\r");
+            char resp[256] = {0};
+            ModemSendAT("AT+CCLK?\r", resp, 200);
             return HTTP_IO_DONE_NOREFRESH;
         }
         else if (!strcmp(tmp, (const char*) "3"))
         {
-            ModemSendAT("ATD+79022518532;\r");
+            char resp[256] = {0};
+            ModemSendAT("ATD+79022518532;\r", resp, 200);
             return HTTP_IO_DONE_NOREFRESH;
         }
         else if (!strcmp(tmp, (const char*) "4"))
         {
-            ModemSendAT("ATH\r");
+            char resp[256] = {0};
+            ModemSendAT("ATH\r", resp, 200);
             return HTTP_IO_DONE_NOREFRESH;
         }
 #endif

@@ -71,7 +71,7 @@ void PPPModemStart(void);
 
 void PPPModemGetRSSI(void);
 void ModemSendSMS(void);
-void ModemSendAT(char *cmd);
+void ModemSendAT(char *cmd, char *resp, int timeout);
 
 void MQTTRun(void);
 
