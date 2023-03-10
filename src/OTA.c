@@ -73,9 +73,11 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt)
         case HTTP_EVENT_DISCONNECTED:
             ESP_LOGD(TAG, "HTTP_EVENT_DISCONNECTED");
         break;
+#if ESP_IDF_VERSION_MAJOR >= 5
         case HTTP_EVENT_REDIRECT:
             ESP_LOGD(TAG, "HTTP_EVENT_REDIRECT");
         break;
+#endif
     }
     return ESP_OK;
 }

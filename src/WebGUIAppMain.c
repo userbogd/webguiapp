@@ -38,6 +38,7 @@
 #include "NetTransport.h"
 #include "Helpers.h"
 #include "HTTPServer.h"
+#include "esp_rom_gpio.h"
 
 #define STORAGE_NAMESPACE "storage"
 #define TAG "SystemConfiguration"

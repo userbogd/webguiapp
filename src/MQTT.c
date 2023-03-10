@@ -290,22 +290,24 @@ static void start_mqtt()
             itoa(GetSysConf()->mqttStation[i].ServerPort, tmp, 10);
             strcat(url, ":");
             strcat(url, tmp);
-            //mqtt_cfg.uri = url;
+#if ESP_IDF_VERSION_MAJOR >= 5
             mqtt_cfg.broker.address.uri = url;
-            //mqtt_cfg.username = GetSysConf()->mqttStation[i].UserName;
             mqtt_cfg.credentials.username = GetSysConf()->mqttStation[i].UserName;
-            //mqtt_cfg.password = GetSysConf()->mqttStation[i].UserPass;
             mqtt_cfg.credentials.authentication.password = GetSysConf()->mqttStation[i].UserPass;
+#else
+            mqtt_cfg.uri = url;
+            mqtt_cfg.username = GetSysConf()->mqttStation[i].UserName;
+            mqtt_cfg.password = GetSysConf()->mqttStation[i].UserPass;
+#endif
             strcpy(tmp, GetSysConf()->mqttStation[i].ClientID);
             strcat(tmp, "-");
             strcat(tmp, GetSysConf()->ID);
-<<<<<<< src/MQTT.c
-            //mqtt_cfg.client_id = tmp;
+#if ESP_IDF_VERSION_MAJOR >= 5
             mqtt_cfg.credentials.client_id = tmp;
-=======
+#else
             mqtt_cfg.client_id = tmp;
+#endif
             mqtt_cfg.reconnect_timeout_ms = MQTT_RECONNECT_TIMEOUT * 1000;
->>>>>>> src/MQTT.c
             mqtt[i].is_connected = false;
             mqtt[i].mqtt_index = i;
             //mqtt_cfg.user_context = (void*) &mqtt[i];
