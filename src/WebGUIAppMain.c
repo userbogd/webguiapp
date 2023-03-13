@@ -289,8 +289,9 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
            sizeof(CONFIG_WEBGUIAPP_WIFI_SSID_STA));
     memcpy(Conf->wifiSettings.InfSecurityKey, CONFIG_WEBGUIAPP_WIFI_KEY_STA,
            sizeof(CONFIG_WEBGUIAPP_WIFI_KEY_STA));
-
-    Conf->wifiSettings.Flags1.bIsDHCPEnabled = CONFIG_WEBGUIAPP_WIFI_DHCP_ON;
+#if CONFIG_WEBGUIAPP_WIFI_DHCP_ON
+    Conf->wifiSettings.Flags1.bIsDHCPEnabled = true;
+#endif
     esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS1_ADDRESS_DEFAULT,
                          (esp_ip4_addr_t*) &Conf->wifiSettings.DNSAddr1);
     esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS2_ADDRESS_DEFAULT,
