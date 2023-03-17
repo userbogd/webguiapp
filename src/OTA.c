@@ -48,6 +48,12 @@ char FwUpdStatus[64] = "<div class='clok'>Updated</div>";
 #define HASH_LEN 32
 #define REPORT_PACKETS_EVERY 100
 
+void (*HookBeforeUpdate)(void);
+void regHookBeforeUpdate(void (*before_update)(void))
+{
+    HookBeforeUpdate = before_update;
+}
+
 esp_err_t _http_event_handler(esp_http_client_event_t *evt)
 {
     switch (evt->event_id)
@@ -174,6 +180,7 @@ esp_err_t my_esp_https_ota(const esp_http_client_config_t *config)
     if (need_to_update)
     {
         ESP_LOGW(TAG, "New firmware has newer build, START update firmware");
+        HookBeforeUpdate();
         int countPackets = 0;
         while (1)
         {
@@ -304,7 +311,7 @@ esp_err_t StartOTA(void)
     }
     ESP_LOGI(TAG, "Starting OTA Task");
     strcpy(FwUpdStatus, "<div class='clwarn'>Start update...</div>");
-    xTaskCreate(OTATask, "OTATask", 1024 * 8, (void*) 0, 3, NULL);
+    xTaskCreate(OTATask, "OTATask", 1024 * 8, (void*) 0, 5, NULL);
     return ESP_OK;
 }
 
