@@ -24,13 +24,12 @@
 #include "NetTransport.h"
 #include "MQTT.h"
 
-
 #define MQTT_DEBUG_MODE  1
 
 #define MQTT_MESSAGE_BUFER_LENTH 5  //size of mqtt queue
-#define MQTT_RECONNECT_CHANGE_ADAPTER   3
+#define MQTT_RECONNECT_CHANGE_ADAPTER  3
 
-#define MQTT_RECONNECT_TIMEOUT 40
+#define MQTT_RECONNECT_TIMEOUT 30
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
 
@@ -111,7 +110,7 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
 {
     xSemaphoreTake(xSemaphoreMQTTHandle, pdMS_TO_TICKS(1000));
 #if MQTT_DEBUG_MODE > 0
-    ESP_LOGI(TAG, "Event dispatched from event loop base=%s, event_id=%d", base, (int)event_id);
+    ESP_LOGI(TAG, "Event dispatched from event loop base=%s, event_id=%d", base, (int )event_id);
 #endif
     esp_mqtt_event_handle_t event = event_data;
     esp_mqtt_client_handle_t client = event->client;
@@ -190,7 +189,7 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
             }
         break;
         default:
-#if MQTT_DEBUG_MODE > 0
+            #if MQTT_DEBUG_MODE > 0
             ESP_LOGI(TAG, "Other event id:%d", event->event_id);
 #endif
         break;
@@ -202,12 +201,18 @@ static void reconnect_MQTT_handler(void *arg, esp_event_base_t event_base,
                                    int32_t event_id,
                                    void *event_data)
 {
-    for (int i = 0; i < CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM; ++i)
+    if (event_id == IP_EVENT_ETH_GOT_IP ||
+            event_id == IP_EVENT_STA_GOT_IP ||
+            event_id == IP_EVENT_PPP_GOT_IP)
     {
-        if (mqtt[i].mqtt)
+
+        for (int i = 0; i < CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM; ++i)
         {
-            esp_mqtt_client_disconnect(mqtt[i].mqtt);
-            esp_mqtt_client_reconnect(mqtt[i].mqtt);
+            if (mqtt[i].mqtt && mqtt[i].is_connected)
+            {
+                esp_mqtt_client_disconnect(mqtt[i].mqtt);
+                esp_mqtt_client_reconnect(mqtt[i].mqtt);
+            }
         }
     }
 }
@@ -274,17 +279,13 @@ static void start_mqtt()
 {
     esp_mqtt_client_config_t mqtt_cfg = { 0 };
 
-    char url[72];
-    char tmp[72];
+    char url[CONFIG_WEBGUIAPP_MQTT_MAX_TOPIC_LENGTH + 14];
+    char tmp[128];
 
     for (int i = 0; i < CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM; ++i)
     {
         if (GetSysConf()->mqttStation[i].Flags1.bIsGlobalEnabled)
         {
-            esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &reconnect_MQTT_handler, &mqtt[i].mqtt);
-            esp_event_handler_register(IP_EVENT, IP_EVENT_ETH_GOT_IP, &reconnect_MQTT_handler, &mqtt[i].mqtt);
-            esp_event_handler_register(IP_EVENT, IP_EVENT_PPP_GOT_IP, &reconnect_MQTT_handler, &mqtt[i].mqtt);
-
             strcpy(url, "mqtt://");
             strcat(url, GetSysConf()->mqttStation[i].ServerAddr);
             itoa(GetSysConf()->mqttStation[i].ServerPort, tmp, 10);
@@ -309,7 +310,6 @@ static void start_mqtt()
             mqtt_cfg.client_id = tmp;
             mqtt_cfg.reconnect_timeout_ms = MQTT_RECONNECT_TIMEOUT * 1000;
 #endif
-
             mqtt[i].is_connected = false;
             mqtt[i].mqtt_index = i;
             //mqtt_cfg.user_context = (void*) &mqtt[i];
@@ -317,6 +317,7 @@ static void start_mqtt()
             /* The last argument may be used to pass data to the event handler, in this example mqtt_system_event_handler */
             esp_mqtt_client_register_event(mqtt[i].mqtt, ESP_EVENT_ANY_ID, mqtt[i].system_event_handler, &mqtt[i].mqtt);
             esp_mqtt_client_register_event(mqtt[i].mqtt, ESP_EVENT_ANY_ID, mqtt[i].user_event_handler, &mqtt[i].mqtt);
+            esp_event_handler_register(IP_EVENT, ESP_EVENT_ANY_ID, &reconnect_MQTT_handler, &mqtt[i].mqtt);
             esp_mqtt_client_start(mqtt[i].mqtt);
             xTaskCreate(MQTTTaskTransmit, "MQTTTaskTransmit", 1024 * 2, (void*) &mqtt[i].mqtt_index, 3, NULL);
         }
