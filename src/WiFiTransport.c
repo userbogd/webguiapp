@@ -39,6 +39,8 @@ esp_netif_t *ap_netif;
 
 static const char *TAG = "WiFiTransport";
 
+#define WIFI_CONNECT_AFTER_FAIL_DELAY   40
+
 #define EXAMPLE_ESP_MAXIMUM_RETRY  5
 #define EXAMPLE_ESP_WIFI_CHANNEL   6
 #define EXAMPLE_MAX_STA_CONN       10
@@ -78,6 +80,14 @@ bool isWIFIConnected(void)
     return isWiFiGotIp;
 }
 
+void resonnectWithDelay(void *agr)
+{
+    vTaskDelay(pdMS_TO_TICKS(WIFI_CONNECT_AFTER_FAIL_DELAY * 1000));
+    esp_wifi_connect();
+    vTaskDelete(NULL);
+}
+
+
 static void event_handler(void *arg, esp_event_base_t event_base,
                           int32_t event_id,
                           void *event_data)
@@ -100,8 +110,8 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     {
         xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
         isWiFiGotIp = false;
-        ESP_LOGI(TAG, "connect to the AP fail");
-        esp_wifi_connect();
+        ESP_LOGI(TAG, "connect to the AP fail, retry in %d seconds", WIFI_CONNECT_AFTER_FAIL_DELAY);
+        xTaskCreate(resonnectWithDelay, "reconnect_delay", 1024, NULL, 3, NULL);
     }
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
     {
