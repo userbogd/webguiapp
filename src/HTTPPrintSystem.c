@@ -365,7 +365,10 @@ static void HTTPPrint_wifisc(char *VarData, void *arg)
     snprintf(VarData, MAX_DYNVAR_LENGTH, "{\"ssid\":\"%s\",\"rssi\":%i,\"ch\":%d}", R->ssid, R->rssi,
              R->primary);
 }
-
+static void HTTPPrint_wifipwr(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", (unsigned int)(GetSysConf()->wifiSettings.MaxPower / 4));
+}
 #endif
 
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
@@ -749,6 +752,7 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "macadr", sizeof("macadr") - 1, &HTTPPrint_macadr },
         { "apmacadr", sizeof("apmacadr") - 1, &HTTPPrint_apmacadr },
         { "wifisc", sizeof("wifisc") - 1, &HTTPPrint_wifisc },
+        { "wifipwr", sizeof("wifipwr") - 1, &HTTPPrint_wifipwr },
         #endif
 
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE

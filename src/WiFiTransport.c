@@ -56,6 +56,8 @@ static bool isWiFiGotIp = false;
 static wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
 static bool isScanReady = false;
 
+static TaskHandle_t reconnect_task = NULL;
+
 wifi_ap_record_t* GetWiFiAPRecord(uint8_t n)
 {
     if (n < DEFAULT_SCAN_LIST_SIZE)
@@ -87,7 +89,6 @@ void resonnectWithDelay(void *agr)
     vTaskDelete(NULL);
 }
 
-
 static void event_handler(void *arg, esp_event_base_t event_base,
                           int32_t event_id,
                           void *event_data)
@@ -105,13 +106,23 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_CONNECTED)
     {
         ESP_LOGI(TAG, "Connected to AP");
+        xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
     {
         xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
+        xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
         isWiFiGotIp = false;
-        ESP_LOGI(TAG, "connect to the AP fail, retry in %d seconds", WIFI_CONNECT_AFTER_FAIL_DELAY);
-        xTaskCreate(resonnectWithDelay, "reconnect_delay", 1024, NULL, 3, NULL);
+        //esp_wifi_connect();
+
+        /*
+        ESP_LOGE(TAG, "Connect to the AP fail");
+        if (!reconnect_task)
+        {
+            xTaskCreate(resonnectWithDelay, "reconnect_delay", 1024, NULL, 3, &reconnect_task);
+            ESP_LOGW(TAG, "Pending reconnect in %d seconds", WIFI_CONNECT_AFTER_FAIL_DELAY);
+        }
+        */
     }
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
     {
@@ -131,7 +142,7 @@ static void event_handler(void *arg, esp_event_base_t event_base,
         ESP_LOGI(TAG, "~~~~~~~~~~~");
 
         isWiFiGotIp = true;
-        xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+
     }
 
     if (event_id == WIFI_EVENT_AP_STACONNECTED)
@@ -150,7 +161,7 @@ static void wifi_init_softap(void *pvParameter)
 {
     char if_key_str[24];
     esp_netif_inherent_config_t esp_netif_conf = ESP_NETIF_INHERENT_DEFAULT_WIFI_AP()
-    ;
+            ;
 
     strcpy(if_key_str, "WIFI_AP_USER");
     esp_netif_conf.if_key = if_key_str;
@@ -211,6 +222,10 @@ static void wifi_init_softap(void *pvParameter)
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
+
+    int max_power = GetSysConf()->wifiSettings.MaxPower;
+    if (max_power >= 8 && max_power <= 84)
+        esp_wifi_set_max_tx_power(max_power);
 
     ESP_LOGI(TAG, "wifi_init_softap finished");
     vTaskDelete(NULL);
@@ -290,6 +305,10 @@ static void wifi_init_sta(void *pvParameter)
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
+
+    int max_power = GetSysConf()->wifiSettings.MaxPower;
+    if (max_power >= 8 && max_power <= 84)
+        esp_wifi_set_max_tx_power(max_power);
 
     ESP_LOGI(TAG, "wifi_init_sta finished.");
     vTaskDelete(NULL);
@@ -438,6 +457,15 @@ static void wifi_init_apsta(void *pvParameter)
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &sta_wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
 
+    int max_power = GetSysConf()->wifiSettings.MaxPower;
+    if (max_power >= 8 && max_power <= 84)
+        esp_wifi_set_max_tx_power(max_power);
+
+    wifi_country_t CC;
+    esp_wifi_get_country(&CC);
+    ESP_LOGW(TAG, "Country code %.*s, start_ch=%d, total_ch=%d, max power %d", 3, CC.cc, CC.schan, CC.nchan,
+             CC.max_tx_power);
+
     ESP_LOGI(TAG, "wifi_init_softap_sta finished");
 
     /* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or connection failed for the maximum
@@ -515,11 +543,13 @@ static void wifi_scan(void *arg)
 {
     uint16_t number = DEFAULT_SCAN_LIST_SIZE;
     uint16_t ap_count = 0;
+    esp_wifi_disconnect();
     memset(ap_info, 0, sizeof(ap_info));
     esp_wifi_scan_start(NULL, true);
     ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&number, ap_info));
     ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(&ap_count));
     ESP_LOGI(TAG, "Total APs scanned = %u", ap_count);
+    esp_wifi_connect();
     isScanReady = true;
     vTaskDelete(NULL);
 }

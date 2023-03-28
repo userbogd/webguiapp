@@ -160,7 +160,7 @@
                 char b6 :1;
                 char bIsWiFiEnabled :1;
             } Flags1; // Flag structure
-
+            uint8_t MaxPower;
         } wifiSettings;
 
 #endif
