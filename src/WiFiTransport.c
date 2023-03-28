@@ -543,13 +543,11 @@ static void wifi_scan(void *arg)
 {
     uint16_t number = DEFAULT_SCAN_LIST_SIZE;
     uint16_t ap_count = 0;
-    esp_wifi_disconnect();
     memset(ap_info, 0, sizeof(ap_info));
     esp_wifi_scan_start(NULL, true);
     ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&number, ap_info));
     ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(&ap_count));
     ESP_LOGI(TAG, "Total APs scanned = %u", ap_count);
-    esp_wifi_connect();
     isScanReady = true;
     vTaskDelete(NULL);
 }
