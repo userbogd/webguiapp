@@ -1,4 +1,4 @@
- /*! Copyright 2022 Bogdan Pilyugin
+/*! Copyright 2022 Bogdan Pilyugin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,15 +34,15 @@
  */
 
 /*
-{
+ {
  "messid":12345,
  "api":"2.0",
  "request":"GET",
  "url":"api/status.json",
  "postdata":"param1=value&param2=value",
  "reload":"true"
-}
-*/
+ }
+ */
 
 #include "MQTT.h"
 #include "jWrite.h"
@@ -70,44 +70,44 @@ const char apiver[] = "2.0";
 const char tagGet[] = "GET";
 const char tagPost[] = "POST";
 
-const char* mqtt_app_err_descr[] = {
-"Operation OK",
-"Internal error",
-"Wrong json format",
-"Key 'idmess' not found",
-"Key 'idmess' value too long",
-"Key 'api' not found",
-"API version not supported",
-"Key 'request' not found",
-"Unsupported HTTP method",
-"Key 'url' not found",
-"Key 'url' value too long",
-"URL not found",
-"Key 'postdata' not found",
-"Key 'postdata' too long",
-"File size too big",
-"File is empty",
-"Unknown error"
+const char *mqtt_app_err_descr[] = {
+        "Operation OK",
+        "Internal error",
+        "Wrong json format",
+        "Key 'idmess' not found",
+        "Key 'idmess' value too long",
+        "Key 'api' not found",
+        "API version not supported",
+        "Key 'request' not found",
+        "Unsupported HTTP method",
+        "Key 'url' not found",
+        "Key 'url' value too long",
+        "URL not found",
+        "Key 'postdata' not found",
+        "Key 'postdata' too long",
+        "File size too big",
+        "File is empty",
+        "Unknown error"
 };
 
-const char* mqtt_app_err_breef[] = {
-"OK",
-"INTERNAL_ERR",
-"WRONG_JSON_ERR",
-"NO_ID_ERR",
-"ID_OVERSIZE_ERR",
-"NO_API_ERR",
-"VERSION_ERR",
-"NO_REQUEST_ERR",
-"UNSUPPORTED_METHOD_ERR",
-"NO_URL_ERR",
-"URL_OVERSIZE_ERR",
-"URL_NOT_FOUND_ERR",
-"NO_POSTDATA_ERR",
-"POSTDATA_OVERSIZE_ERR",
-"FILE_OVERSIZE_ERR",
-"FILE_EMPTY_ERR",
-"UNKNOWN_ERR"
+const char *mqtt_app_err_breef[] = {
+        "OK",
+        "INTERNAL_ERR",
+        "WRONG_JSON_ERR",
+        "NO_ID_ERR",
+        "ID_OVERSIZE_ERR",
+        "NO_API_ERR",
+        "VERSION_ERR",
+        "NO_REQUEST_ERR",
+        "UNSUPPORTED_METHOD_ERR",
+        "NO_URL_ERR",
+        "URL_OVERSIZE_ERR",
+        "URL_NOT_FOUND_ERR",
+        "NO_POSTDATA_ERR",
+        "POSTDATA_OVERSIZE_ERR",
+        "FILE_OVERSIZE_ERR",
+        "FILE_EMPTY_ERR",
+        "UNKNOWN_ERR"
 };
 
 typedef enum
@@ -360,7 +360,6 @@ void SystemDataHandler(char *data, uint32_t len, int idx)
             ESP_LOGW(TAG, "URL=%s, DATA=%s", URL, POST_DATA);
             HTTPPostApp(NULL, URL, POST_DATA);
 
-
             jRead(data, "{'reload'", &result);
             if (result.elements == 1 && !memcmp("true", result.pValue, result.bytelen))
             {
@@ -401,3 +400,36 @@ api_json_err:
     if (ResponceWithError(idx, file, ID, URL, api_err) != API_OK)
         ESP_LOGE(TAG, "Failed to allocate memory for file MQTT message");
 }
+
+mqtt_app_err_t PublicTestMQTT(int idx)
+{
+    char JSONMess[MAX_ERROR_JSON];
+    jwOpen(JSONMess, MAX_ERROR_JSON, JW_OBJECT, JW_PRETTY);
+    time_t now;
+    time(&now);
+    jwObj_int("time", (unsigned int) now);
+    jwObj_string("event", "MQTT_TEST_MESSAGE)");
+    jwEnd();
+    jwClose();
+    char *buf = (char*) malloc(strlen(JSONMess) + 1);
+    if (buf)
+    {
+        memcpy(buf, JSONMess, strlen(JSONMess));
+        MQTT_DATA_SEND_STRUCT DSS;
+        ComposeTopic(DSS.topic, idx, "SYSTEM", "UPLINK");
+        DSS.raw_data_ptr = buf;
+        DSS.data_length = strlen(JSONMess);
+        if (xQueueSend(GetMQTTHandlesPool(idx)->mqtt_queue, &DSS, pdMS_TO_TICKS(1000)) == pdPASS)
+            return API_OK;
+        else
+        {
+            free(buf);
+            return API_INTERNAL_ERR;
+        }
+    }
+    else
+    {  // ERR internal error on publish error
+        return API_INTERNAL_ERR;
+    }
+}
+
