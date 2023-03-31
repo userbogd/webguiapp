@@ -403,6 +403,7 @@ api_json_err:
 
 mqtt_app_err_t PublicTestMQTT(int idx)
 {
+    char tmp[10];
     char resp[256];
     char JSONMess[512];
     jwOpen(JSONMess, MAX_ERROR_JSON, JW_OBJECT, JW_PRETTY);
@@ -410,8 +411,16 @@ mqtt_app_err_t PublicTestMQTT(int idx)
     time(&now);
     jwObj_int("time", (unsigned int) now);
     jwObj_string("event", "MQTT_TEST_MESSAGE)");
+    strcpy(resp, "mqtt://");
+    strcat(resp, GetSysConf()->mqttStation[idx].ServerAddr);
+    itoa(GetSysConf()->mqttStation[idx].ServerPort, tmp, 10);
+    strcat(resp, ":");
+    strcat(resp, tmp);
+    jwObj_string("url", resp);
+    ComposeTopic(resp, idx, "SYSTEM", "UPLINK");
+    jwObj_string("tx_topic", resp);
     ComposeTopic(resp, idx, "SYSTEM", "DWLINK");
-    jwObj_string("resp_topic", resp);
+    jwObj_string("rx_topic", resp);
     jwEnd();
     jwClose();
     char *buf = (char*) malloc(strlen(JSONMess) + 1);
