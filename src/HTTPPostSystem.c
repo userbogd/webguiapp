@@ -150,7 +150,7 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
     if (httpd_query_key_value(PostData, "wifipwr", tmp, sizeof(tmp)) == ESP_OK)
     {
         uint8_t pwr = atoi((const char*) tmp);
-        if (pwr >=8  && pwr <= 84)
+        if (pwr >= 8 && pwr <= 84)
             GetSysConf()->wifiSettings.MaxPower = pwr * 4;
     }
 
@@ -320,8 +320,11 @@ static HTTP_IO_RESULT HTTPPostServicesSettings(httpd_req_t *req, char *PostData)
     char tmp[64];
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
     bool TempIsMQTT1Enabled = false;
+    bool TempIsMQTT1AutotestEnabled = false;
+
 #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
     bool TempIsMQTT2Enabled = false;
+    bool TempIsMQTT2AutotestEnabled = false;
 #endif
     httpd_query_key_value(PostData, "mqurl1", GetSysConf()->mqttStation[0].ServerAddr,
                           sizeof(GetSysConf()->mqttStation[0].ServerAddr));
@@ -340,17 +343,28 @@ static HTTP_IO_RESULT HTTPPostServicesSettings(httpd_req_t *req, char *PostData)
             TempIsMQTT1Enabled = true;
     }
     if (httpd_query_key_value(PostData, "mqport1", tmp, sizeof(tmp)) == ESP_OK)
-        if (httpd_query_key_value(PostData, "mqport1", tmp, sizeof(tmp)) == ESP_OK)
-        {
-            uint16_t tp = atoi((const char*) tmp);
-            if (tp < 65535 && tp >= 1000)
-                GetSysConf()->mqttStation[0].ServerPort = tp;
-        }
+    {
+        uint16_t tp = atoi((const char*) tmp);
+        if (tp < 65535 && tp >= 1000)
+            GetSysConf()->mqttStation[0].ServerPort = tp;
+    }
 
     if (httpd_query_key_value(PostData, "mqpass1", tmp, sizeof(tmp)) == ESP_OK &&
             strcmp(tmp, (const char*) "******"))
     {
         strcpy(GetSysConf()->mqttStation[0].UserPass, tmp);
+    }
+
+    if (httpd_query_key_value(PostData, "mqtestpr1", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        uint16_t prd = atoi((const char*) tmp);
+        if (prd < 65535)
+            GetSysConf()->mqttStation[0].AutotestInterval = prd;
+    }
+    if (httpd_query_key_value(PostData, "mqtesten1", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (!strcmp((const char*) tmp, (const char*) "1"))
+            TempIsMQTT1AutotestEnabled = true;
     }
 
 #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
@@ -372,17 +386,27 @@ static HTTP_IO_RESULT HTTPPostServicesSettings(httpd_req_t *req, char *PostData)
     }
 
     if (httpd_query_key_value(PostData, "mqport2", tmp, sizeof(tmp)) == ESP_OK)
-        if (httpd_query_key_value(PostData, "mqport2", tmp, sizeof(tmp)) == ESP_OK)
-        {
-            uint16_t tp = atoi((const char*) tmp);
-            if (tp < 65535 && tp >= 1000)
-                GetSysConf()->mqttStation[1].ServerPort = tp;
-        }
+    {
+        uint16_t tp = atoi((const char*) tmp);
+        if (tp < 65535 && tp >= 1000)
+            GetSysConf()->mqttStation[1].ServerPort = tp;
+    }
 
     if (httpd_query_key_value(PostData, "mqpass2", tmp, sizeof(tmp)) == ESP_OK &&
             strcmp(tmp, (const char*) "******"))
     {
         strcpy(GetSysConf()->mqttStation[1].UserPass, tmp);
+    }
+    if (httpd_query_key_value(PostData, "mqtestpr2", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        uint16_t prd = atoi((const char*) tmp);
+        if (prd < 65535)
+            GetSysConf()->mqttStation[1].AutotestInterval = prd;
+    }
+    if (httpd_query_key_value(PostData, "mqtesten2", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (!strcmp((const char*) tmp, (const char*) "1"))
+            TempIsMQTT2AutotestEnabled = true;
     }
 
 #endif
@@ -403,12 +427,14 @@ static HTTP_IO_RESULT HTTPPostServicesSettings(httpd_req_t *req, char *PostData)
         if (!strcmp(tmp, (const char*) "mqtt1"))
         {
             GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled = TempIsMQTT1Enabled;
+            GetSysConf()->mqttStation[0].Flags1.bIsAutotestEnabled = TempIsMQTT1AutotestEnabled;
         }
 
         else if (!strcmp(tmp, (const char*) "mqtt2"))
         {
 #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
             GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled = TempIsMQTT2Enabled;
+            GetSysConf()->mqttStation[1].Flags1.bIsAutotestEnabled = TempIsMQTT2AutotestEnabled;
 #endif
         }
 

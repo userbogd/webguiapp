@@ -339,6 +339,11 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
            sizeof(CONFIG_WEBGUIAPP_MQTT_USERNAME));
     memcpy(Conf->mqttStation[0].UserPass, CONFIG_WEBGUIAPP_MQTT_PASSWORD,
            sizeof(CONFIG_WEBGUIAPP_MQTT_PASSWORD));
+    Conf->mqttStation[0].Flags1.bIsAutotestEnabled = false;
+#if CONFIG_WEBGUIAPP_MQTT_AUTOTEST_ON
+    Conf->mqttStation[0].Flags1.bIsAutotestEnabled = true;
+#endif
+    Conf->mqttStation[0].AutotestInterval = CONFIG_WEBGUIAPP_MQTT_AUTOTEST_PERIOD;
 #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
     Conf->mqttStation[1].Flags1.bIsGlobalEnabled = false;
 #if CONFIG_WEBGUIAPP_MQTT_ON
@@ -352,6 +357,11 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
     memcpy(Conf->mqttStation[1].ClientID, CONFIG_WEBGUIAPP_MQTT_CLIENT_ID_2, sizeof(CONFIG_WEBGUIAPP_MQTT_CLIENT_ID_2));
     memcpy(Conf->mqttStation[1].UserName, CONFIG_WEBGUIAPP_MQTT_USERNAME, sizeof(CONFIG_WEBGUIAPP_MQTT_USERNAME));
     memcpy(Conf->mqttStation[1].UserPass, CONFIG_WEBGUIAPP_MQTT_PASSWORD, sizeof(CONFIG_WEBGUIAPP_MQTT_PASSWORD));
+    Conf->mqttStation[1].Flags1.bIsAutotestEnabled = false;
+#if CONFIG_WEBGUIAPP_MQTT_AUTOTEST_ON
+    Conf->mqttStation[1].Flags1.bIsAutotestEnabled = true;
+#endif
+    Conf->mqttStation[1].AutotestInterval = CONFIG_WEBGUIAPP_MQTT_AUTOTEST_PERIOD;
 #endif
 #endif
     memcpy(Conf->sntpClient.SntpServerAdr, CONFIG_WEBGUIAPP_SNTP_HOST,

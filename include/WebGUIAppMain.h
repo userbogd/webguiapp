@@ -89,6 +89,7 @@
             char ClientID[32];
             char UserName[32];
             char UserPass[32];
+            uint16_t AutotestInterval;
             struct
             {
                 char b0 :1;
@@ -97,7 +98,7 @@
                 char b3 :1;
                 char b4 :1;
                 char b5 :1;
-                char b6 :1;
+                char bIsAutotestEnabled :1;
                 char bIsGlobalEnabled :1;
             } Flags1;
         } mqttStation[CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM];
