@@ -56,8 +56,6 @@ static bool isWiFiGotIp = false;
 static wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
 static bool isScanReady = false;
 
-static TaskHandle_t reconnect_task = NULL;
-
 wifi_ap_record_t* GetWiFiAPRecord(uint8_t n)
 {
     if (n < DEFAULT_SCAN_LIST_SIZE)
@@ -128,22 +126,33 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     {
         ip_event_got_ip_t *event = (ip_event_got_ip_t*) event_data;
         const esp_netif_ip_info_t *ip_info = &event->ip_info;
-        ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
-
         memcpy(&GetSysConf()->wifiSettings.InfIPAddr, &event->ip_info.ip, sizeof(event->ip_info.ip));
         memcpy(&GetSysConf()->wifiSettings.InfMask, &event->ip_info.netmask, sizeof(event->ip_info.netmask));
         memcpy(&GetSysConf()->wifiSettings.InfGateway, &event->ip_info.gw, sizeof(event->ip_info.gw));
-
         ESP_LOGI(TAG, "WIFI Got IP Address");
         ESP_LOGI(TAG, "~~~~~~~~~~~");
         ESP_LOGI(TAG, "WIFIIP:" IPSTR, IP2STR(&ip_info->ip));
         ESP_LOGI(TAG, "WIFIMASK:" IPSTR, IP2STR(&ip_info->netmask));
         ESP_LOGI(TAG, "WIFIGW:" IPSTR, IP2STR(&ip_info->gw));
         ESP_LOGI(TAG, "~~~~~~~~~~~");
-
         isWiFiGotIp = true;
-
     }
+    else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_LOST_IP)
+    {
+        ip_event_got_ip_t *event = (ip_event_got_ip_t*) event_data;
+        const esp_netif_ip_info_t *ip_info = &event->ip_info;
+        memcpy(&GetSysConf()->wifiSettings.InfIPAddr, &event->ip_info.ip, sizeof(event->ip_info.ip));
+        memcpy(&GetSysConf()->wifiSettings.InfMask, &event->ip_info.netmask, sizeof(event->ip_info.netmask));
+        memcpy(&GetSysConf()->wifiSettings.InfGateway, &event->ip_info.gw, sizeof(event->ip_info.gw));
+        ESP_LOGI(TAG, "WIFI Lost IP Address");
+        ESP_LOGI(TAG, "~~~~~~~~~~~");
+        ESP_LOGI(TAG, "WIFIIP:" IPSTR, IP2STR(&ip_info->ip));
+        ESP_LOGI(TAG, "WIFIMASK:" IPSTR, IP2STR(&ip_info->netmask));
+        ESP_LOGI(TAG, "WIFIGW:" IPSTR, IP2STR(&ip_info->gw));
+        ESP_LOGI(TAG, "~~~~~~~~~~~");
+        isWiFiGotIp = false;
+    }
+
 
     if (event_id == WIFI_EVENT_AP_STACONNECTED)
     {

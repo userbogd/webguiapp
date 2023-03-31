@@ -739,16 +739,7 @@ menu "WebGUIApp"
 	    	
 	    	config WEBGUIAPP_MQTT_PASSWORD
 	    		string "MQTT user password"
-	    		default "password"	
-	    	
-	    	config WEBGUIAPP_MQTT_AUTOTEST_ON
-	    		bool "Enable MQTT autotest"
-	    		default n
-	    	
-	    	config WEBGUIAPP_MQTT_AUTOTEST_PERIOD
-	    		int "MQTT autotest period"
-	    		range 1 65535
-	    		default 60				 			        
+	    		default "password"				 			        
 	   	
 	   	endif
 	endmenu

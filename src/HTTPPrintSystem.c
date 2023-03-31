@@ -570,17 +570,6 @@ void HTTPPrint_mqpass1(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", "******");
 }
-void HTTPPrint_mqtesten1(char *VarData, void *arg)
-{
-    PrintCheckbox(VarData, arg, GetSysConf()->mqttStation[0].Flags1.bIsAutotestEnabled);
-}
-void HTTPPrint_mqtestpr1(char *VarData, void *arg)
-{
-    snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", GetSysConf()->mqttStation[0].AutotestInterval);
-}
-
-
-
 
 #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
 void HTTPPrint_mqen2(char *VarData, void *arg)
@@ -615,15 +604,6 @@ void HTTPPrint_mqpass2(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", "******");
 }
-void HTTPPrint_mqtesten2(char *VarData, void *arg)
-{
-    PrintCheckbox(VarData, arg, GetSysConf()->mqttStation[1].Flags1.bIsAutotestEnabled);
-}
-void HTTPPrint_mqtestpr2(char *VarData, void *arg)
-{
-    snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", GetSysConf()->mqttStation[1].AutotestInterval);
-}
-
 #endif
 #endif
 
@@ -825,9 +805,6 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "mqname1", sizeof("mqname1") - 1, &HTTPPrint_mqname1 },
         { "mqpass1", sizeof("mqpass1") - 1, &HTTPPrint_mqpass1 },
 
-        { "mqtesten1", sizeof("mqtesten1") - 1, &HTTPPrint_mqtesten1 },
-        { "mqtestpr1", sizeof("mqtestpr1") - 1, &HTTPPrint_mqtestpr1 },
-
         #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
         { "mqen2", sizeof("mqen2") - 1, &HTTPPrint_mqen2 },
         { "mqurl2", sizeof("mqurl2") - 1, &HTTPPrint_mqurl2 },
@@ -837,9 +814,6 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "mqgrp2", sizeof("mqgrp2") - 1, &HTTPPrint_mqgrp2 },
         { "mqname2", sizeof("mqname2") - 1, &HTTPPrint_mqname2 },
         { "mqpass2", sizeof("mqpass2") - 1, &HTTPPrint_mqpass2 },
-
-        { "mqtesten2", sizeof("mqtesten2") - 1, &HTTPPrint_mqtesten2 },
-        { "mqtestpr2", sizeof("mqtestpr2") - 1, &HTTPPrint_mqtestpr2 },
 
         #endif
 #endif

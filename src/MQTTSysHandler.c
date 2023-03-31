@@ -403,12 +403,15 @@ api_json_err:
 
 mqtt_app_err_t PublicTestMQTT(int idx)
 {
-    char JSONMess[MAX_ERROR_JSON];
+    char resp[256];
+    char JSONMess[512];
     jwOpen(JSONMess, MAX_ERROR_JSON, JW_OBJECT, JW_PRETTY);
     time_t now;
     time(&now);
     jwObj_int("time", (unsigned int) now);
     jwObj_string("event", "MQTT_TEST_MESSAGE)");
+    ComposeTopic(resp, idx, "SYSTEM", "DWLINK");
+    jwObj_string("resp_topic", resp);
     jwEnd();
     jwClose();
     char *buf = (char*) malloc(strlen(JSONMess) + 1);
