@@ -397,29 +397,26 @@ static HTTP_IO_RESULT HTTPPostServicesSettings(httpd_req_t *req, char *PostData)
     httpd_query_key_value(PostData, "tsr", GetSysConf()->sntpClient.SntpServerAdr,
                           sizeof(GetSysConf()->sntpClient.SntpServerAdr));
 
-
     /*MQTT Test button handlers*/
     if (httpd_query_key_value(PostData, "mqtttest1", tmp, 6) == ESP_OK)
     {
-        if(!strcmp(tmp, (const char*) "prs"))
+        if (!strcmp(tmp, (const char*) "prs"))
         {
-            ESP_LOGI(TAG,"MQTT TEST 1");
-            PublicTestMQTT(0);
+            if (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled)
+                PublicTestMQTT(0);
             return HTTP_IO_DONE;
         }
     }
 
     if (httpd_query_key_value(PostData, "mqtttest2", tmp, 6) == ESP_OK)
     {
-        if(!strcmp(tmp, (const char*) "prs"))
+        if (!strcmp(tmp, (const char*) "prs"))
         {
-            ESP_LOGI(TAG,"MQTT TEST 2");
-            PublicTestMQTT(1);
+            if (GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled)
+                PublicTestMQTT(1);
             return HTTP_IO_DONE;
         }
     }
-
-
 
     if (httpd_query_key_value(PostData, "save", tmp, 6) == ESP_OK ||
             httpd_query_key_value(PostData, "apply", tmp, 6) == ESP_OK)
@@ -453,8 +450,6 @@ static HTTP_IO_RESULT HTTPPostServicesSettings(httpd_req_t *req, char *PostData)
             return HTTP_IO_REDIRECT;
         }
     }
-
-
 
 #endif
     return HTTP_IO_DONE;

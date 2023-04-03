@@ -115,8 +115,6 @@ menu "WebGUIApp"
         		Set enabled SPI bus
         
         if WEBGUIAPP_SPI_ENABLE	
-
-
 		        			
 			config SPI_HOST
 	            int "SPI Host Number"
@@ -699,7 +697,7 @@ menu "WebGUIApp"
 	    
 	    	config WEBGUIAPP_MQTT_ON
 	    		bool "Enable MQTT client"
-	    		default y
+	    		default n
 	    		
 	    	config WEBGUIAPP_MQTT_MAX_TOPIC_LENGTH
 	    		int "Max topic length"
@@ -708,7 +706,7 @@ menu "WebGUIApp"
 	    		
 	    	config WEBGUIAPP_MQTT_SERVER_URL
 	    		string "MQTT server URL"
-	    		default "myfirstmqttserver.com"
+	    		default "mqttbroker.com"
 	    	
 	    	config WEBGUIAPP_MQTT_SERVER_PORT
 	    		int "MQTT server port"

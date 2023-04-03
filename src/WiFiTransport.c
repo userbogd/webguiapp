@@ -108,19 +108,9 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
     {
+        ESP_LOGI(TAG, "Disconnected from AP");
         xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
         xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
-        isWiFiGotIp = false;
-        //esp_wifi_connect();
-
-        /*
-        ESP_LOGE(TAG, "Connect to the AP fail");
-        if (!reconnect_task)
-        {
-            xTaskCreate(resonnectWithDelay, "reconnect_delay", 1024, NULL, 3, &reconnect_task);
-            ESP_LOGW(TAG, "Pending reconnect in %d seconds", WIFI_CONNECT_AFTER_FAIL_DELAY);
-        }
-        */
     }
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
     {
@@ -153,8 +143,7 @@ static void event_handler(void *arg, esp_event_base_t event_base,
         isWiFiGotIp = false;
     }
 
-
-    if (event_id == WIFI_EVENT_AP_STACONNECTED)
+    else if (event_id == WIFI_EVENT_AP_STACONNECTED)
     {
         wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t*) event_data;
         ESP_LOGI(TAG, "station "MACSTR" join, AID=%d", MAC2STR(event->mac), event->aid);
@@ -476,10 +465,6 @@ static void wifi_init_apsta(void *pvParameter)
              CC.max_tx_power);
 
     ESP_LOGI(TAG, "wifi_init_softap_sta finished");
-
-    /* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or connection failed for the maximum
-     * number of re-tries (WIFI_FAIL_BIT). The bits are set by event_handler() (see above) */
-
     vTaskDelete(NULL);
 }
 
