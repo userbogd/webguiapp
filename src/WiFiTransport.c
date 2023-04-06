@@ -108,10 +108,16 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
     {
-        ESP_LOGI(TAG, "Disconnected from AP");
+        ESP_LOGW(TAG, "Disconnected from AP");
         xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
         xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
     }
+    else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_BEACON_TIMEOUT)
+    {
+        ESP_LOGW(TAG, "STA beacon timeout");
+
+    }
+
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
     {
         ip_event_got_ip_t *event = (ip_event_got_ip_t*) event_data;
@@ -222,7 +228,7 @@ static void wifi_init_softap(void *pvParameter)
     ESP_ERROR_CHECK(esp_wifi_start());
 
     int max_power = GetSysConf()->wifiSettings.MaxPower;
-    if (max_power >= 8 && max_power <= 84)
+    if (max_power >= 8 && max_power <= 80)
         esp_wifi_set_max_tx_power(max_power);
 
     ESP_LOGI(TAG, "wifi_init_softap finished");
@@ -305,7 +311,7 @@ static void wifi_init_sta(void *pvParameter)
     ESP_ERROR_CHECK(esp_wifi_start());
 
     int max_power = GetSysConf()->wifiSettings.MaxPower;
-    if (max_power >= 8 && max_power <= 84)
+    if (max_power >= 8 && max_power <= 80)
         esp_wifi_set_max_tx_power(max_power);
 
     ESP_LOGI(TAG, "wifi_init_sta finished.");
@@ -456,7 +462,7 @@ static void wifi_init_apsta(void *pvParameter)
     ESP_ERROR_CHECK(esp_wifi_start());
 
     int max_power = GetSysConf()->wifiSettings.MaxPower;
-    if (max_power >= 8 && max_power <= 84)
+    if (max_power >= 8 && max_power <= 80)
         esp_wifi_set_max_tx_power(max_power);
 
     wifi_country_t CC;
@@ -518,10 +524,13 @@ static void WiFiControlTask(void *arg)
             {
                 ESP_LOGI(TAG, "WiFi STA started, reconnecting to AP...");
                 esp_wifi_connect();
+                /*
                 reconnect_interval += BASE_RECONNECT_INTERVAL;
                 if (reconnect_interval >= BASE_RECONNECT_INTERVAL * 10)
                     reconnect_interval = BASE_RECONNECT_INTERVAL * 10;
                 reconnect_counter = reconnect_interval;
+                */
+                reconnect_counter = BASE_RECONNECT_INTERVAL;
             }
         }
 

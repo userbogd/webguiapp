@@ -151,7 +151,7 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
     if (httpd_query_key_value(PostData, "wifipwr", tmp, sizeof(tmp)) == ESP_OK)
     {
         uint8_t pwr = atoi((const char*) tmp);
-        if (pwr >= 8 && pwr <= 84)
+        if (pwr >= 1 && pwr <= 20)
             GetSysConf()->wifiSettings.MaxPower = pwr * 4;
     }
 
