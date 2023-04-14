@@ -56,10 +56,12 @@ static void mqtt1_user_event_handler(void *handler_args, esp_event_base_t base, 
 static void mqtt2_user_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
 
 void (*UserEventHandler)(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
+static void* UserArg;
 void regUserEventHandler(
-        void (*event_handler)(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data))
+        void (*event_handler)(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data), void* user_arg)
 {
     UserEventHandler = event_handler;
+    UserArg = user_arg;
 }
 
 mqtt_client_t* GetMQTTHandlesPool(int idx)
@@ -315,8 +317,8 @@ static void start_mqtt()
             //mqtt_cfg.user_context = (void*) &mqtt[i];
             mqtt[i].mqtt = esp_mqtt_client_init(&mqtt_cfg);
             /* The last argument may be used to pass data to the event handler, in this example mqtt_system_event_handler */
-            esp_mqtt_client_register_event(mqtt[i].mqtt, ESP_EVENT_ANY_ID, mqtt[i].system_event_handler, &mqtt[i].mqtt);
-            esp_mqtt_client_register_event(mqtt[i].mqtt, ESP_EVENT_ANY_ID, mqtt[i].user_event_handler, &mqtt[i].mqtt);
+            esp_mqtt_client_register_event(mqtt[i].mqtt, ESP_EVENT_ANY_ID, mqtt[i].system_event_handler, &mqtt[i]);
+            esp_mqtt_client_register_event(mqtt[i].mqtt, ESP_EVENT_ANY_ID, mqtt[i].user_event_handler, &mqtt[i]);
             esp_event_handler_register(IP_EVENT, ESP_EVENT_ANY_ID, &reconnect_MQTT_handler, &mqtt[i].mqtt);
             esp_mqtt_client_start(mqtt[i].mqtt);
             xTaskCreate(MQTTTaskTransmit, "MQTTTaskTransmit", 1024 * 2, (void*) &mqtt[i].mqtt_index, 3, NULL);
@@ -349,8 +351,10 @@ void MQTTRun(void)
 
     mqtt[0].system_event_handler = mqtt1_system_event_handler;
     mqtt[0].user_event_handler = mqtt1_user_event_handler;
+    mqtt[0].user_arg = UserArg;
     mqtt[1].system_event_handler = mqtt2_system_event_handler;
     mqtt[1].user_event_handler = mqtt2_user_event_handler;
+    mqtt[1].user_arg = UserArg;
     start_mqtt();
 }
 
