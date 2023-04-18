@@ -70,7 +70,7 @@ void PPPModemColdStart(void);
 void PPPModemSoftRestart(void);
 void PPPModemStart(void);
 
-void PPPModemGetRSSI(void);
+int PPPModemGetRSSI(void);
 void ModemSendSMS(void);
 void ModemSendAT(char *cmd, char *resp, int timeout);
 
