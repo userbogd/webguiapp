@@ -284,7 +284,7 @@ static void HTTPPrint_ipap(char *VarData, void *arg)
     if (GetAPNetifAdapter() && esp_netif_is_netif_up(GetAPNetifAdapter()))
         PrintIPFromInterface(VarData, arg, GetAPNetifAdapter(), IP);
     else
-        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ip4addr_ntoa(&GetSysConf()->wifiSettings.ApIPAddr));
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ip4addr_ntoa((const ip4_addr_t*)&GetSysConf()->wifiSettings.ApIPAddr));
 }
 
 static void HTTPPrint_ssid(char *VarData, void *arg)
@@ -307,7 +307,7 @@ static void HTTPPrint_ip(char *VarData, void *arg)
     if (GetSTANetifAdapter() && esp_netif_is_netif_up(GetSTANetifAdapter()))
         PrintIPFromInterface(VarData, arg, GetSTANetifAdapter(), IP);
     else
-        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ip4addr_ntoa(&GetSysConf()->wifiSettings.InfIPAddr));
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ip4addr_ntoa((const ip4_addr_t*)&GetSysConf()->wifiSettings.InfIPAddr));
 }
 /*STA NETMASK*/
 static void HTTPPrint_msk(char *VarData, void *arg)
@@ -315,7 +315,7 @@ static void HTTPPrint_msk(char *VarData, void *arg)
     if (GetSTANetifAdapter() && esp_netif_is_netif_up(GetSTANetifAdapter()))
         PrintIPFromInterface(VarData, arg, GetSTANetifAdapter(), NETMASK);
     else
-        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ip4addr_ntoa(&GetSysConf()->wifiSettings.InfMask));
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ip4addr_ntoa((const ip4_addr_t*)&GetSysConf()->wifiSettings.InfMask));
 }
 /*STA GATEWAY*/
 static void HTTPPrint_gate(char *VarData, void *arg)
@@ -323,7 +323,7 @@ static void HTTPPrint_gate(char *VarData, void *arg)
     if (GetSTANetifAdapter() && esp_netif_is_netif_up(GetSTANetifAdapter()))
         PrintIPFromInterface(VarData, arg, GetSTANetifAdapter(), GW);
     else
-        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ip4addr_ntoa(&GetSysConf()->wifiSettings.InfGateway));
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ip4addr_ntoa((const ip4_addr_t*)&GetSysConf()->wifiSettings.InfGateway));
 }
 /*Current DNS*/
 static void HTTPPrint_dns(char *VarData, void *arg)
@@ -390,7 +390,7 @@ static void HTTPPrint_eip(char *VarData, void *arg)
     if (GetETHNetifAdapter() && esp_netif_is_netif_up(GetETHNetifAdapter()))
         PrintIPFromInterface(VarData, arg, GetETHNetifAdapter(), IP);
     else
-        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ip4addr_ntoa(&GetSysConf()->ethSettings.IPAddr));
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ip4addr_ntoa((const ip4_addr_t*)&GetSysConf()->ethSettings.IPAddr));
 }
 /*Etherbox NETMASK*/
 static void HTTPPrint_emsk(char *VarData, void *arg)
@@ -398,7 +398,7 @@ static void HTTPPrint_emsk(char *VarData, void *arg)
     if (GetETHNetifAdapter() && esp_netif_is_netif_up(GetETHNetifAdapter()))
         PrintIPFromInterface(VarData, arg, GetETHNetifAdapter(), NETMASK);
     else
-        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ip4addr_ntoa(&GetSysConf()->ethSettings.Mask));
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ip4addr_ntoa((const ip4_addr_t*)&GetSysConf()->ethSettings.Mask));
 }
 /*Ethernet GATEWAY*/
 static void HTTPPrint_egate(char *VarData, void *arg)
@@ -406,7 +406,7 @@ static void HTTPPrint_egate(char *VarData, void *arg)
     if (GetETHNetifAdapter() && esp_netif_is_netif_up(GetETHNetifAdapter()))
         PrintIPFromInterface(VarData, arg, GetETHNetifAdapter(), GW);
     else
-        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ip4addr_ntoa(&GetSysConf()->ethSettings.Gateway));
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ip4addr_ntoa((const ip4_addr_t*)&GetSysConf()->ethSettings.Gateway));
 }
 /*Current DNS*/
 static void HTTPPrint_edns(char *VarData, void *arg)
@@ -919,7 +919,7 @@ void GenerateSystemSettingsJSONFile(void)
         strcat(val, "~");
         strcat(val, HANDLERS_ARRAY[i].tag);
         strcat(val, "~");
-        jwObj_string(HANDLERS_ARRAY[i].tag, val);
+        jwObj_string((char*)HANDLERS_ARRAY[i].tag, val);
     }
     jwEnd();
     jwClose();

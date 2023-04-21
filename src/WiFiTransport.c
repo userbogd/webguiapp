@@ -489,7 +489,6 @@ void WiFiConnect(void)
 static void WiFiControlTask(void *arg)
 {
     //WiFi init and start block
-    static int reconnect_interval = BASE_RECONNECT_INTERVAL;
     static int reconnect_counter = BASE_RECONNECT_INTERVAL;
     s_wifi_event_group = xEventGroupCreate();
     switch (GetSysConf()->wifiSettings.WiFiMode)
@@ -515,7 +514,6 @@ static void WiFiControlTask(void *arg)
                                                portMAX_DELAY);
         if (bits & WIFI_CONNECTED_BIT)
         {
-            reconnect_interval = BASE_RECONNECT_INTERVAL;
             reconnect_counter = BASE_RECONNECT_INTERVAL;
         }
         else if (bits & WIFI_FAIL_BIT)
@@ -524,12 +522,6 @@ static void WiFiControlTask(void *arg)
             {
                 ESP_LOGI(TAG, "WiFi STA started, reconnecting to AP...");
                 esp_wifi_connect();
-                /*
-                reconnect_interval += BASE_RECONNECT_INTERVAL;
-                if (reconnect_interval >= BASE_RECONNECT_INTERVAL * 10)
-                    reconnect_interval = BASE_RECONNECT_INTERVAL * 10;
-                reconnect_counter = reconnect_interval;
-                */
                 reconnect_counter = BASE_RECONNECT_INTERVAL;
             }
         }
