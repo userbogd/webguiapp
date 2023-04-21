@@ -33,6 +33,7 @@
 #if CONFIG_ETH_USE_SPI_ETHERNET
 #include "driver/spi_master.h"
 #endif
+#include "esp_mac.h"
 
 static const char *TAG = "EthTransport";
 static bool isEthConn = false;
@@ -289,8 +290,11 @@ static void eth_init(void *pvParameter)
         ESP_ERROR_CHECK(spi_bus_add_device(CONFIG_SPI_HOST, &devcfg, &spi_handle[i]));
         ESP_LOGI(TAG, "ETHERNET SPI device added OK");
         // w5500 ethernet driver is based on spi driver
+#if ESP_IDF_VERSION_MAJOR >= 5
+        eth_w5500_config_t w5500_config = ETH_W5500_DEFAULT_CONFIG(CONFIG_SPI_HOST, &devcfg);
+#else
         eth_w5500_config_t w5500_config = ETH_W5500_DEFAULT_CONFIG(spi_handle[i]);
-
+#endif
         // Set remaining GPIO numbers and configuration used by the SPI module
         w5500_config.int_gpio_num = spi_eth_module_config[i].int_gpio;
         phy_config_spi.phy_addr = spi_eth_module_config[i].phy_addr;
