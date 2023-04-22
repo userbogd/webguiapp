@@ -30,6 +30,7 @@
 #include "romfs.h"
 #include "esp_idf_version.h"
 #include "jWrite.h"
+#include "UserCallbacks.h"
 
 static const char *TAG = "HTTPServerPrint";
 

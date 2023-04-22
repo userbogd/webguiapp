@@ -34,6 +34,8 @@
 #include "esp_system.h"
 #include "driver/spi_master.h"
 
+#include "UserCallbacks.h"
+
 esp_err_t spi_device_polling_transmit_synchronized(spi_device_handle_t handle, spi_transaction_t *trans_desc);
 
 bool GetUserAppNeedReset(void);

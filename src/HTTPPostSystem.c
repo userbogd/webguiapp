@@ -25,6 +25,7 @@
 #include "LoRaWAN.h"
 #include "Helpers.h"
 #include "MQTT.h"
+#include "UserCallbacks.h"
 
 static const char *TAG = "HTTPServerPost";
 

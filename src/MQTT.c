@@ -23,6 +23,7 @@
 #include "Helpers.h"
 #include "NetTransport.h"
 #include "MQTT.h"
+#include "UserCallbacks.h"
 
 #define MQTT_DEBUG_MODE  1
 

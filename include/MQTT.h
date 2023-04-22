@@ -73,7 +73,6 @@ typedef struct
 mqtt_client_t* GetMQTTHandlesPool(int idx);
 QueueHandle_t GetMQTTSendQueue(int idx);
 void ComposeTopic(char *topic, int idx, char *service_name, char *direct);
-void regUserEventHandler(void (*event_handler)(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data), void* user_arg);
 void SystemDataHandler(char *data, uint32_t len, int idx);
 
 mqtt_app_err_t PublicTestMQTT(int idx);

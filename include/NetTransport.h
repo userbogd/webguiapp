@@ -108,7 +108,6 @@ void GetRFC3339Time(char *t);
 void StartTimeGet(void);
 
 esp_err_t StartOTA(void);
-void regHookBeforeUpdate(void (*before_update)(void));
 char* GetAvailVersion();
 char* GetUpdateStatus();
 
