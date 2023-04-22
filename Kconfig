@@ -37,7 +37,7 @@ menu "WebGUIApp"
 	
 	config MAIN_FUNCTIONAL_BUTTON_GPIO
 	    int "Main functional button GPIO"
-	    range -1 34
+	    range -1 39
 	    default 15
 	         help
 	            Set the GPIO number for main system button. Mainly needed for settings default reset. If not

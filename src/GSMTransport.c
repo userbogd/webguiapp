@@ -77,7 +77,7 @@ static void on_ppp_changed(void *arg, esp_event_base_t event_base,
                            int32_t event_id,
                            void *event_data)
 {
-    ESP_LOGI(TAG, "PPP state changed event %d", event_id);
+    ESP_LOGI(TAG, "PPP state changed event %u", (unsigned int)event_id);
     if (event_id == NETIF_PPP_ERRORUSER)
     {
         /* User interrupted event from esp-netif */
@@ -90,7 +90,7 @@ static void on_ip_event(void *arg, esp_event_base_t event_base,
                         int32_t event_id,
                         void *event_data)
 {
-    ESP_LOGD(TAG, "IP event! %d", event_id);
+    ESP_LOGD(TAG, "IP event! %u", (unsigned int)event_id);
     if (event_id == IP_EVENT_PPP_GOT_IP)
     {
         esp_netif_dns_info_t dns_info;
@@ -264,13 +264,13 @@ modem_init_fail:
 void PPPModemColdStart(void)
 {
     ResetType = 0;
-    xTaskCreate(GSMInitTask, "GSMInitTask", 1024 * 6, &ResetType, 3, initTaskhandle);
+    xTaskCreate(GSMInitTask, "GSMInitTask", 1024 * 6, &ResetType, 3, &initTaskhandle);
 }
 
 void PPPModemSoftRestart(void)
 {
     ResetType = 1;
-    xTaskCreate(GSMInitTask, "GSMInitTask", 1024 * 6, &ResetType, 3, initTaskhandle);
+    xTaskCreate(GSMInitTask, "GSMInitTask", 1024 * 6, &ResetType, 3, &initTaskhandle);
 }
 
 static void GSMRunTask(void *pvParameter)
@@ -291,11 +291,12 @@ void PPPModemStart(void)
     xTaskCreate(GSMRunTask, "GSMRunTask", 1024 * 4, &ResetType, 3, NULL);
 }
 
-void PPPModemGetRSSI(void)
+int PPPModemGetRSSI(void)
 {
-    int rssi, ber;
+    int rssi = -1, ber;
     esp_modem_get_signal_quality(dce, &rssi, &ber);
-    ESP_LOGW(TAG, "Signal %d, ber %d", rssi, ber);
+    //ESP_LOGW(TAG, "Signal %d, ber %d", rssi, ber);
+    return rssi;
 }
 
 void ModemSendAT(char *cmd, char *resp, int timeout)
