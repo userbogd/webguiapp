@@ -45,12 +45,9 @@ static const char *TAG = "WiFiTransport";
 #define EXAMPLE_ESP_WIFI_CHANNEL   6
 #define EXAMPLE_MAX_STA_CONN       10
 
-static EventGroupHandle_t s_wifi_event_group;
-
-#define WIFI_CONNECTED_BIT BIT0
-#define WIFI_FAIL_BIT      BIT1
-
+static bool isWiFiConnected = false;
 static bool isWiFiGotIp = false;
+static bool isWiFiFail = false;
 
 #define DEFAULT_SCAN_LIST_SIZE 20
 static wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
@@ -104,13 +101,14 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_CONNECTED)
     {
         ESP_LOGI(TAG, "Connected to AP");
-        xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+        isWiFiConnected = true;
+        isWiFiFail = false;
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
     {
         ESP_LOGW(TAG, "Disconnected from AP");
-        xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
-        xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+        isWiFiConnected = false;
+        isWiFiFail = true;
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_BEACON_TIMEOUT)
     {
@@ -484,13 +482,15 @@ void WiFiConnect(void)
     esp_wifi_connect();
 }
 
-#define BASE_RECONNECT_INTERVAL 6
+#define RECONNECT_INTERVAL 10
+#define WAITIP_INTERVAL 10
 
 static void WiFiControlTask(void *arg)
 {
     //WiFi init and start block
-    static int reconnect_counter = BASE_RECONNECT_INTERVAL;
-    s_wifi_event_group = xEventGroupCreate();
+    static int reconnect_counter = RECONNECT_INTERVAL;
+    static int waitip_counter = WAITIP_INTERVAL;
+    //s_wifi_event_group = xEventGroupCreate();
     switch (GetSysConf()->wifiSettings.WiFiMode)
     {
         case WIFI_MODE_STA:
@@ -507,25 +507,28 @@ static void WiFiControlTask(void *arg)
     while (1)
     {
         vTaskDelay(pdMS_TO_TICKS(1000));
-        EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
-        WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
-                                               pdFALSE,
-                                               pdFALSE,
-                                               portMAX_DELAY);
-        if (bits & WIFI_CONNECTED_BIT)
+        if (isWiFiConnected)
         {
-            reconnect_counter = BASE_RECONNECT_INTERVAL;
+            reconnect_counter = RECONNECT_INTERVAL;
+            if (!isWiFiGotIp)
+            {
+                if (--waitip_counter <= 0)
+                {
+                    ESP_LOGW(TAG, "WiFi STA Connected but can't obtain IP...");
+                    esp_wifi_disconnect();
+                    waitip_counter = WAITIP_INTERVAL;
+                }
+            }
         }
-        else if (bits & WIFI_FAIL_BIT)
+        if (isWiFiFail)
         {
             if (--reconnect_counter <= 0)
             {
                 ESP_LOGI(TAG, "WiFi STA started, reconnecting to AP...");
                 esp_wifi_connect();
-                reconnect_counter = BASE_RECONNECT_INTERVAL;
+                reconnect_counter = RECONNECT_INTERVAL;
             }
         }
-
     }
 }
 
