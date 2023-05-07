@@ -51,7 +51,7 @@ static bool isWiFiFail = false;
 
 #define DEFAULT_SCAN_LIST_SIZE 20
 static wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
-static bool isScanReady = false;
+static bool isScanExecuting = false;
 
 wifi_ap_record_t* GetWiFiAPRecord(uint8_t n)
 {
@@ -522,7 +522,7 @@ static void WiFiControlTask(void *arg)
         }
         if (isWiFiFail)
         {
-            if (--reconnect_counter <= 0)
+            if (--reconnect_counter <= 0 && !isScanExecuting)
             {
                 ESP_LOGI(TAG, "WiFi STA started, reconnecting to AP...");
                 esp_wifi_connect();
@@ -542,16 +542,20 @@ static void wifi_scan(void *arg)
     uint16_t number = DEFAULT_SCAN_LIST_SIZE;
     uint16_t ap_count = 0;
     memset(ap_info, 0, sizeof(ap_info));
-    esp_wifi_scan_start(NULL, true);
+    while (esp_wifi_scan_start(NULL, true) == ESP_ERR_WIFI_STATE)
+    {
+        vTaskDelay(pdMS_TO_TICKS(2000));
+    }
+
     ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&number, ap_info));
     ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(&ap_count));
     ESP_LOGI(TAG, "Total APs scanned = %u", ap_count);
-    isScanReady = true;
+    isScanExecuting = false;
     vTaskDelete(NULL);
 }
 
 void WiFiScan(void)
 {
-    isScanReady = false;
+    isScanExecuting = true;
     xTaskCreate(wifi_scan, "ScanWiFiTask", 1024 * 4, (void*) 0, 3, NULL);
 }
