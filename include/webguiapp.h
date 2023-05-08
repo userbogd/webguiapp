@@ -40,5 +40,6 @@ esp_err_t spi_device_polling_transmit_synchronized(spi_device_handle_t handle, s
 
 bool GetUserAppNeedReset(void);
 void SetUserAppNeedReset(bool res);
+void LogFile(char *fname, char *mess);
 
 #endif /* COMPONENTS_WEBGUIAPPCOMPONENT_INCLUDE_WEBGUIAPP_H_ */

@@ -65,7 +65,6 @@ StaticSemaphore_t xSemaphoreSPIBuf;
 
 #define NETWORK_START_TIMEOUT (5)
 
-static int NetworkStartTimeout = 0;
 static bool isUserAppNeedReset = false;
 
 static void InitSysIO(void);
@@ -509,5 +508,24 @@ bool GetUserAppNeedReset(void)
 void SetUserAppNeedReset(bool res)
 {
     isUserAppNeedReset = res;
+}
+
+void LogFile(char *fname, char *mess)
+{
+    char filename[32];
+    strcpy(filename, "/data/");
+    strcat(filename, fname);
+    FILE *f = fopen(filename, "a");
+    if (f == NULL)
+    {
+        ESP_LOGE(TAG, "Failed to open file %s for writing", filename);
+        return;
+    }
+    fwrite(esp_log_system_timestamp(), 1, 12, f);
+    fwrite(" ", 1, 1, f);
+    fwrite(mess, 1, strlen(mess), f);
+    fwrite("\r\n", 1, 2, f);
+    fclose(f);
+    ESP_LOGI(TAG, "File written to %s", filename);
 }
 
