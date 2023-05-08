@@ -510,9 +510,10 @@ void SetUserAppNeedReset(bool res)
     isUserAppNeedReset = res;
 }
 
-void LogFile(char *fname, char *mess)
+void LogFile(char *fname, char *format, ...)
 {
     char filename[32];
+    char tstamp[16];
     strcpy(filename, "/data/");
     strcat(filename, fname);
     FILE *f = fopen(filename, "a");
@@ -521,10 +522,14 @@ void LogFile(char *fname, char *mess)
         ESP_LOGE(TAG, "Failed to open file %s for writing", filename);
         return;
     }
-    fwrite(esp_log_system_timestamp(), 1, 12, f);
-    fwrite(" ", 1, 1, f);
-    fwrite(mess, 1, strlen(mess), f);
-    fwrite("\r\n", 1, 2, f);
+    va_list arg;
+    va_start(arg, format);
+    va_end(arg);
+    strcpy(tstamp, "\r\n");
+    strcat(tstamp, esp_log_system_timestamp());
+    strcat(tstamp, " ");
+    fwrite(tstamp, 1, 15, f);
+    vfprintf(f, format, arg);
     fclose(f);
     ESP_LOGI(TAG, "File written to %s", filename);
 }
