@@ -431,7 +431,7 @@ menu "WebGUIApp"
 		
 		        config ETH_SPI_INT0_GPIO
 		            int "Interrupt GPIO number SPI Ethernet module #1"
-		            range 0 39
+		            range GPIO_RANGE_MIN GPIO_RANGE_MAX
 		            default 4 if IDF_TARGET_ESP32 || IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32C3 || IDF_TARGET_ESP32S3
 		            help
 		                Set the GPIO number used by the first SPI Ethernet module interrupt line.
@@ -439,7 +439,7 @@ menu "WebGUIApp"
 		        config ETH_SPI_INT1_GPIO
 		            depends on SPI_ETHERNETS_NUM > 1
 		            int "Interrupt GPIO number SPI Ethernet module #2"
-		            range 0 36
+		            range GPIO_RANGE_MIN GPIO_RANGE_MAX
 		            default 33 if IDF_TARGET_ESP32
 		            default 5 if IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32C3 || IDF_TARGET_ESP32S3
 		            help
