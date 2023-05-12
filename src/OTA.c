@@ -180,7 +180,8 @@ esp_err_t my_esp_https_ota(const esp_http_client_config_t *config)
     if (need_to_update)
     {
         ESP_LOGW(TAG, "New firmware has newer build, START update firmware");
-        HookBeforeUpdate();
+        if (HookBeforeUpdate != NULL)
+            HookBeforeUpdate();
         int countPackets = 0;
         while (1)
         {
@@ -236,35 +237,35 @@ esp_err_t my_esp_https_ota(const esp_http_client_config_t *config)
 static void OTATask(void *pvParameter)
 {
     /*
-    espfs_file_t *file;
-    struct espfs_stat_t stat;
+     espfs_file_t *file;
+     struct espfs_stat_t stat;
 
-    //open file
-    file = espfs_fopen(fs, "res/ca_cert.pem");
-    if (!file)
-    {
-        ESP_LOGE(TAG, "Failed to read certificate file");
-        goto update_error;
-    }
-    //get file info
-    espfs_stat(fs, "res/ca_cert.pem", &stat);
-    uint32_t fileSize;
-    fileSize = stat.size;
-    char *certbuf = (char*) malloc(fileSize);
-    if (certbuf)
-    {
-        espfs_fread(file, certbuf, fileSize);
-    }
-    else
-    {
-        ESP_LOGE(TAG, "Failed to allocate memory");
-        espfs_fclose(file);
-        goto update_error;
-    }
-    */
+     //open file
+     file = espfs_fopen(fs, "res/ca_cert.pem");
+     if (!file)
+     {
+     ESP_LOGE(TAG, "Failed to read certificate file");
+     goto update_error;
+     }
+     //get file info
+     espfs_stat(fs, "res/ca_cert.pem", &stat);
+     uint32_t fileSize;
+     fileSize = stat.size;
+     char *certbuf = (char*) malloc(fileSize);
+     if (certbuf)
+     {
+     espfs_fread(file, certbuf, fileSize);
+     }
+     else
+     {
+     ESP_LOGE(TAG, "Failed to allocate memory");
+     espfs_fclose(file);
+     goto update_error;
+     }
+     */
     esp_http_client_config_t config = {
             .url = GetSysConf()->OTAURL,
-            .cert_pem = (char *)server_cert_pem_start,
+            .cert_pem = (char*) server_cert_pem_start,
             .event_handler = _http_event_handler,
             .keep_alive_enable = true,
             .skip_cert_common_name_check = true,
@@ -284,11 +285,11 @@ static void OTATask(void *pvParameter)
         strcpy(FwUpdStatus, "<div class='clerr'>Error update</div>");
     }
     /*
-    free(certbuf);
-    espfs_fclose(file);
+     free(certbuf);
+     espfs_fclose(file);
 
-update_error:
- */
+     update_error:
+     */
     vTaskDelete(NULL);
 }
 
