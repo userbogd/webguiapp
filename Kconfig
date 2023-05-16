@@ -104,7 +104,24 @@ menu "WebGUIApp"
 	            help	
 	            	Timezone in hours. Positive for East and negative for the West                   
 	endmenu  	
-	      		
+	     
+	menu "CRON settings"
+		config WEBGUIAPP_CRON_ENABLE
+		bool "Enabled CRON scheduler"
+		default y
+			help
+				Include CRON functionality into firmware
+		
+		if WEBGUIAPP_CRON_ENABLE
+		
+			config WEBGUIAPP_CRON_NUMBER
+	            int "CRON tasks number"
+	            range 1 32
+	            default 16
+	            	help
+	            		Max number of CRON schedulers in the system
+		endif
+	endmenu       		
         		
 	
 	menu "SPI settings"
