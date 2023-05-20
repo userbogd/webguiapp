@@ -66,6 +66,8 @@
         {
             int TimeZone;
             char SntpServerAdr[33];
+            char SntpServer2Adr[33];
+            char SntpServer3Adr[33];
             struct
             {
                 char b1 :1;

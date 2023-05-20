@@ -397,6 +397,10 @@ static HTTP_IO_RESULT HTTPPostServicesSettings(httpd_req_t *req, char *PostData)
     }
     httpd_query_key_value(PostData, "tsr", GetSysConf()->sntpClient.SntpServerAdr,
                           sizeof(GetSysConf()->sntpClient.SntpServerAdr));
+    httpd_query_key_value(PostData, "tsr2", GetSysConf()->sntpClient.SntpServer2Adr,
+                          sizeof(GetSysConf()->sntpClient.SntpServer2Adr));
+    httpd_query_key_value(PostData, "tsr3", GetSysConf()->sntpClient.SntpServer3Adr,
+                          sizeof(GetSysConf()->sntpClient.SntpServer3Adr));
 
     /*MQTT Test button handlers*/
     if (httpd_query_key_value(PostData, "mqtttest1", tmp, 6) == ESP_OK)

@@ -68,7 +68,9 @@ static void time_sync_notification_cb(struct timeval *tv)
 static void initialize_sntp(void)
 {
   sntp_setoperatingmode(SNTP_OPMODE_POLL);
-  sntp_setservername(0, "pool.ntp.org");
+  sntp_setservername(0, GetSysConf()->sntpClient.SntpServerAdr);
+  sntp_setservername(1, GetSysConf()->sntpClient.SntpServerAdr);
+  sntp_setservername(2, GetSysConf()->sntpClient.SntpServerAdr);
   sntp_set_sync_interval(6*3600*1000);
   sntp_set_time_sync_notification_cb(time_sync_notification_cb);
   sntp_init();

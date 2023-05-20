@@ -353,8 +353,12 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
     memcpy(Conf->mqttStation[1].UserPass, CONFIG_WEBGUIAPP_MQTT_PASSWORD, sizeof(CONFIG_WEBGUIAPP_MQTT_PASSWORD));
 #endif
 #endif
-    memcpy(Conf->sntpClient.SntpServerAdr, CONFIG_WEBGUIAPP_SNTP_HOST,
-           sizeof(CONFIG_WEBGUIAPP_SNTP_HOST));
+    memcpy(Conf->sntpClient.SntpServerAdr, CONFIG_WEBGUIAPP_SNTP_HOST_1,
+           sizeof(CONFIG_WEBGUIAPP_SNTP_HOST_1));
+    memcpy(Conf->sntpClient.SntpServer2Adr, CONFIG_WEBGUIAPP_SNTP_HOST_2,
+           sizeof(CONFIG_WEBGUIAPP_SNTP_HOST_2));
+    memcpy(Conf->sntpClient.SntpServer3Adr, CONFIG_WEBGUIAPP_SNTP_HOST_3,
+           sizeof(CONFIG_WEBGUIAPP_SNTP_HOST_3));
     Conf->sntpClient.Flags1.bIsGlobalEnabled = CONFIG_WEBGUIAPP_SNTP_AUTOUPDATE_ENABLE;
     Conf->sntpClient.TimeZone = CONFIG_WEBGUIAPP_SNTP_TIMEZONE;
 

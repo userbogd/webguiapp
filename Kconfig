@@ -84,11 +84,23 @@ menu "WebGUIApp"
 			bool "Enabled SNTP time update"
 	        default y
 
-		config WEBGUIAPP_SNTP_HOST
-            string "URL of SNTP server"
+		config WEBGUIAPP_SNTP_HOST_1
+            string "URL of SNTP server 1"
+            default "1.pool.ntp.org"
+	            help
+	                URL of SNTP server 
+	                
+	    config WEBGUIAPP_SNTP_HOST_2
+            string "URL of SNTP server 2"
             default "2.pool.ntp.org"
 	            help
-	                URL of firmware file for OTA update	             
+	                URL of SNTP server
+
+	    config WEBGUIAPP_SNTP_HOST_3
+            string "URL of SNTP server 3"
+            default "3.pool.ntp.org"
+	            help
+	                URL of SNTP server 	                             
         		
         config WEBGUIAPP_SNTP_AUTOUPDATE_PERIOD
             int "SNTP autoupdate period in seconds"
