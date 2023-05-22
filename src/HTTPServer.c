@@ -355,7 +355,10 @@ static esp_err_t GETHandler(httpd_req_t *req)
     }
 
 //check if the file can contains dynamic variables
-    if (IS_FILE_EXT(filename, ".html") || IS_FILE_EXT(filename, ".json") || IS_FILE_EXT(filename, ".js"))
+    if (IS_FILE_EXT(filename, ".html") ||
+            IS_FILE_EXT(filename, ".json") ||
+            IS_FILE_EXT(filename, ".css") ||
+            IS_FILE_EXT(filename, ".js"))
         isDynamicVars = true;
     do
     {

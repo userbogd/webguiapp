@@ -116,6 +116,12 @@ static void PrintCheckbox(char *VarData, void *arg, bool checked)
         snprintf(VarData, MAX_DYNVAR_LENGTH, " ");
 }
 
+static void HTTPPrint_actclr(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", CONFIG_WEBGUIAPP_ACCENT_COLOR);
+}
+
+
 static void HTTPPrint_name(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", CONFIG_DEVICE_MODEL_NAME);
@@ -713,7 +719,10 @@ static void HTTPPrint_DEF(char *VarData, void *arg)
 }
 
 dyn_var_handler_t HANDLERS_ARRAY[] = {
-        /*Ststem settings*/
+        /*GUI settings*/
+        { "actclr", sizeof("actclr") - 1, &HTTPPrint_actclr },
+
+        /*System settings*/
         { "name", sizeof("name") - 1, &HTTPPrint_name },
         { "dname", sizeof("dname") - 1, &HTTPPrint_dname },
         { "login", sizeof("login") - 1, &HTTPPrint_login },

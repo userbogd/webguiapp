@@ -54,6 +54,14 @@ menu "WebGUIApp"
         default n
              help
         		This will reset to default settings on every startup
+	
+	menu "Web UI settings"        		
+    	config WEBGUIAPP_ACCENT_COLOR
+    		string "Accent color code for web ui"
+    		default "#dba617"
+    			help
+    				Set accent color for user web ui
+    endmenu
         		
 	menu "OTA settings"
 		config WEBGUIAPP_OTA_AUTOUPDATE_ENABLE
