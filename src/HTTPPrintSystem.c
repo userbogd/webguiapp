@@ -116,6 +116,12 @@ static void PrintCheckbox(char *VarData, void *arg, bool checked)
         snprintf(VarData, MAX_DYNVAR_LENGTH, " ");
 }
 
+static void HTTPPrint_actclr(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", CONFIG_WEBGUIAPP_ACCENT_COLOR);
+}
+
+
 static void HTTPPrint_name(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", CONFIG_DEVICE_MODEL_NAME);
@@ -617,6 +623,14 @@ void HTTPPrint_tmsrv(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->sntpClient.SntpServerAdr);
 }
+void HTTPPrint_tmsrv2(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->sntpClient.SntpServer2Adr);
+}
+void HTTPPrint_tmsrv3(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetSysConf()->sntpClient.SntpServer3Adr);
+}
 
 static void HTTPPrint_freeram(char *VarData, void *arg)
 {
@@ -705,7 +719,10 @@ static void HTTPPrint_DEF(char *VarData, void *arg)
 }
 
 dyn_var_handler_t HANDLERS_ARRAY[] = {
-        /*Ststem settings*/
+        /*GUI settings*/
+        { "actclr", sizeof("actclr") - 1, &HTTPPrint_actclr },
+
+        /*System settings*/
         { "name", sizeof("name") - 1, &HTTPPrint_name },
         { "dname", sizeof("dname") - 1, &HTTPPrint_dname },
         { "login", sizeof("login") - 1, &HTTPPrint_login },
@@ -821,6 +838,8 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         /*SNTP*/
         { "sntpen", sizeof("sntpen") - 1, &HTTPPrint_sntpen },
         { "tmsrv", sizeof("tmsrv") - 1, &HTTPPrint_tmsrv },
+        { "tmsrv2", sizeof("tmsrv2") - 1, &HTTPPrint_tmsrv2 },
+        { "tmsrv3", sizeof("tmsrv3") - 1, &HTTPPrint_tmsrv3 },
 
         { "freeram", sizeof("freeram") - 1, &HTTPPrint_freeram },
         { "minram", sizeof("minram") - 1, &HTTPPrint_minram },
