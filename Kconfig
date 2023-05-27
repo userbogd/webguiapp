@@ -774,7 +774,12 @@ menu "WebGUIApp"
 	    	
 	    	config WEBGUIAPP_MQTT_PASSWORD
 	    		string "MQTT user password"
-	    		default "password"				 			        
+	    		default "password"	
+	    		
+	    	config WEBGUIAPP_MQTT_DEBUG_LEVEL
+	    		int "MQTT debug log level"
+	    		range 0 5
+	    		default 1			 			        
 	   	
 	   	endif
 	endmenu

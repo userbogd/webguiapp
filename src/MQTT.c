@@ -25,7 +25,7 @@
 #include "MQTT.h"
 #include "UserCallbacks.h"
 
-#define MQTT_DEBUG_MODE  1
+#define MQTT_DEBUG_MODE  CONFIG_WEBGUIAPP_MQTT_DEBUG_LEVEL
 
 #define MQTT_MESSAGE_BUFER_LENTH 5  //size of mqtt queue
 #define MQTT_RECONNECT_CHANGE_ADAPTER  3
