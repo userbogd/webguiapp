@@ -504,6 +504,13 @@ static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
         strcpy(GetSysConf()->OTAURL, tmp);
     }
 
+    if (httpd_query_key_value(PostData, "colscheme", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        uint16_t chm = atoi((const char*) tmp);
+        if (chm < 3 && chm >= 1)
+            GetSysConf()->ColorSheme = chm;
+    }
+
     if (httpd_query_key_value(PostData, "upd", tmp, sizeof(tmp)) == ESP_OK)
     {
 

@@ -116,9 +116,57 @@ static void PrintCheckbox(char *VarData, void *arg, bool checked)
         snprintf(VarData, MAX_DYNVAR_LENGTH, " ");
 }
 
+/*GUI color define*/
+
+
+
+static void HTTPPrint_bgrclr(char *VarData, void *arg)
+{
+    const char *sch = CONFIG_WEBGUIAPP_SCH1_BACKGROUNG_COLOR;
+    if(GetSysConf()->ColorSheme == 2)
+        sch = CONFIG_WEBGUIAPP_SCH2_BACKGROUNG_COLOR;
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", sch);
+}
+static void HTTPPrint_pnlclr(char *VarData, void *arg)
+{
+    const char *sch = CONFIG_WEBGUIAPP_SCH1_PANEL_COLOR;
+    if(GetSysConf()->ColorSheme == 2)
+        sch = CONFIG_WEBGUIAPP_SCH2_PANEL_COLOR;
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", sch);
+}
+static void HTTPPrint_mnuclr(char *VarData, void *arg)
+{
+    const char *sch = CONFIG_WEBGUIAPP_SCH1_MENU_COLOR;
+    if(GetSysConf()->ColorSheme == 2)
+        sch = CONFIG_WEBGUIAPP_SCH2_MENU_COLOR;
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", sch);
+}
 static void HTTPPrint_actclr(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", CONFIG_WEBGUIAPP_ACCENT_COLOR);
+}
+static void HTTPPrint_fntclr(char *VarData, void *arg)
+{
+    const char *sch = CONFIG_WEBGUIAPP_SCH1_TEXT_COLOR;
+    if(GetSysConf()->ColorSheme == 2)
+        sch = CONFIG_WEBGUIAPP_SCH2_TEXT_COLOR;
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", sch);
+}
+static void HTTPPrint_brdclr(char *VarData, void *arg)
+{
+    const char *sch = CONFIG_WEBGUIAPP_SCH1_BORDER_COLOR;
+    if(GetSysConf()->ColorSheme == 2)
+        sch = CONFIG_WEBGUIAPP_SCH2_BORDER_COLOR;
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", sch);
+}
+
+
+static void HTTPPrint_colchm(char *VarData, void *arg)
+{
+    if ((*(uint8_t*) arg) == GetSysConf()->ColorSheme)
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "selected");
+    else
+        snprintf(VarData, MAX_DYNVAR_LENGTH, " ");
 }
 
 
@@ -720,7 +768,15 @@ static void HTTPPrint_DEF(char *VarData, void *arg)
 
 dyn_var_handler_t HANDLERS_ARRAY[] = {
         /*GUI settings*/
+
+        { "bgrclr", sizeof("bgrclr") - 1, &HTTPPrint_bgrclr },
+        { "pnlclr", sizeof("pnlclr") - 1, &HTTPPrint_pnlclr },
+        { "mnuclr", sizeof("mnuclr") - 1, &HTTPPrint_mnuclr },
         { "actclr", sizeof("actclr") - 1, &HTTPPrint_actclr },
+        { "fntclr", sizeof("fntclr") - 1, &HTTPPrint_fntclr },
+        { "brdclr", sizeof("brdclr") - 1, &HTTPPrint_brdclr },
+        { "colchm", sizeof("colchm") - 1, &HTTPPrint_colchm },
+
 
         /*System settings*/
         { "name", sizeof("name") - 1, &HTTPPrint_name },

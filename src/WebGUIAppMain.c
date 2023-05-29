@@ -243,6 +243,8 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
     GetChipId((uint8_t*) d.v);
     snprintf(Conf->SN, 11, "%010u", (unsigned int)swap(d.Val));
 
+    Conf->ColorSheme = CONFIG_WEBGUIAPP_DEFAULT_COLOR_SCHEME;
+
     memcpy(Conf->NetBIOSName, CONFIG_WEBGUIAPP_HOSTNAME,
            sizeof(CONFIG_WEBGUIAPP_HOSTNAME));
     memcpy(Conf->SysName, CONFIG_WEBGUIAPP_USERNAME,

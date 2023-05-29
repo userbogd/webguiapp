@@ -49,6 +49,7 @@
 
         char SN[11];        ///< String of serial number (decimal ID)
         char ID[9];        ///< String of ID ( last 4 bytes of MAC)
+        int ColorSheme;
 
         struct
         {
