@@ -35,6 +35,7 @@ const char url_adapters[] = "adapters.html";
 const char url_services[] = "services.html";
 const char url_system[] = "system.html";
 const char url_reboot[] = "reboot.html";
+const char url_sysapi[] = "sysapi";
 
 static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, char *PostData);
 static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData);
@@ -48,6 +49,7 @@ void regAfterPostHandlerCustom(HTTP_IO_RESULT (*post_handler)(httpd_req_t *req, 
 {
     AfterPostHandlerCust = post_handler;
 }
+
 
 HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostData)
 {
@@ -74,6 +76,8 @@ HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostDat
         break;
         case HTTP_IO_DONE_NOREFRESH:
             break;
+        case HTTP_IO_DONE_API:
+            break;
         break;
     }
     return res;
@@ -81,6 +85,8 @@ HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostDat
 
 static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, char *PostData)
 {
+    if (!memcmp(filename, url_sysapi, sizeof(url_sysapi)))
+        return HTTPPostSysAPI(req, PostData);
     if (!memcmp(filename, url_adapters, sizeof(url_adapters)))
         return HTTPPostAdaptersSettings(req, PostData);
     if (!memcmp(filename, url_services, sizeof(url_services)))
@@ -91,12 +97,16 @@ static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, c
     if (!memcmp(filename, url_reboot, sizeof(url_reboot)))
         return HTTPPostReboot(req, PostData);
 
+
     // If not found target URL here, try to call custom code
     if (AfterPostHandlerCust != NULL)
         return AfterPostHandlerCust(req, filename, PostData);
 
     return HTTP_IO_DONE;
 }
+
+
+
 
 static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
 {

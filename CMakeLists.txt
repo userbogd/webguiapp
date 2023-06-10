@@ -30,6 +30,7 @@ idf_component_register(
     	 "src/spifs.c"
     	 "src/HTTPServer.c"
     	 "src/FileServer.c"
+    	 "src/HTTPAPISystem.c"
     	 "src/HTTPPrintSystem.c"
     	 "src/HTTPPostSystem.c"
     	 "src/Helpers.c"
@@ -39,7 +40,7 @@ idf_component_register(
     	 "src/SNTP.c"
     	 "src/MQTT.c"
     	 "src/MQTTSysHandler.c"
-    	 "src/OTA.c"
+    	  src/OTA.c
 #   	 	 "src/mDNS.c"
     	    
     INCLUDE_DIRS  "."

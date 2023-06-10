@@ -38,5 +38,4 @@ void regHTTPPrintCustom(int (*print_handler)(httpd_req_t *req, char *buf, char *
 //User handler of variables 'var1=value1&var2=value2' styled in POST requests.
 void regAfterPostHandlerCustom(HTTP_IO_RESULT (*post_handler)(httpd_req_t *req, const char *filename, char *PostData));
 
-
 #endif /* COMPONENTS_WEBGUIAPP_INCLUDE_USERCALLBACKS_H_ */

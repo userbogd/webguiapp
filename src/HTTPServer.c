@@ -220,11 +220,6 @@ static esp_err_t POSTHandler(httpd_req_t *req)
                                          req->uri,
                                          sizeof(filepath));
 
-            if (!memcmp(filename, "/api", 4))
-            {
-                return RestApiHandler(req);
-            }
-
             http_res = HTTPPostApp(req, filename, buf);
 
             if (http_res == HTTP_IO_DONE)
@@ -244,6 +239,11 @@ static esp_err_t POSTHandler(httpd_req_t *req)
             else if (http_res == HTTP_IO_DONE_NOREFRESH)
             {
                 httpd_resp_set_status(req, HTTPD_204);
+                httpd_resp_send(req, NULL, 0);  // Response body can be empty
+                return ESP_OK;
+            }
+            else if (http_res == HTTP_IO_DONE_API)
+            {
                 httpd_resp_send(req, NULL, 0);  // Response body can be empty
                 return ESP_OK;
             }

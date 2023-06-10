@@ -56,7 +56,7 @@
 #define SCRATCH_BUFSIZE  4096
 #define AUTH_DATA_MAX_LENGTH 16
 
-#define HTTP_SERVER_DEBUG_LEVEL 0
+#define HTTP_SERVER_DEBUG_LEVEL 1
 
 typedef enum
 {
@@ -64,7 +64,8 @@ typedef enum
     HTTP_IO_NEED_DATA,  // More data needed to continue, call again later
     HTTP_IO_WAITING,     // Waiting for asynchronous process to complete, call again later
     HTTP_IO_REDIRECT,
-    HTTP_IO_DONE_NOREFRESH
+    HTTP_IO_DONE_NOREFRESH,
+    HTTP_IO_DONE_API
 } HTTP_IO_RESULT;
 
 
@@ -89,6 +90,7 @@ typedef struct
 esp_err_t start_file_server(void);
 HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostData);
 int HTTPPrint(httpd_req_t *req, char* buf, char* var);
+HTTP_IO_RESULT HTTPPostSysAPI(httpd_req_t *req, char *PostData);
 
 esp_err_t download_get_handler(httpd_req_t *req);
 esp_err_t upload_post_handler(httpd_req_t *req);
