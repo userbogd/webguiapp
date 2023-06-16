@@ -440,7 +440,7 @@ static esp_err_t GETHandler(httpd_req_t *req)
     while (bufSize > 0);
 
 #if HTTP_SERVER_DEBUG_LEVEL > 0
-    ESP_LOGI(TAG, "File sending complete, read from file %d", readBytes);
+    ESP_LOGI(TAG, "File sending complete, read from file %d", (int)readBytes);
 #endif
 
     /* Respond with an empty chunk to signal HTTP response completion */
