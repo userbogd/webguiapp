@@ -56,7 +56,7 @@
 #define SCRATCH_BUFSIZE  4096
 #define AUTH_DATA_MAX_LENGTH 16
 
-#define HTTP_SERVER_DEBUG_LEVEL 1
+#define HTTP_SERVER_DEBUG_LEVEL 0
 
 typedef enum
 {

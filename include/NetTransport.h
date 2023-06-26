@@ -61,6 +61,9 @@ void StartTimeGet(void);
 void WiFiStart(void);
 void WiFiDisconnect(void);
 void WiFiScan(void);
+void WiFiStop();
+void WiFiStopAP();
+void WiFiStartAP();
 void EthStart(void);
 
 void WiFiTransportTask(void *prm);

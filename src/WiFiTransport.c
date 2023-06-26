@@ -45,6 +45,7 @@ static const char *TAG = "WiFiTransport";
 #define EXAMPLE_ESP_WIFI_CHANNEL   6
 #define EXAMPLE_MAX_STA_CONN       10
 
+static bool isWiFiRunning = false;
 static bool isWiFiConnected = false;
 static bool isWiFiGotIp = false;
 static bool isWiFiFail = false;
@@ -503,8 +504,9 @@ static void WiFiControlTask(void *arg)
             xTaskCreate(wifi_init_apsta, "InitSoftAPSTATask", 1024 * 4, (void*) 0, 3, NULL);
         break;
     }
+    isWiFiRunning = true;
     //WiFi in work service
-    while (1)
+    while (isWiFiRunning)
     {
         vTaskDelay(pdMS_TO_TICKS(1000));
         if (isWiFiConnected)
@@ -530,11 +532,42 @@ static void WiFiControlTask(void *arg)
             }
         }
     }
+
+    if (isWiFiConnected)
+    {
+        ESP_ERROR_CHECK(esp_wifi_disconnect());
+    }
+    ESP_ERROR_CHECK(esp_wifi_stop());
+    ESP_ERROR_CHECK(esp_wifi_deinit());
+    esp_netif_destroy(ap_netif);
+    vTaskDelete(NULL);
 }
 
 void WiFiStart(void)
 {
     xTaskCreate(WiFiControlTask, "WiFiCtrlTask", 1024 * 4, (void*) 0, 3, NULL);
+}
+
+void WiFiStop()
+{
+    isWiFiRunning = false;
+}
+
+void WiFiStopAP()
+{
+    if (GetSysConf()->wifiSettings.WiFiMode == WIFI_MODE_APSTA || GetSysConf()->wifiSettings.WiFiMode == WIFI_MODE_STA)
+        ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    else
+        ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_NULL));
+}
+void WiFiStartAP()
+{
+    if (GetSysConf()->wifiSettings.WiFiMode == WIFI_MODE_APSTA)
+        ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
+    else if (GetSysConf()->wifiSettings.WiFiMode == WIFI_MODE_STA)
+        ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    else
+        ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
 }
 
 static void wifi_scan(void *arg)

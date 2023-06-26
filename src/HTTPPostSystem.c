@@ -270,6 +270,22 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
         }
     }
 
+    if (httpd_query_key_value(PostData, "wifistart", tmp, 4) == ESP_OK)
+    {
+        if (!strcmp(tmp, (const char*) "prs"))
+        {
+            WiFiStartAP();
+        }
+    }
+    if (httpd_query_key_value(PostData, "wifistop", tmp, 4) == ESP_OK)
+    {
+        if (!strcmp(tmp, (const char*) "prs"))
+        {
+            WiFiStopAP();
+        }
+    }
+
+
     if (httpd_query_key_value(PostData, "wifisave", tmp, 4) == ESP_OK)
     {
         if (!strcmp(tmp, (const char*) "prs"))
