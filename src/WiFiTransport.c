@@ -40,6 +40,7 @@ esp_netif_t *ap_netif;
 static const char *TAG = "WiFiTransport";
 
 #define WIFI_CONNECT_AFTER_FAIL_DELAY   40
+#define WIFI_AP_ONBOOT_TIME 300
 
 #define EXAMPLE_ESP_MAXIMUM_RETRY  5
 #define EXAMPLE_ESP_WIFI_CHANNEL   6
@@ -49,6 +50,7 @@ static bool isWiFiRunning = false;
 static bool isWiFiConnected = false;
 static bool isWiFiGotIp = false;
 static bool isWiFiFail = false;
+static int TempAPCounter = WIFI_AP_ONBOOT_TIME;
 
 #define DEFAULT_SCAN_LIST_SIZE 20
 static wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
@@ -531,6 +533,15 @@ static void WiFiControlTask(void *arg)
                 reconnect_counter = RECONNECT_INTERVAL;
             }
         }
+        if (TempAPCounter > 0)
+        {
+            if (--TempAPCounter <= 0)
+            {
+                WiFiStopAP();
+                ESP_LOGI(TAG, "WiFi AP stopped after temporarily activity");
+            }
+        }
+
     }
 
     if (isWiFiConnected)
@@ -568,6 +579,13 @@ void WiFiStartAP()
         ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     else
         ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+}
+
+void WiFiStartAPTemp(int seconds)
+{
+    TempAPCounter = seconds;
+    WiFiStartAP();
+    ESP_LOGI(TAG, "WiFi AP started temporarily for %u seconds", seconds);
 }
 
 static void wifi_scan(void *arg)
