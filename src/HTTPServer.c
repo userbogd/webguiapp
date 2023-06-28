@@ -175,10 +175,10 @@ static esp_err_t POSTHandler(httpd_req_t *req)
     ESP_LOGI(TAG, "POST request handle");
 #endif
 
-    if (memmem(req->uri, strlen(req->uri), "/storage/upload/", sizeof("/storage/upload/")-1))
+    if (memmem(req->uri, strlen(req->uri), "/storage/upload/", sizeof("/storage/upload/") - 1))
         return upload_post_handler(req);
 
-    if (memmem(req->uri, strlen(req->uri), "/storage/delete/", sizeof("/storage/delete/")-1))
+    if (memmem(req->uri, strlen(req->uri), "/storage/delete/", sizeof("/storage/delete/") - 1))
         return delete_post_handler(req);
 
     char *buf = ((struct file_server_data*) req->user_ctx)->scratch;
@@ -347,12 +347,7 @@ static esp_err_t GETHandler(httpd_req_t *req)
     }
 //read first portion of data from file
     readBytes = espfs_fread(file, buf, bufSize);
-//check if file is compressed by GZIP and add correspondent header
-    if (memmem(buf, 3, GZIP_SIGN, 3))
-    {
-        httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
-        httpd_resp_set_hdr(req, "Cache-Control", "max-age=600");
-    }
+
 
 //check if the file can contains dynamic variables
     if (IS_FILE_EXT(filename, ".html") ||
@@ -360,6 +355,15 @@ static esp_err_t GETHandler(httpd_req_t *req)
             IS_FILE_EXT(filename, ".css") ||
             IS_FILE_EXT(filename, ".js"))
         isDynamicVars = true;
+
+//check if file is compressed by GZIP and add correspondent header
+    if (memmem(buf, 3, GZIP_SIGN, 3))
+    {
+        httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
+        httpd_resp_set_hdr(req, "Cache-Control", "max-age=600");
+        isDynamicVars = false;
+    }
+
     do
     {
         int pt = 0;
@@ -392,8 +396,11 @@ static esp_err_t GETHandler(httpd_req_t *req)
                                 break; //found close tag
                         }
                         else
-                            //unexpected end of file
+                        //unexpected end of file
+                        {
+                            ESP_LOGE(TAG, "Unexpected end of file");
                             goto file_send_error;
+                        }
                     }
                 }
                 if (buf[pt] == '~' || ch == '~')   //close tag, got valid dynamic variable name
@@ -405,8 +412,11 @@ static esp_err_t GETHandler(httpd_req_t *req)
                         pt++;
                 }
                 else
-                    //not found close tag, exit by overflow max variable size or file end
+                //not found close tag, exit by overflow max variable size or file end
+                {
+                    ESP_LOGE(TAG, "Dyn variable close tag not found");
                     goto file_send_error;
+                }
             }
             else
                 chunk[preparedBytes++] = buf[pt++]; //write to chunk ordinary character
@@ -417,8 +427,13 @@ static esp_err_t GETHandler(httpd_req_t *req)
 #if HTTP_SERVER_DEBUG_LEVEL > 0
                 ESP_LOGI(TAG, "Call resp_send_chank because of chunk full. Send %d bytes", preparedBytes);
 #endif
-                if (httpd_resp_send_chunk(req, chunk, preparedBytes) != ESP_OK)
+                esp_err_t send_err = httpd_resp_send_chunk(req, chunk, preparedBytes);
+
+                if (send_err != ESP_OK)
+                {
+                    ESP_LOGE(TAG, "%s", esp_err_to_name(send_err));
                     goto file_send_error;
+                }
                 preparedBytes = 0;
             }
         }
@@ -440,7 +455,7 @@ static esp_err_t GETHandler(httpd_req_t *req)
     while (bufSize > 0);
 
 #if HTTP_SERVER_DEBUG_LEVEL > 0
-    ESP_LOGI(TAG, "File sending complete, read from file %d", (int)readBytes);
+    ESP_LOGI(TAG, "File sending complete, read from file %d", (int )readBytes);
 #endif
 
     /* Respond with an empty chunk to signal HTTP response completion */
