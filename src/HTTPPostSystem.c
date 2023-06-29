@@ -31,6 +31,8 @@ static const char *TAG = "HTTPServerPost";
 
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
 
+char rtstat[2048];
+
 const char url_adapters[] = "adapters.html";
 const char url_services[] = "services.html";
 const char url_system[] = "system.html";
@@ -539,13 +541,20 @@ static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
 
     if (httpd_query_key_value(PostData, "upd", tmp, sizeof(tmp)) == ESP_OK)
     {
-
         if (!strcmp(tmp, (const char*) "prs"))
         {
             StartOTA();
         }
-
     }
+    if (httpd_query_key_value(PostData, "rtos", tmp, sizeof(tmp)) == ESP_OK)
+    {
+        if (!strcmp(tmp, (const char*) "prs"))
+        {
+            vTaskGetRunTimeStats(rtstat);
+            ESP_LOGW("FREERTOS_STATS", "\n%s", rtstat);
+        }
+    }
+
     if (httpd_query_key_value(PostData, "rst", tmp, sizeof(tmp)) == ESP_OK)
     {
         if (!strcmp(tmp, (const char*) "prs"))
