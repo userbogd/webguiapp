@@ -551,7 +551,8 @@ static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
         if (!strcmp(tmp, (const char*) "prs"))
         {
             vTaskGetRunTimeStats(rtstat);
-            ESP_LOGW("FREERTOS_STATS", "\n%s", rtstat);
+            httpd_resp_sendstr(req, rtstat);
+            return HTTP_IO_DONE_API;
         }
     }
 
