@@ -117,23 +117,23 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
         if (!strcmp((const char*) tmp, (const char*) "1"))
             TempIsETHEnabled = true;
     }
-    if (httpd_query_key_value(PostData, "dhcp", tmp, sizeof(tmp)) == ESP_OK)
+    if (httpd_query_key_value(PostData, "edhcp", tmp, sizeof(tmp)) == ESP_OK)
     {
         if (!strcmp((const char*) tmp, (const char*) "1"))
             TempIsETHDHCPEnabled = true;
     }
 
-    if (httpd_query_key_value(PostData, "ipa", tmp, 15) == ESP_OK)
+    if (httpd_query_key_value(PostData, "eipa", tmp, 15) == ESP_OK)
         esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.IPAddr);
-    if (httpd_query_key_value(PostData, "mas", tmp, 15) == ESP_OK)
+    if (httpd_query_key_value(PostData, "emas", tmp, 15) == ESP_OK)
         esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Mask);
-    if (httpd_query_key_value(PostData, "gte", tmp, 15) == ESP_OK)
+    if (httpd_query_key_value(PostData, "egte", tmp, 15) == ESP_OK)
         esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Gateway);
-    if (httpd_query_key_value(PostData, "dns1", tmp, 15) == ESP_OK)
+    if (httpd_query_key_value(PostData, "edns1", tmp, 15) == ESP_OK)
         esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr1);
-    if (httpd_query_key_value(PostData, "dns2", tmp, 15) == ESP_OK)
+    if (httpd_query_key_value(PostData, "edns2", tmp, 15) == ESP_OK)
         esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr2);
-    if (httpd_query_key_value(PostData, "dns3", tmp, 15) == ESP_OK)
+    if (httpd_query_key_value(PostData, "edns3", tmp, 15) == ESP_OK)
         esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr3);
 
 #endif
@@ -188,10 +188,7 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
             TempIsWIFIDHCPEnabled = true;
     }
     if (httpd_query_key_value(PostData, "ipa", tmp, 15) == ESP_OK)
-    {
-        esp_err_t err = esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->wifiSettings.InfIPAddr);
-        ESP_LOGI(TAG, "WRITE IP:%s", esp_err_to_name(err));
-    }
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->wifiSettings.InfIPAddr);
     if (httpd_query_key_value(PostData, "mas", tmp, 15) == ESP_OK)
         esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->wifiSettings.InfMask);
     if (httpd_query_key_value(PostData, "gte", tmp, 15) == ESP_OK)
