@@ -202,6 +202,7 @@ static void eth_init(void *pvParameter)
         esp_netif_config.if_desc = if_desc_str;
         esp_netif_config.route_prio = ETH_PRIO - i;
         eth_netif_spi[i] = esp_netif_new(&cfg_spi);
+
     }
 
     // Init MAC and PHY configs to default
@@ -325,10 +326,31 @@ static void eth_init(void *pvParameter)
         }
         // attach Ethernet driver to TCP/IP stack
         ESP_ERROR_CHECK(esp_netif_attach(eth_netif_spi[i], esp_eth_new_netif_glue(eth_handle_spi[i])));
-        esp_netif_dns_info_t fldns;
+
+        //esp_netif_dns_info_t fldns;
         //esp_netif_str_to_ip4(&GetAppConf()->ethSettings.DNSAddr3, (esp_ip4_addr_t*) (&fldns.ip));
-        memcpy(&fldns.ip, &GetSysConf()->ethSettings.DNSAddr3, sizeof(esp_ip4_addr_t));
-        esp_netif_set_dns_info(eth_netif_spi[i], ESP_NETIF_DNS_FALLBACK, &fldns);
+        //memcpy(&fldns.ip, &GetSysConf()->ethSettings.DNSAddr3, sizeof(esp_ip4_addr_t));
+        //esp_netif_set_dns_info(eth_netif_spi[i], ESP_NETIF_DNS_FALLBACK, &fldns);
+        //DHCP & DNS
+
+        esp_netif_ip_info_t ip_info;
+        memcpy(&ip_info.ip, &GetSysConf()->ethSettings.IPAddr, 4);
+        memcpy(&ip_info.gw, &GetSysConf()->ethSettings.Gateway, 4);
+        memcpy(&ip_info.netmask, &GetSysConf()->ethSettings.Mask, 4);
+        esp_netif_dns_info_t dns_info;
+        memcpy(&dns_info, &GetSysConf()->ethSettings.DNSAddr1, 4);
+
+        esp_netif_dhcpc_stop(eth_netif_spi[i]);
+        esp_netif_set_ip_info(eth_netif_spi[i], &ip_info);
+        esp_netif_set_dns_info(eth_netif_spi[i], ESP_NETIF_DNS_MAIN, &dns_info);
+
+        //esp_netif_str_to_ip4(&GetSysConf()->wifiSettings.DNSAddr3, (esp_ip4_addr_t*)(&dns_info.ip));
+        memcpy(&dns_info.ip, &GetSysConf()->wifiSettings.DNSAddr3, sizeof(esp_ip4_addr_t));
+        esp_netif_set_dns_info(eth_netif_spi[i], ESP_NETIF_DNS_FALLBACK, &dns_info);
+
+        if (GetSysConf()->ethSettings.Flags1.bIsDHCPEnabled)
+            esp_netif_dhcpc_start(eth_netif_spi[i]);
+
     }
 #endif // CONFIG_ETH_USE_SPI_ETHERNET
 

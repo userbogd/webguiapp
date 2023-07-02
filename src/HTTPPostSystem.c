@@ -52,7 +52,6 @@ void regAfterPostHandlerCustom(HTTP_IO_RESULT (*post_handler)(httpd_req_t *req, 
     AfterPostHandlerCust = post_handler;
 }
 
-
 HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostData)
 {
     const char *pt = filename + 1;
@@ -99,16 +98,12 @@ static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, c
     if (!memcmp(filename, url_reboot, sizeof(url_reboot)))
         return HTTPPostReboot(req, PostData);
 
-
     // If not found target URL here, try to call custom code
     if (AfterPostHandlerCust != NULL)
         return AfterPostHandlerCust(req, filename, PostData);
 
     return HTTP_IO_DONE;
 }
-
-
-
 
 static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
 {
@@ -120,26 +115,26 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
     if (httpd_query_key_value(PostData, "ethen", tmp, sizeof(tmp)) == ESP_OK)
     {
         if (!strcmp((const char*) tmp, (const char*) "1"))
-        TempIsETHEnabled = true;
+            TempIsETHEnabled = true;
     }
     if (httpd_query_key_value(PostData, "dhcp", tmp, sizeof(tmp)) == ESP_OK)
     {
         if (!strcmp((const char*) tmp, (const char*) "1"))
-        TempIsETHDHCPEnabled = true;
+            TempIsETHDHCPEnabled = true;
     }
 
     if (httpd_query_key_value(PostData, "ipa", tmp, 15) == ESP_OK)
-    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.IPAddr);
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.IPAddr);
     if (httpd_query_key_value(PostData, "mas", tmp, 15) == ESP_OK)
-    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Mask);
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Mask);
     if (httpd_query_key_value(PostData, "gte", tmp, 15) == ESP_OK)
-    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Gateway);
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.Gateway);
     if (httpd_query_key_value(PostData, "dns1", tmp, 15) == ESP_OK)
-    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr1);
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr1);
     if (httpd_query_key_value(PostData, "dns2", tmp, 15) == ESP_OK)
-    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr2);
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr2);
     if (httpd_query_key_value(PostData, "dns3", tmp, 15) == ESP_OK)
-    esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr3);
+        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->ethSettings.DNSAddr3);
 
 #endif
 
@@ -193,7 +188,10 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
             TempIsWIFIDHCPEnabled = true;
     }
     if (httpd_query_key_value(PostData, "ipa", tmp, 15) == ESP_OK)
-        esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->wifiSettings.InfIPAddr);
+    {
+        esp_err_t err = esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->wifiSettings.InfIPAddr);
+        ESP_LOGI(TAG, "WRITE IP:%s", esp_err_to_name(err));
+    }
     if (httpd_query_key_value(PostData, "mas", tmp, 15) == ESP_OK)
         esp_netif_str_to_ip4(tmp, (esp_ip4_addr_t*) &GetSysConf()->wifiSettings.InfMask);
     if (httpd_query_key_value(PostData, "gte", tmp, 15) == ESP_OK)
@@ -286,7 +284,6 @@ static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData)
             WiFiStopAP();
         }
     }
-
 
     if (httpd_query_key_value(PostData, "wifisave", tmp, 4) == ESP_OK)
     {
