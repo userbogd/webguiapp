@@ -22,6 +22,8 @@
 #include "esp_mac.h"
 #include "esp_rom_crc.h"
 #include "mbedtls/md.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 uint32_t crc32(uint32_t crc, uint8_t const *buf, uint32_t len)
 {
@@ -189,4 +191,69 @@ esp_err_t SHA256Hash(unsigned char *data, int datalen,
     return ESP_OK;
 }
 
+void vTaskGetRunTimeStatsCustom( char *pcWriteBuffer )
+{
+TaskStatus_t *pxTaskStatusArray;
+volatile UBaseType_t uxArraySize, x;
+unsigned long ulTotalRunTime, ulStatsAsPercentage;
 
+   /* Make sure the write buffer does not contain a string. */
+   *pcWriteBuffer = 0x00;
+
+   /* Take a snapshot of the number of tasks in case it changes while this
+   function is executing. */
+   uxArraySize = uxTaskGetNumberOfTasks();
+
+   /* Allocate a TaskStatus_t structure for each task.  An array could be
+   allocated statically at compile time. */
+   pxTaskStatusArray = pvPortMalloc( uxArraySize * sizeof( TaskStatus_t ) );
+
+   if( pxTaskStatusArray != NULL )
+   {
+      /* Generate raw status information about each task. */
+      uxArraySize = uxTaskGetSystemState( pxTaskStatusArray,
+                                 uxArraySize,
+                                 &ulTotalRunTime );
+
+      /* For percentage calculations. */
+      ulTotalRunTime /= 100UL;
+
+      /* Avoid divide by zero errors. */
+      if( ulTotalRunTime > 0 )
+      {
+         /* For each populated position in the pxTaskStatusArray array,
+         format the raw data as human readable ASCII data. */
+         for( x = 0; x < uxArraySize; x++ )
+         {
+            /* What percentage of the total run time has the task used?
+            This will always be rounded down to the nearest integer.
+            ulTotalRunTimeDiv100 has already been divided by 100. */
+            ulStatsAsPercentage =
+                  pxTaskStatusArray[ x ].ulRunTimeCounter / ulTotalRunTime;
+
+            if( ulStatsAsPercentage > 0UL )
+            {
+               sprintf( pcWriteBuffer, "%s----%llu----%lu%%----%d\r\n",
+                                 pxTaskStatusArray[ x ].pcTaskName,
+                                 (uint64_t)pxTaskStatusArray[ x ].ulRunTimeCounter,
+                                 ulStatsAsPercentage,
+                                 (int)pxTaskStatusArray[ x ].usStackHighWaterMark);
+            }
+            else
+            {
+               /* If the percentage is zero here then the task has
+               consumed less than 1% of the total run time. */
+               sprintf( pcWriteBuffer, "%s----%llu----<1%%----%d\r\n",
+                                 pxTaskStatusArray[ x ].pcTaskName,
+                                 (uint64_t)pxTaskStatusArray[ x ].ulRunTimeCounter,
+                                 (int)pxTaskStatusArray[ x ].usStackHighWaterMark);
+            }
+
+            pcWriteBuffer += strlen( ( char * ) pcWriteBuffer );
+         }
+      }
+
+      /* The array is no longer needed, free the memory it consumes. */
+      vPortFree( pxTaskStatusArray );
+   }
+}

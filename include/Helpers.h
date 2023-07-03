@@ -35,5 +35,6 @@ void bin_to_hex_str(const uint8_t *buf, int len, char *hex);
 void UnencodeURL(char* URL);
 esp_err_t SHA256Hash(unsigned char *data, int datalen,
                                  unsigned char *res);
+void vTaskGetRunTimeStatsCustom( char *pcWriteBuffer );
 
 #endif /* MAIN_INCLUDE_HELPERS_H_ */

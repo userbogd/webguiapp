@@ -65,6 +65,7 @@ void WiFiStop();
 void WiFiStopAP();
 void WiFiStartAP();
 void WiFiStartAPTemp(int seconds);
+int GetAPClientsNumber();
 void EthStart(void);
 
 void WiFiTransportTask(void *prm);

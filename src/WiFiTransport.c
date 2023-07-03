@@ -537,8 +537,13 @@ static void WiFiControlTask(void *arg)
         {
             if (--TempAPCounter <= 0)
             {
-                WiFiStopAP();
-                ESP_LOGI(TAG, "WiFi AP stopped after temporarily activity");
+                if (GetAPClientsNumber() > 0)
+                    TempAPCounter = WIFI_AP_ONBOOT_TIME;
+                else
+                {
+                    WiFiStopAP();
+                    ESP_LOGI(TAG, "WiFi AP stopped after temporarily activity");
+                }
             }
         }
 
@@ -610,3 +615,18 @@ void WiFiScan(void)
     isScanExecuting = true;
     xTaskCreate(wifi_scan, "ScanWiFiTask", 1024 * 4, (void*) 0, 3, NULL);
 }
+
+int GetAPClientsNumber()
+{
+    wifi_sta_list_t clients;
+    wifi_mode_t mode;
+    esp_wifi_get_mode(&mode);
+    if (mode == WIFI_MODE_NULL || mode == WIFI_MODE_STA)
+        return -1;
+    if (esp_wifi_ap_get_sta_list(&clients) == ESP_OK)
+    {
+        return clients.num;
+    }
+    return -1;
+}
+
