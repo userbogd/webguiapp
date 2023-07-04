@@ -45,6 +45,8 @@ typedef struct
 #define PPP_PRIO 30
 #define AP_PRIO 10
 
+#define RFC3339_TIMESTAMP_LENGTH (26)
+
 //#define DEFAULT_FALLBACK_DNS  "8.8.8.8"
 
 //QueueHandle_t MQTT1MessagesQueueHandle;
