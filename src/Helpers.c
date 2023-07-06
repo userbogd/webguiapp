@@ -191,6 +191,7 @@ esp_err_t SHA256Hash(unsigned char *data, int datalen,
     return ESP_OK;
 }
 
+# if(CONFIG_FREERTOS_USE_TRACE_FACILITY == 1)
 void vTaskGetRunTimeStatsCustom( char *pcWriteBuffer )
 {
 TaskStatus_t *pxTaskStatusArray;
@@ -257,3 +258,4 @@ unsigned long ulTotalRunTime, ulStatsAsPercentage;
       vPortFree( pxTaskStatusArray );
    }
 }
+#endif

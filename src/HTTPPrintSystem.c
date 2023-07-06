@@ -118,26 +118,24 @@ static void PrintCheckbox(char *VarData, void *arg, bool checked)
 
 /*GUI color define*/
 
-
-
 static void HTTPPrint_bgrclr(char *VarData, void *arg)
 {
     const char *sch = CONFIG_WEBGUIAPP_SCH1_BACKGROUNG_COLOR;
-    if(GetSysConf()->ColorSheme == 2)
+    if (GetSysConf()->ColorSheme == 2)
         sch = CONFIG_WEBGUIAPP_SCH2_BACKGROUNG_COLOR;
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", sch);
 }
 static void HTTPPrint_pnlclr(char *VarData, void *arg)
 {
     const char *sch = CONFIG_WEBGUIAPP_SCH1_PANEL_COLOR;
-    if(GetSysConf()->ColorSheme == 2)
+    if (GetSysConf()->ColorSheme == 2)
         sch = CONFIG_WEBGUIAPP_SCH2_PANEL_COLOR;
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", sch);
 }
 static void HTTPPrint_mnuclr(char *VarData, void *arg)
 {
     const char *sch = CONFIG_WEBGUIAPP_SCH1_MENU_COLOR;
-    if(GetSysConf()->ColorSheme == 2)
+    if (GetSysConf()->ColorSheme == 2)
         sch = CONFIG_WEBGUIAPP_SCH2_MENU_COLOR;
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", sch);
 }
@@ -148,18 +146,17 @@ static void HTTPPrint_actclr(char *VarData, void *arg)
 static void HTTPPrint_fntclr(char *VarData, void *arg)
 {
     const char *sch = CONFIG_WEBGUIAPP_SCH1_TEXT_COLOR;
-    if(GetSysConf()->ColorSheme == 2)
+    if (GetSysConf()->ColorSheme == 2)
         sch = CONFIG_WEBGUIAPP_SCH2_TEXT_COLOR;
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", sch);
 }
 static void HTTPPrint_brdclr(char *VarData, void *arg)
 {
     const char *sch = CONFIG_WEBGUIAPP_SCH1_BORDER_COLOR;
-    if(GetSysConf()->ColorSheme == 2)
+    if (GetSysConf()->ColorSheme == 2)
         sch = CONFIG_WEBGUIAPP_SCH2_BORDER_COLOR;
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", sch);
 }
-
 
 static void HTTPPrint_colchm(char *VarData, void *arg)
 {
@@ -168,7 +165,6 @@ static void HTTPPrint_colchm(char *VarData, void *arg)
     else
         snprintf(VarData, MAX_DYNVAR_LENGTH, " ");
 }
-
 
 static void HTTPPrint_name(char *VarData, void *arg)
 {
@@ -183,7 +179,7 @@ static void HTTPPrint_time(char *VarData, void *arg)
 }
 static void HTTPPrint_uptime(char *VarData, void *arg)
 {
-    snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", (int)GetUpTime());
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", (int) GetUpTime());
 }
 
 static void HTTPPrint_status_fail(char *VarData, void *arg)
@@ -237,7 +233,10 @@ static void HTTPPrint_fver(char *VarData, void *arg)
         snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", cur_app_info.version);
     }
 }
-
+static void HTTPPrint_hrev(char *VarData, void *arg)
+{
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", CONFIG_BOARD_HARDWARE_REVISION);
+}
 static void HTTPPrint_fverav(char *VarData, void *arg)
 {
     snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", GetAvailVersion());
@@ -339,7 +338,8 @@ static void HTTPPrint_ipap(char *VarData, void *arg)
     if (GetAPNetifAdapter() && esp_netif_is_netif_up(GetAPNetifAdapter()))
         PrintIPFromInterface(VarData, arg, GetAPNetifAdapter(), IP);
     else
-        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ip4addr_ntoa((const ip4_addr_t*)&GetSysConf()->wifiSettings.ApIPAddr));
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s",
+                 ip4addr_ntoa((const ip4_addr_t*) &GetSysConf()->wifiSettings.ApIPAddr));
 }
 
 static void HTTPPrint_ssid(char *VarData, void *arg)
@@ -362,7 +362,8 @@ static void HTTPPrint_ip(char *VarData, void *arg)
     if (GetSTANetifAdapter() && esp_netif_is_netif_up(GetSTANetifAdapter()))
         PrintIPFromInterface(VarData, arg, GetSTANetifAdapter(), IP);
     else
-        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ip4addr_ntoa((const ip4_addr_t*)&GetSysConf()->wifiSettings.InfIPAddr));
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s",
+                 ip4addr_ntoa((const ip4_addr_t*) &GetSysConf()->wifiSettings.InfIPAddr));
 }
 /*STA NETMASK*/
 static void HTTPPrint_msk(char *VarData, void *arg)
@@ -370,7 +371,8 @@ static void HTTPPrint_msk(char *VarData, void *arg)
     if (GetSTANetifAdapter() && esp_netif_is_netif_up(GetSTANetifAdapter()))
         PrintIPFromInterface(VarData, arg, GetSTANetifAdapter(), NETMASK);
     else
-        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ip4addr_ntoa((const ip4_addr_t*)&GetSysConf()->wifiSettings.InfMask));
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s",
+                 ip4addr_ntoa((const ip4_addr_t*) &GetSysConf()->wifiSettings.InfMask));
 }
 /*STA GATEWAY*/
 static void HTTPPrint_gate(char *VarData, void *arg)
@@ -378,7 +380,8 @@ static void HTTPPrint_gate(char *VarData, void *arg)
     if (GetSTANetifAdapter() && esp_netif_is_netif_up(GetSTANetifAdapter()))
         PrintIPFromInterface(VarData, arg, GetSTANetifAdapter(), GW);
     else
-        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s", ip4addr_ntoa((const ip4_addr_t*)&GetSysConf()->wifiSettings.InfGateway));
+        snprintf(VarData, MAX_DYNVAR_LENGTH, "%s",
+                 ip4addr_ntoa((const ip4_addr_t*) &GetSysConf()->wifiSettings.InfGateway));
 }
 /*Current DNS*/
 static void HTTPPrint_dns(char *VarData, void *arg)
@@ -422,7 +425,7 @@ static void HTTPPrint_wifisc(char *VarData, void *arg)
 }
 static void HTTPPrint_wifipwr(char *VarData, void *arg)
 {
-    snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", (unsigned int)(GetSysConf()->wifiSettings.MaxPower / 4));
+    snprintf(VarData, MAX_DYNVAR_LENGTH, "%d", (unsigned int) (GetSysConf()->wifiSettings.MaxPower / 4));
 }
 #endif
 
@@ -777,7 +780,6 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "brdclr", sizeof("brdclr") - 1, &HTTPPrint_brdclr },
         { "colchm", sizeof("colchm") - 1, &HTTPPrint_colchm },
 
-
         /*System settings*/
         { "name", sizeof("name") - 1, &HTTPPrint_name },
         { "dname", sizeof("dname") - 1, &HTTPPrint_dname },
@@ -787,6 +789,7 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "otarst", sizeof("otarst") - 1, &HTTPPrint_otarst },
         { "otaint", sizeof("otaint") - 1, &HTTPPrint_otaint },
         { "fver", sizeof("fver") - 1, &HTTPPrint_fver },
+        { "hrev", sizeof("hrev") - 1, &HTTPPrint_hrev },
         { "fverav", sizeof("fverav") - 1, &HTTPPrint_fverav },
         { "updstat", sizeof("updstat") - 1, &HTTPPrint_updstat },
 
@@ -879,7 +882,7 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "mqname1", sizeof("mqname1") - 1, &HTTPPrint_mqname1 },
         { "mqpass1", sizeof("mqpass1") - 1, &HTTPPrint_mqpass1 },
 
-        #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
+#if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
         { "mqen2", sizeof("mqen2") - 1, &HTTPPrint_mqen2 },
         { "mqurl2", sizeof("mqurl2") - 1, &HTTPPrint_mqurl2 },
         { "mqport2", sizeof("mqport2") - 1, &HTTPPrint_mqport2 },
@@ -889,7 +892,7 @@ dyn_var_handler_t HANDLERS_ARRAY[] = {
         { "mqname2", sizeof("mqname2") - 1, &HTTPPrint_mqname2 },
         { "mqpass2", sizeof("mqpass2") - 1, &HTTPPrint_mqpass2 },
 
-        #endif
+#endif
 #endif
         /*SNTP*/
         { "sntpen", sizeof("sntpen") - 1, &HTTPPrint_sntpen },
@@ -981,11 +984,11 @@ int HTTPPrint(httpd_req_t *req, char *buf, char *var)
 
 }
 
-
 void GenerateSystemSettingsJSONFile(void)
 {
     char *buf = malloc(2048);
-    if(!buf) return;
+    if (!buf)
+        return;
 
     jwOpen(buf, 2048, JW_OBJECT, JW_PRETTY);
     for (int i = 0; i < (sizeof(HANDLERS_ARRAY) / sizeof(HANDLERS_ARRAY[0])); ++i)
@@ -995,7 +998,7 @@ void GenerateSystemSettingsJSONFile(void)
         strcat(val, "~");
         strcat(val, HANDLERS_ARRAY[i].tag);
         strcat(val, "~");
-        jwObj_string((char*)HANDLERS_ARRAY[i].tag, val);
+        jwObj_string((char*) HANDLERS_ARRAY[i].tag, val);
     }
     jwEnd();
     jwClose();

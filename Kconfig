@@ -12,7 +12,11 @@ menu "WebGUIApp"
         default 19 if IDF_TARGET_ESP32C3
         default 48 if IDF_TARGET_ESP32S3    
     
-    
+    config BOARD_HARDWARE_REVISION
+		int "Board hardware revision"
+    	range 1 5
+    	default 1	
+    	
     config APP_PROJECT_VER
         string "Device firmware version"
         default "0.0.0.0000"
@@ -37,7 +41,7 @@ menu "WebGUIApp"
 	
 	config MAIN_FUNCTIONAL_BUTTON_GPIO
 	    int "Main functional button GPIO"
-	    range -1 39
+	    range -1 GPIO_RANGE_MAX
 	    default 15
 	         help
 	            Set the GPIO number for main system button. Mainly needed for settings default reset. If not
