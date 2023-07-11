@@ -357,7 +357,7 @@ menu "WebGUIApp"
 			     
 	        config WEBGUIAPP_ETHERNET_DHCP_DEFAULT
 				bool "Default Ethernet DHCP client on"
-	        	default n
+	        	default y
 		
 		    config USE_INTERNAL_ETHERNET
 		        depends on IDF_TARGET_ESP32
