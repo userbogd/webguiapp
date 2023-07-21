@@ -112,9 +112,21 @@ static esp_err_t set_content_type_from_file(httpd_req_t *req,
     {
         return httpd_resp_set_type(req, "image/x-icon");
     }
+    else if (IS_FILE_EXT(filename, ".svg"))
+    {
+        return httpd_resp_set_type(req, "image/svg+xml");
+    }
     else if (IS_FILE_EXT(filename, ".css"))
     {
         return httpd_resp_set_type(req, "text/css");
+    }
+    else if (IS_FILE_EXT(filename, ".js"))
+    {
+        return httpd_resp_set_type(req, "text/javascript");
+    }
+    else if (IS_FILE_EXT(filename, ".woff"))
+    {
+        return httpd_resp_set_type(req, "font/woff");
     }
     else if (IS_FILE_EXT(filename, ".woff2"))
     {
@@ -336,6 +348,7 @@ static esp_err_t GETHandler(httpd_req_t *req)
     bufSize = MIN(stat.size, SCRATCH_BUFSIZE - MAX_DYNVAR_LENGTH);
     readBytes = 0;
 //allocate buffer for file data
+    if(bufSize == 0) bufSize = 1;
     char *buf = (char*) malloc(bufSize);
     if (!buf)
     {
@@ -354,7 +367,8 @@ static esp_err_t GETHandler(httpd_req_t *req)
             IS_FILE_EXT(filename, ".json") ||
             IS_FILE_EXT(filename, ".css") ||
             IS_FILE_EXT(filename, ".js"))
-        isDynamicVars = true;
+        isDynamicVars = false;
+
 
 //check if file is compressed by GZIP and add correspondent header
     if (memmem(buf, 3, GZIP_SIGN, 3))
