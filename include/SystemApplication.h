@@ -63,8 +63,15 @@ typedef struct
 {
 int key1;
 int key2;
-
 } payload_type_50;
+
+typedef struct
+{
+int key1;
+int key2;
+} payload_type_10;
+
+
 
 
 #define DATA_MESSAGE_TYPE_COMMAND  (1)
@@ -91,6 +98,7 @@ typedef struct
 } data_message_t;
 
 esp_err_t SysServiceDataHandler(data_message_t *MSG);
+sys_error_code SysVarsPayloadHandler(data_message_t *MSG);
 void GetSysErrorDetales(sys_error_code err, const char **br, const char **ds);
 
 #endif /* COMPONENTS_WEBGUIAPP_INCLUDE_SYSTEMAPPLICATION_H_ */

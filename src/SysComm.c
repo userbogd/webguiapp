@@ -224,7 +224,6 @@ static sys_error_code SysDataParser(data_message_t *MSG)
         MSG->parsedData.payloadType = atoi((char*) result.pValue);
         if (MSG->parsedData.payloadType < 1 && MSG->parsedData.payloadType > 100)
             return SYS_ERROR_PARSE_PAYLOADTYPE;
-        MSG->parsedData.payload = malloc(sizeof(payload_type_50));
     }
     else
         return SYS_ERROR_PARSE_PAYLOADTYPE;
@@ -232,7 +231,12 @@ static sys_error_code SysDataParser(data_message_t *MSG)
     switch (MSG->parsedData.payloadType)
     {
         case 50:
+            MSG->parsedData.payload = malloc(sizeof(payload_type_50));
             return SysPayloadType50Handler(MSG);
+        case 51:
+            MSG->parsedData.payload = malloc(sizeof(payload_type_10));
+            return SysVarsPayloadHandler(MSG);
+
         break;
     }
 

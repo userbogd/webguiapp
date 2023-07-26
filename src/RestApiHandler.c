@@ -21,6 +21,7 @@
  *	\copyright Apache License, Version 2.0
  */
 
+#include "SystemApplication.h"
 #include <SysConfiguration.h>
 #include <webguiapp.h>
 
@@ -83,6 +84,46 @@ esp_err_t GetConfVar(char* valias, rest_var_types* vtype, void* val)
     vtype = &V->vartype;
     val = V->ref;
     return ESP_OK;
+}
+
+
+sys_error_code SysVarsPayloadHandler(data_message_t *MSG)
+{
+    struct jReadElement result;
+    payload_type_50 *payload;
+    payload = ((payload_type_50*) (MSG->parsedData.payload));
+    if (MSG->parsedData.msgType == DATA_MESSAGE_TYPE_COMMAND)
+    {
+        //Extract 'key1' or throw exception
+        jRead(MSG->inputDataBuffer, "{'data'{'payload'{'key1'", &result);
+        if (result.elements == 1)
+        {
+
+        }
+        else
+            return SYS_ERROR_PARSE_KEY1;
+
+        //Extract 'key1' or throw exception
+        jRead(MSG->inputDataBuffer, "{'data'{'payload'{'key2'", &result);
+        if (result.elements == 1)
+        {
+
+        }
+        else
+            return SYS_ERROR_PARSE_KEY2;
+        //return StartTransactionPayloadType1(MSG);
+
+    }
+
+    else if (MSG->parsedData.msgType == DATA_MESSAGE_TYPE_REQUEST)
+    {
+        PrepareResponsePayloadType50(MSG);
+        return SYS_OK_DATA;
+    }
+    else
+        return SYS_ERROR_PARSE_MSGTYPE;
+
+    return SYS_OK;
 }
 
 

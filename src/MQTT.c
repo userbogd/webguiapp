@@ -132,6 +132,51 @@ esp_err_t SysServiceMQTTSend(char *data, int len, int idx)
     return ESP_ERR_NO_MEM;
 }
 
+#define MAX_ERROR_JSON  256
+mqtt_app_err_t PublicTestMQTT(int idx)
+{
+    char tmp[10];
+    char resp[256];
+    char JSONMess[512];
+    jwOpen(JSONMess, MAX_ERROR_JSON, JW_OBJECT, JW_PRETTY);
+    time_t now;
+    time(&now);
+    jwObj_int("time", (unsigned int) now);
+    jwObj_string("event", "MQTT_TEST_MESSAGE)");
+    strcpy(resp, "mqtt://");
+    strcat(resp, GetSysConf()->mqttStation[idx].ServerAddr);
+    itoa(GetSysConf()->mqttStation[idx].ServerPort, tmp, 10);
+    strcat(resp, ":");
+    strcat(resp, tmp);
+    jwObj_string("url", resp);
+    ComposeTopic(resp, idx, "SYSTEM", "UPLINK");
+    jwObj_string("tx_topic", resp);
+    ComposeTopic(resp, idx, "SYSTEM", "DWLINK");
+    jwObj_string("rx_topic", resp);
+    jwEnd();
+    jwClose();
+    char *buf = (char*) malloc(strlen(JSONMess) + 1);
+    if (buf)
+    {
+        memcpy(buf, JSONMess, strlen(JSONMess));
+        MQTT_DATA_SEND_STRUCT DSS;
+        ComposeTopic(DSS.topic, idx, "SYSTEM", "UPLINK");
+        DSS.raw_data_ptr = buf;
+        DSS.data_length = strlen(JSONMess);
+        if (xQueueSend(GetMQTTHandlesPool(idx)->mqtt_queue, &DSS, pdMS_TO_TICKS(1000)) == pdPASS)
+            return API_OK;
+        else
+        {
+            free(buf);
+            return API_INTERNAL_ERR;
+        }
+    }
+    else
+    {  // ERR internal error on publish error
+        return API_INTERNAL_ERR;
+    }
+}
+
 
 static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_base_t base, int32_t event_id,
                                       void *event_data)
