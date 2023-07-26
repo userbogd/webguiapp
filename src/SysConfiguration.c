@@ -21,8 +21,9 @@
  *	\copyright Apache License, Version 2.0
  */
 
-#include "WebGUIAppMain.h"
+#include "../include/SysConfiguration.h"
 
+#include "SystemApplication.h"
 #include <webguiapp.h>
 #include "stdlib.h"
 #include "string.h"

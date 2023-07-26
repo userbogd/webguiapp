@@ -41,7 +41,7 @@
 #include "esp_netif.h"
 #include "esp_eth.h"
 #include "mbedtls/base64.h"
-#include "WebGUIAppMain.h"
+#include "SysConfiguration.h"
 
 #define MAX_DYNVAR_NAME_LENGTH 32
 #define MAX_DYNVAR_LENGTH 256

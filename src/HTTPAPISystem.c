@@ -20,10 +20,10 @@
  */
 
 #include "HTTPServer.h"
-#include "jWrite.h"
-#include "jRead.h"
+#include "SystemApplication.h"
 
-#define API_VER "1.00"
+#define SYS_API_VER "1.00"
+#define TAG "HTTPAPISystem"
 
 HTTP_IO_RESULT HTTPPostSysAPI(httpd_req_t *req, char *PostData)
 {
@@ -31,23 +31,26 @@ HTTP_IO_RESULT HTTPPostSysAPI(httpd_req_t *req, char *PostData)
     httpd_req_get_hdr_value_str(req, "Content-Type", (char*) data, 31);
     if (!memcmp(data, "application/json", sizeof("application/json")))
     {
-        char key[32] = {0};
-        struct jReadElement result;
-        jRead(PostData, "", &result);
-        if (result.dataType == JREAD_OBJECT)
+        char *respbuf = malloc(EXPECTED_MAX_DATA_RESPONSE_SIZE);
+        if (respbuf)
         {
-            jRead_string(PostData, "{'key'", key, sizeof(key), NULL);
+            data_message_t M = { 0 };
+            M.inputDataBuffer = PostData;
+            M.inputDataLength = strlen(PostData);
+            M.chlidx = 100;
+            M.outputDataBuffer = respbuf;
+            M.outputDataLength = EXPECTED_MAX_DATA_RESPONSE_SIZE;
+            SysServiceDataHandler(&M);
+            httpd_resp_sendstr(req, respbuf);
+            free(respbuf);
+            return HTTP_IO_DONE_API;
         }
-
-        //ESP_LOGI(TAG, "JSON data:%s", PostData);
-        jwOpen(data, sizeof(data), JW_OBJECT, JW_COMPACT);
-        jwObj_string("apiver", API_VER);
-        jwObj_string("key", key);;
-        jwObj_raw("result", "OK");
-        jwEnd();
-        jwClose();
-        httpd_resp_sendstr(req, data);
-        return HTTP_IO_DONE_API;
+        else
+        {
+            ESP_LOGE(TAG, "Out of free RAM for HTTP API handle");
+            httpd_resp_set_status(req, HTTPD_500);
+            return HTTP_IO_DONE_API;
+        }
     }
 
     httpd_resp_set_status(req, HTTPD_400);

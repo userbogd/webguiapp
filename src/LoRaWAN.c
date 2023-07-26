@@ -28,7 +28,8 @@
 #include "NetTransport.h"
 #include "webguiapp.h"
 #include "LoRaWAN.h"
-#include "../include/WebGUIAppMain.h"
+
+#include "../include/SysConfiguration.h"
 
 // Pins and other resources
 /*Defined in global configuration*/

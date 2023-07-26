@@ -29,6 +29,24 @@
 #include "esp_netif.h"
 #include "sdkconfig.h"
 
+typedef enum{
+    VAR_BOOL = 0,
+    VAR_INT,
+    VAR_STRING
+} rest_var_types;
+
+typedef struct
+{
+  int id;
+  char alias[32];
+  void* ref;
+  rest_var_types vartype;
+  int minlen;
+  int maxlen;
+} rest_var_t;
+
+
+
 // Application-dependent structure used to contain address information
 
     /**

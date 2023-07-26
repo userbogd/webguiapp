@@ -21,7 +21,7 @@
 
 #include <string.h>
 
-#include "../include/WebGUIAppMain.h"
+#include "../include/SysConfiguration.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "freertos/task.h"

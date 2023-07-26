@@ -25,7 +25,7 @@ idf_component_register(
     PRIV_INCLUDE_DIRS ${libespfs_PRIV_INCLUDE_DIRS}
     PRIV_REQUIRES ${libespfs_PRIV_REQUIRES}
     
-    SRCS "src/WebGUIAppMain.c"
+    SRCS "src/SysConfiguration.c"
     	 "src/romfs.c"
     	 "src/spifs.c"
     	 "src/HTTPServer.c"
@@ -41,6 +41,9 @@ idf_component_register(
     	 "src/MQTT.c"
     	 "src/MQTTSysHandler.c"
     	  src/OTA.c
+    	  src/RestApiHandler.c
+    	  src/SysComm.c
+    	  src/SysErr.c
 #   	 	 "src/mDNS.c"
     	    
     INCLUDE_DIRS  "."

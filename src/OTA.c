@@ -34,7 +34,7 @@
 #include "nvs.h"
 
 #include <sys/socket.h>
-#include <WebGUIAppMain.h>
+#include <SysConfiguration.h>
 #include "NetTransport.h"
 
 TaskHandle_t ota_task_handle;

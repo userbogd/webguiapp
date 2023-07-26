@@ -18,7 +18,8 @@
  *      Author: Bogdan Pilyugin
  * Description:	
  */
-#include <WebGUIAppMain.h>
+#include <SysConfiguration.h>
+#include <SystemApplication.h>
 #include "esp_log.h"
 #include "Helpers.h"
 #include "NetTransport.h"
@@ -108,6 +109,30 @@ void ComposeTopic(char *topic, int idx, char *service_name, char *direct)
     strcat((char*) topic, direct);  // Data direction UPLINK or DOWNLINK
 }
 
+esp_err_t SysServiceMQTTSend(char *data, int len, int idx)
+{
+    if (GetMQTTHandlesPool(idx)->mqtt_queue == NULL)
+        return ESP_ERR_NOT_FOUND;
+    char *buf = (char*) malloc(len);
+    if (buf)
+    {
+        memcpy(buf, data, len);
+        MQTT_DATA_SEND_STRUCT DSS;
+        ComposeTopic(DSS.topic, idx, "SYSTEM", "UPLINK");
+        DSS.raw_data_ptr = buf;
+        DSS.data_length = len;
+        if (xQueueSend(GetMQTTHandlesPool(idx)->mqtt_queue, &DSS, pdMS_TO_TICKS(1000)) == pdPASS)
+            return ESP_OK;
+        else
+        {
+            free(buf);
+            return ESP_ERR_TIMEOUT;
+        }
+    }
+    return ESP_ERR_NO_MEM;
+}
+
+
 static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_base_t base, int32_t event_id,
                                       void *event_data)
 {
@@ -174,10 +199,26 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
             ComposeTopic(topic, idx, "SYSTEM", "DWLINK");
             if (!memcmp(topic, event->topic, event->topic_len))
             {
-                SystemDataHandler(event->data, event->data_len, idx);
-#if MQTT_DEBUG_MODE > 0
-                ESP_LOGI(TAG, "Control data handler on client %d", idx);
+                //SystemDataHandler(event->data, event->data_len, idx);  //Old API
+                char *respbuf = malloc(EXPECTED_MAX_DATA_RESPONSE_SIZE);
+                if (respbuf != NULL)
+                {
+                    data_message_t M = { 0 };
+                    M.inputDataBuffer = event->data;
+                    M.inputDataLength = event->data_len;
+                    M.chlidx = idx;
+                    M.outputDataBuffer = respbuf;
+                    M.outputDataLength = EXPECTED_MAX_DATA_RESPONSE_SIZE;
+                    SysServiceDataHandler(&M);
+                    SysServiceMQTTSend(M.outputDataBuffer, strlen(M.outputDataBuffer), idx);
+                    free(respbuf);
+#if(MQTT_DEBUG_MODE > 0)
+                    ESP_LOGI(TAG, "SERVICE data handler on client %d", idx);
 #endif
+                }
+                else
+                    ESP_LOGE(TAG, "Out of free RAM for MQTT API handle");
+
             }
         break;
         case MQTT_EVENT_ERROR:
