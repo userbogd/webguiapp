@@ -41,6 +41,8 @@ const sys_error_t SysErrors[] = {
         { SYS_ERROR_PARSE_MESSAGEID, "SYS_ERROR_PARSE_MESSAGEID", "Key 'msgid' not found or have illegal value" },
         { SYS_ERROR_PARSE_MSGTYPE, "SYS_ERROR_PARSE_MSGTYPE", "Key 'msgtype' not found or have illegal value"},
         { SYS_ERROR_PARSE_PAYLOADTYPE, "SYS_ERROR_PARSE_PAYLOADTYPE", "Key 'payloadtype' not found or have illegal value"},
+        { SYS_ERROR_PARSE_APPLYTYPE, "SYS_ERROR_PARSE_APPLYTYPE", "Key 'applytype' not found or have illegal value"},
+
 
         { SYS_ERROR_PARSE_KEY1, "SYS_ERROR_PARSE_KEY1", "Key 'key1' not found or have illegal value"},
         { SYS_ERROR_PARSE_KEY2, "SYS_ERROR_PARSE_KEY2", "Key 'key2' not found or have illegal value"},

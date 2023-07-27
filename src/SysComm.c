@@ -30,13 +30,11 @@
  "msgtype":1,
  "payloadtype":1,
  "payload":{
- "variables":[
- {"name":"variablename1","val":"variablevalue1"},
- {"name":"variablename2","val":"variablevalue2"},
- {"name":"variablename3","val":"variablevalue3"},
- {"name":"variablename4","val":"variablevalue4"},
- {"name":"variablename5","val":"variablevalue5"},
- {"name":"variablename6","val":"variablevalue6"},]
+ "applytype":1,
+ "variables":[{"name":"netname","val":"DEVICE_HOSTNAME"},
+              {"name":"otaurl","val":"https://iotronic.cloud/firmware/firmware.bin"},
+              {"name":"ledenab","val":"0"},
+              {"name":"otaint","val":"3600"}]
  }},
  "signature":"6a11b872e8f766673eb82e127b6918a0dc96a42c5c9d184604f9787f3d27bcef"}
 
@@ -48,13 +46,10 @@
  "msgtype":2,
  "payloadtype":1
  "payload":{
- "variables":[
- {"name":"variablename1","val":""},
- {"name":"variablename2","val":""},
- {"name":"variablename3","val":""},
- {"name":"variablename4","val":""},
- {"name":"variablename5","val":""},
- {"name":"variablename6","val":""},]
+ "variables":[{"name":"netname","val":""},
+              {"name":"otaurl","val":""},
+              {"name":"ledenab","val":""},
+              {"name":"otaint","val":""}]
  }},
  "signature":"3c1254d5b0e7ecc7e662dd6397554f02622ef50edba18d0b30ecb5d53e409bcb"}
 
@@ -67,13 +62,10 @@
  "msgtype": 3,
  "payloadtype":1,
  "payload":{
- "variables":[
- {"name":"variablename1","val":"variablevalue1"},
- {"name":"variablename2","val":"variablevalue2"},
- {"name":"variablename3","val":"variablevalue3"},
- {"name":"variablename4","val":"variablevalue4"},
- {"name":"variablename5","val":"variablevalue5"},
- {"name":"variablename6","val":"variablevalue6"},]
+ "variables":[{"name":"netname","val":"DEVICE_HOSTNAME"},
+              {"name":"otaurl","val":"https://iotronic.cloud/firmware/firmware.bin"},
+              {"name":"ledenab","val":"0"},
+              {"name":"otaint","val":"3600"}]
  },
  "error":"SYS_OK",
  "error_descr":"Result successful"},
@@ -161,7 +153,7 @@ static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
             else
             { //Read variables
                 esp_err_t res = GetConfVar(VarName, VarValue);
-                if ( res != ESP_OK)
+                if (res != ESP_OK)
                     strcpy(VarValue, esp_err_to_name(res));
                 jwObj_string("name", VarName);
                 jwObj_string("val", VarValue);
@@ -178,9 +170,51 @@ static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
     jwObj_string("error", (char*) err_br);
     jwObj_string("error_descr", (char*) err_desc);
     jwEnd();
+
+
+    char* datap = strstr(MSG->outputDataBuffer, "\"data\":");
+    if(datap)
+    {
+        datap += sizeof("\"data\":") - 1;
+        SHA256hmacHash((unsigned char*) datap , strlen(datap), (unsigned char*) "mykey", sizeof("mykey"),
+                       MSG->parsedData.sha256);
+        unsigned char sha_print[32 * 2 + 1];
+        BytesToStr(MSG->parsedData.sha256, sha_print, 32);
+        sha_print[32 * 2] = 0x00;
+        ESP_LOGI(TAG, "SHA256 of DATA object is %s", sha_print);
+        jwObj_string("signature", (char*)sha_print);
+    }
+    else
+        return SYS_ERROR_SHA256_DATA;
     jwEnd();
-    jwObj_string("signature", "1234567890");
     jwClose();
+
+
+    jRead(MSG->inputDataBuffer, "{'data'{'payload'{'applytype'", &result);
+    if (result.elements == 1)
+    {
+        int atype = atoi((char*) result.pValue);
+        switch (atype)
+        {
+            case 0:
+                break;
+            case 1:
+                //WriteNVSSysConfig(GetSysConf());
+                break;
+            case 2:
+                //WriteNVSSysConfig(GetSysConf());
+                //DelayedRestart();
+                break;
+            default:
+                return SYS_ERROR_PARSE_APPLYTYPE;
+        }
+
+    }
+    else
+    {
+        if (MSG->parsedData.msgType == DATA_MESSAGE_TYPE_COMMAND)
+            return SYS_ERROR_PARSE_APPLYTYPE;
+    }
 
     return SYS_OK_DATA;
 }
@@ -260,8 +294,9 @@ static sys_error_code SysDataParser(data_message_t *MSG)
         case 1:
             //MSG->parsedData.payload = malloc(sizeof(payload_type_vars));   Not needed for this case
             return SysPayloadTypeVarsHandler(MSG);
-
         break;
+        default:
+            return SYS_ERROR_PARSE_PAYLOADTYPE;
     }
 
     return SYS_ERROR_UNKNOWN;

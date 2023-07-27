@@ -52,9 +52,9 @@ esp_err_t SetConfVar(char *name, char *val)
     switch (V->vartype)
     {
         case VAR_BOOL:
-            if (!strcmp(val, "true"))
+            if (!strcmp(val, "true") || !strcmp(val, "1"))
                 *((bool*) V->ref) = true;
-            else if (!strcmp(val, "false"))
+            else if (!strcmp(val, "false") || !strcmp(val, "0"))
                 *((bool*) V->ref) = 0;
             else
                 return ESP_ERR_INVALID_ARG;
@@ -92,7 +92,7 @@ esp_err_t GetConfVar(char *name, char *val)
     switch (V->vartype)
     {
         case VAR_BOOL:
-            strcpy(val, *((bool*) V->ref) ? "true" : "false");
+            strcpy(val, *((bool*) V->ref) ? "1" : "0");
         break;
         case VAR_INT:
             itoa(*((int*) V->ref), val, 10);
