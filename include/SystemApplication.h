@@ -29,6 +29,8 @@
 #include "jWrite.h"
 
 #define EXPECTED_MAX_DATA_RESPONSE_SIZE (4096)
+#define VAR_MAX_NAME_LENGTH 16
+#define VAR_MAX_VALUE_LENGTH 128
 
 typedef enum
 {
@@ -46,6 +48,7 @@ typedef enum
 
     SYS_ERROR_PARSE_KEY1,
     SYS_ERROR_PARSE_KEY2,
+    SYS_ERROR_PARSE_VARIABLES,
 
     SYS_ERROR_NO_MEMORY = 300,
     SYS_ERROR_UNKNOWN,
@@ -61,17 +64,8 @@ typedef enum
 
 typedef struct
 {
-int key1;
-int key2;
-} payload_type_50;
 
-typedef struct
-{
-int key1;
-int key2;
-} payload_type_10;
-
-
+} payload_type_vars;
 
 
 #define DATA_MESSAGE_TYPE_COMMAND  (1)
@@ -96,6 +90,9 @@ typedef struct
     } parsedData;
     int err_code;
 } data_message_t;
+
+esp_err_t GetConfVar(char* name, char* val);
+esp_err_t SetConfVar(char* name, char* val);
 
 esp_err_t SysServiceDataHandler(data_message_t *MSG);
 sys_error_code SysVarsPayloadHandler(data_message_t *MSG);

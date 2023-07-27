@@ -71,14 +71,12 @@ typedef struct
 
         struct
         {
-            char bIsOTAEnabled :1;
-            char bIsResetOTAEnabled :1;
-            char bIsLedsEnabled :1;  ///< Indication LEDs enable
-            char bIsLoRaConfirm :1;  ///< Enable send back confirmation in LoRa channel
-            char bIsTCPConfirm :1;   ///< Enable send back confirmation in TCP channel
-            char bit5 :1;
-            char bit6 :1;
-            char bit7 :1;
+            bool bIsOTAEnabled;
+            bool bIsResetOTAEnabled;
+            bool bIsLedsEnabled;  ///< Indication LEDs enable
+            bool bIsLoRaConfirm;  ///< Enable send back confirmation in LoRa channel
+            bool bIsTCPConfirm;   ///< Enable send back confirmation in TCP channel
+
         } Flags1; // Flag structure
 
         struct

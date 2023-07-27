@@ -22,43 +22,62 @@
  */
 
 /*
- //Example of remote transaction [payloadtype=1]  start[msgtype=1]
+ //Example of SET [msgtype=1] variables [payloadtype=1]
  {
  "data":{
  "msgid":123456789,
  "time":"2023-06-03T12:25:24+00:00",
  "msgtype":1,
- "payloadtype":50,
+ "payloadtype":1,
  "payload":{
- "key1":"value1",
- "key2":"value2"}},
+ "variables":[
+ {"name":"variablename1","val":"variablevalue1"},
+ {"name":"variablename2","val":"variablevalue2"},
+ {"name":"variablename3","val":"variablevalue3"},
+ {"name":"variablename4","val":"variablevalue4"},
+ {"name":"variablename5","val":"variablevalue5"},
+ {"name":"variablename6","val":"variablevalue6"},]
+ }},
  "signature":"6a11b872e8f766673eb82e127b6918a0dc96a42c5c9d184604f9787f3d27bcef"}
 
-
- //Example of request [msgtype=2] of information related to transaction [payloadtype=1]
+ //Example of GET [msgtype=2] variables [payloadtype=1]
  {
  "data":{
  "msgid":123456789,
  "time":"2023-06-03T12:25:24+00:00",
  "msgtype":2,
- "payloadtype":50},
+ "payloadtype":1
+ "payload":{
+ "variables":[
+ {"name":"variablename1","val":""},
+ {"name":"variablename2","val":""},
+ {"name":"variablename3","val":""},
+ {"name":"variablename4","val":""},
+ {"name":"variablename5","val":""},
+ {"name":"variablename6","val":""},]
+ }},
  "signature":"3c1254d5b0e7ecc7e662dd6397554f02622ef50edba18d0b30ecb5d53e409bcb"}
 
 
- //Example of response [msgtype=3] to request related to the transaction [payloadtype=1]
+ //Example of RESPONSE [msgtype=3] with variables [payloadtype=1]
  {
  "data":{
  "msgid":123456789,
  "time":"2023-06-03T12:25:24+00:00",
  "msgtype": 3,
- "payloadtype":50,
+ "payloadtype":1,
  "payload":{
- "key1":"value1",
- "key2":"value2"},
+ "variables":[
+ {"name":"variablename1","val":"variablevalue1"},
+ {"name":"variablename2","val":"variablevalue2"},
+ {"name":"variablename3","val":"variablevalue3"},
+ {"name":"variablename4","val":"variablevalue4"},
+ {"name":"variablename5","val":"variablevalue5"},
+ {"name":"variablename6","val":"variablevalue6"},]
+ },
  "error":"SYS_OK",
  "error_descr":"Result successful"},
  "signature":"0d3b545b7c86274a6bf5a6e606b260f32b1999de40cb7d29d0949ecc9389cd9d"}
-
  */
 
 #include "webguiapp.h"
@@ -94,68 +113,76 @@ static void Timestamp(char *ts)
     sprintf(ts, "%llu", ms);
 }
 
-void PrepareResponsePayloadType50(data_message_t *MSG)
+static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
 {
+    char VarName[VAR_MAX_NAME_LENGTH];
+    char VarValue[VAR_MAX_VALUE_LENGTH];
+    struct jReadElement result;
     const char *err_br;
     const char *err_desc;
-    jwOpen(MSG->outputDataBuffer, MSG->outputDataLength, JW_OBJECT, JW_PRETTY);
+
+    if (!(MSG->parsedData.msgType == DATA_MESSAGE_TYPE_COMMAND || MSG->parsedData.msgType == DATA_MESSAGE_TYPE_REQUEST))
+        return SYS_ERROR_PARSE_MSGTYPE;
+
+    jwOpen(MSG->outputDataBuffer, MSG->outputDataLength, JW_OBJECT, JW_COMPACT);
+    jwObj_object("data");
     jwObj_int("msgid", MSG->parsedData.msgID);
     char time[RFC3339_TIMESTAMP_LENGTH];
     GetRFC3339Time(time);
     jwObj_string("time", time);
     jwObj_int("messtype", DATA_MESSAGE_TYPE_RESPONSE);
-    jwObj_int("payloadtype", 50);
-    //PAYLOAD BEGIN
+    jwObj_int("payloadtype", 1);
     jwObj_object("payload");
+    jwObj_array("variables");
 
-    jwObj_string("param1", "value1");
-    jwObj_string("param2", "value2");
+    jRead(MSG->inputDataBuffer, "{'data'{'payload'{'variables'", &result);
+    if (result.dataType == JREAD_ARRAY)
+    { //Write variables
+        for (int i = 0; i < result.elements; ++i)
+        {
+            jRead_string(MSG->inputDataBuffer, "{'data'{'payload'{'variables'[*{'name'", VarName,
+            VAR_MAX_NAME_LENGTH,
+                         &i);
+            jRead_string(MSG->inputDataBuffer, "{'data'{'payload'{'variables'[*{'val'", VarValue,
+            VAR_MAX_VALUE_LENGTH,
+                         &i);
+            ESP_LOGI(TAG, "Got write variable %s:%s", VarName, VarValue);
+            jwArr_object();
+            if (MSG->parsedData.msgType == DATA_MESSAGE_TYPE_COMMAND)
+            { //Write variables
+                esp_err_t res = SetConfVar(VarName, VarValue);
+                if (res == ESP_OK)
+                    GetConfVar(VarName, VarValue);
+                else
+                    strcpy(VarValue, esp_err_to_name(res));
+                jwObj_string("name", VarName);
+                jwObj_string("val", VarValue);
+            }
+            else
+            { //Read variables
+                esp_err_t res = GetConfVar(VarName, VarValue);
+                if ( res != ESP_OK)
+                    strcpy(VarValue, esp_err_to_name(res));
+                jwObj_string("name", VarName);
+                jwObj_string("val", VarValue);
+            }
+            jwEnd();
+        }
+    }
+    else
+        return SYS_ERROR_PARSE_VARIABLES;
 
+    jwEnd();
     jwEnd();
     GetSysErrorDetales((sys_error_code) MSG->err_code, &err_br, &err_desc);
     jwObj_string("error", (char*) err_br);
     jwObj_string("error_descr", (char*) err_desc);
     jwEnd();
+    jwEnd();
+    jwObj_string("signature", "1234567890");
     jwClose();
-}
 
-static sys_error_code SysPayloadType50Handler(data_message_t *MSG)
-{
-    struct jReadElement result;
-    payload_type_50 *payload;
-    payload = ((payload_type_50*) (MSG->parsedData.payload));
-    if (MSG->parsedData.msgType == DATA_MESSAGE_TYPE_COMMAND)
-    {
-        //Extract 'key1' or throw exception
-        jRead(MSG->inputDataBuffer, "{'data'{'payload'{'key1'", &result);
-        if (result.elements == 1)
-        {
-
-        }
-        else
-            return SYS_ERROR_PARSE_KEY1;
-
-        //Extract 'key1' or throw exception
-        jRead(MSG->inputDataBuffer, "{'data'{'payload'{'key2'", &result);
-        if (result.elements == 1)
-        {
-
-        }
-        else
-            return SYS_ERROR_PARSE_KEY2;
-        //return StartTransactionPayloadType1(MSG);
-
-    }
-
-    else if (MSG->parsedData.msgType == DATA_MESSAGE_TYPE_REQUEST)
-    {
-        PrepareResponsePayloadType50(MSG);
-        return SYS_OK_DATA;
-    }
-    else
-        return SYS_ERROR_PARSE_MSGTYPE;
-
-    return SYS_OK;
+    return SYS_OK_DATA;
 }
 
 static sys_error_code SysDataParser(data_message_t *MSG)
@@ -230,12 +257,9 @@ static sys_error_code SysDataParser(data_message_t *MSG)
 
     switch (MSG->parsedData.payloadType)
     {
-        case 50:
-            MSG->parsedData.payload = malloc(sizeof(payload_type_50));
-            return SysPayloadType50Handler(MSG);
-        case 51:
-            MSG->parsedData.payload = malloc(sizeof(payload_type_10));
-            return SysVarsPayloadHandler(MSG);
+        case 1:
+            //MSG->parsedData.payload = malloc(sizeof(payload_type_vars));   Not needed for this case
+            return SysPayloadTypeVarsHandler(MSG);
 
         break;
     }

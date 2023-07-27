@@ -58,7 +58,7 @@
 #endif
 #endif
 
-static SYS_CONFIG SysConfig;
+SYS_CONFIG SysConfig;
 
 #define SPI_LOCK_TIMEOUT_MS (1000)
 SemaphoreHandle_t xSemaphoreSPIHandle = NULL;

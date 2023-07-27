@@ -44,6 +44,7 @@ const sys_error_t SysErrors[] = {
 
         { SYS_ERROR_PARSE_KEY1, "SYS_ERROR_PARSE_KEY1", "Key 'key1' not found or have illegal value"},
         { SYS_ERROR_PARSE_KEY2, "SYS_ERROR_PARSE_KEY2", "Key 'key2' not found or have illegal value"},
+        { SYS_ERROR_PARSE_VARIABLES, "SYS_ERROR_PARSE_VARIABLES", "Key 'variables' not found or have illegal value"},
 
         { SYS_ERROR_NO_MEMORY, "SYS_ERROR_NO_MEMORY", "ERROR allocate memory for JSON parser" },
         { SYS_ERROR_UNKNOWN, "SYS_ERROR_UNKNOWN", "Unknown ERROR" }
