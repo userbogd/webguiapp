@@ -199,11 +199,11 @@ static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
             case 0:
                 break;
             case 1:
-                //WriteNVSSysConfig(GetSysConf());
+                WriteNVSSysConfig(GetSysConf());
                 break;
             case 2:
-                //WriteNVSSysConfig(GetSysConf());
-                //DelayedRestart();
+                WriteNVSSysConfig(GetSysConf());
+                DelayedRestart();
                 break;
             default:
                 return SYS_ERROR_PARSE_APPLYTYPE;
