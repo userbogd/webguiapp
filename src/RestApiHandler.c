@@ -24,6 +24,7 @@
 #include "SystemApplication.h"
 #include <SysConfiguration.h>
 #include <webguiapp.h>
+#include "esp_wifi.h"
 
 extern SYS_CONFIG SysConfig;
 
@@ -41,18 +42,36 @@ static void funct_time(char *argres)
     snprintf(argres, MAX_DYNVAR_LENGTH, "%d", (int) now);
 }
 
+static void funct_wifiscan(char *argres)
+{
+    if (atoi(argres))
+        WiFiScan();
+}
+
+static void funct_wifiscanres(char *argres)
+{
+    int arg = atoi(argres);
+    wifi_ap_record_t *R = GetWiFiAPRecord(arg);
+    if (!R)
+        return;
+    snprintf(argres, MAX_DYNVAR_LENGTH, "{\"ssid\":\"%s\",\"rssi\":%i,\"ch\":%d}", R->ssid, R->rssi,
+             R->primary);
+}
+
 const rest_var_t ConfigVariables[] =
         {
                 { 0, "netname", &SysConfig.NetBIOSName, VAR_STRING, 3, 31 },
                 { 1, "otaurl", &SysConfig.OTAURL, VAR_STRING, 3, 128 },
                 { 2, "ledenab", &SysConfig.Flags1.bIsLedsEnabled, VAR_BOOL, 0, 1 },
                 { 3, "otaint", &SysConfig.OTAAutoInt, VAR_INT, 0, 65535 },
-                { 4, "time", &funct_time, VAR_FUNCT, 0, 65535 },
-                { 5, "addone", &funct_addone, VAR_FUNCT, 0, 65535 }
+                { 4, "time", &funct_time, VAR_FUNCT, 0, 0 },
+                { 5, "addone", &funct_addone, VAR_FUNCT, 0, 0 },
+                { 6, "wifiscan", &funct_wifiscan, VAR_FUNCT, 0, 0 },
+                { 7, "wifiscanres", &funct_wifiscanres, VAR_FUNCT, 0, 0 }
 
         };
 
-esp_err_t SetConfVar(char *name, char *val)
+esp_err_t SetConfVar(char *name, char *val, rest_var_types *tp)
 {
     rest_var_t *V = NULL;
     for (int i = 0; i < sizeof(ConfigVariables) / sizeof(rest_var_t); ++i)
@@ -66,6 +85,7 @@ esp_err_t SetConfVar(char *name, char *val)
     if (!V)
         return ESP_ERR_NOT_FOUND;
     int constr;
+    *tp = V->vartype;
     switch (V->vartype)
     {
         case VAR_BOOL:
@@ -96,7 +116,7 @@ esp_err_t SetConfVar(char *name, char *val)
     return ESP_OK;
 }
 
-esp_err_t GetConfVar(char *name, char *val)
+esp_err_t GetConfVar(char *name, char *val, rest_var_types *tp)
 {
     rest_var_t *V = NULL;
     for (int i = 0; i < sizeof(ConfigVariables) / sizeof(rest_var_t); ++i)
@@ -109,6 +129,7 @@ esp_err_t GetConfVar(char *name, char *val)
     }
     if (!V)
         return ESP_ERR_NOT_FOUND;
+    *tp = V->vartype;
     switch (V->vartype)
     {
         case VAR_BOOL:
@@ -127,7 +148,7 @@ esp_err_t GetConfVar(char *name, char *val)
 
     }
 
-    val = V->ref;
+    //val = V->ref;
     return ESP_OK;
 }
 

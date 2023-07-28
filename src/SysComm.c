@@ -32,9 +32,9 @@
  "payload":{
  "applytype":1,
  "variables":[{"name":"netname","val":"DEVICE_HOSTNAME"},
-              {"name":"otaurl","val":"https://iotronic.cloud/firmware/firmware.bin"},
-              {"name":"ledenab","val":"0"},
-              {"name":"otaint","val":"3600"}]
+ {"name":"otaurl","val":"https://iotronic.cloud/firmware/firmware.bin"},
+ {"name":"ledenab","val":"0"},
+ {"name":"otaint","val":"3600"}]
  }},
  "signature":"6a11b872e8f766673eb82e127b6918a0dc96a42c5c9d184604f9787f3d27bcef"}
 
@@ -47,9 +47,9 @@
  "payloadtype":1,
  "payload":{
  "variables":[{"name":"netname","val":""},
-              {"name":"otaurl","val":""},
-              {"name":"ledenab","val":""},
-              {"name":"otaint","val":""}]
+ {"name":"otaurl","val":""},
+ {"name":"ledenab","val":""},
+ {"name":"otaint","val":""}]
  }},
  "signature":"3c1254d5b0e7ecc7e662dd6397554f02622ef50edba18d0b30ecb5d53e409bcb"}
 
@@ -63,9 +63,9 @@
  "payloadtype":1,
  "payload":{
  "variables":[{"name":"netname","val":"DEVICE_HOSTNAME"},
-              {"name":"otaurl","val":"https://iotronic.cloud/firmware/firmware.bin"},
-              {"name":"ledenab","val":"0"},
-              {"name":"otaint","val":"3600"}]
+ {"name":"otaurl","val":"https://iotronic.cloud/firmware/firmware.bin"},
+ {"name":"ledenab","val":"0"},
+ {"name":"otaint","val":"3600"}]
  },
  "error":"SYS_OK",
  "error_descr":"Result successful"},
@@ -142,21 +142,29 @@ static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
             jwArr_object();
             if (MSG->parsedData.msgType == DATA_MESSAGE_TYPE_COMMAND)
             { //Write variables
-                esp_err_t res = SetConfVar(VarName, VarValue);
+                rest_var_types tp;
+                esp_err_t res = SetConfVar(VarName, VarValue, &tp);
                 if (res == ESP_OK)
-                    GetConfVar(VarName, VarValue);
+                    GetConfVar(VarName, VarValue, &tp);
                 else
                     strcpy(VarValue, esp_err_to_name(res));
                 jwObj_string("name", VarName);
-                jwObj_string("val", VarValue);
+                if (tp == VAR_STRING)
+                    jwObj_string("val", VarValue);
+                else
+                    jwObj_raw("val", VarValue);
             }
             else
             { //Read variables
-                esp_err_t res = GetConfVar(VarName, VarValue);
+                rest_var_types tp;
+                esp_err_t res = GetConfVar(VarName, VarValue, &tp);
                 if (res != ESP_OK)
                     strcpy(VarValue, esp_err_to_name(res));
                 jwObj_string("name", VarName);
-                jwObj_string("val", VarValue);
+                if (tp == VAR_STRING)
+                    jwObj_string("val", VarValue);
+                else
+                    jwObj_raw("val", VarValue);
             }
             jwEnd();
         }
@@ -171,24 +179,22 @@ static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
     jwObj_string("error_descr", (char*) err_desc);
     jwEnd();
 
-
-    char* datap = strstr(MSG->outputDataBuffer, "\"data\":");
-    if(datap)
+    char *datap = strstr(MSG->outputDataBuffer, "\"data\":");
+    if (datap)
     {
         datap += sizeof("\"data\":") - 1;
-        SHA256hmacHash((unsigned char*) datap , strlen(datap), (unsigned char*) "mykey", sizeof("mykey"),
+        SHA256hmacHash((unsigned char*) datap, strlen(datap), (unsigned char*) "mykey", sizeof("mykey"),
                        MSG->parsedData.sha256);
         unsigned char sha_print[32 * 2 + 1];
         BytesToStr(MSG->parsedData.sha256, sha_print, 32);
         sha_print[32 * 2] = 0x00;
         ESP_LOGI(TAG, "SHA256 of DATA object is %s", sha_print);
-        jwObj_string("signature", (char*)sha_print);
+        jwObj_string("signature", (char*) sha_print);
     }
     else
         return SYS_ERROR_SHA256_DATA;
     jwEnd();
     jwClose();
-
 
     jRead(MSG->inputDataBuffer, "{'data'{'payload'{'applytype'", &result);
     if (result.elements == 1)
@@ -200,11 +206,11 @@ static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
                 break;
             case 1:
                 WriteNVSSysConfig(GetSysConf());
-                break;
+            break;
             case 2:
                 WriteNVSSysConfig(GetSysConf());
                 DelayedRestart();
-                break;
+            break;
             default:
                 return SYS_ERROR_PARSE_APPLYTYPE;
         }

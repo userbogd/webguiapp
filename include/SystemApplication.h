@@ -92,8 +92,8 @@ typedef struct
     int err_code;
 } data_message_t;
 
-esp_err_t GetConfVar(char* name, char* val);
-esp_err_t SetConfVar(char* name, char* val);
+esp_err_t GetConfVar(char* name, char* val, rest_var_types *tp);
+esp_err_t SetConfVar(char* name, char* val, rest_var_types *tp);
 
 esp_err_t SysServiceDataHandler(data_message_t *MSG);
 sys_error_code SysVarsPayloadHandler(data_message_t *MSG);
