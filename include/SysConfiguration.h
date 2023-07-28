@@ -32,7 +32,8 @@
 typedef enum{
     VAR_BOOL = 0,
     VAR_INT,
-    VAR_STRING
+    VAR_STRING,
+    VAR_FUNCT
 } rest_var_types;
 
 typedef struct

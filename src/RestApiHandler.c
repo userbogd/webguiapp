@@ -27,12 +27,21 @@
 
 extern SYS_CONFIG SysConfig;
 
+static void get_time(char *argres)
+{
+    time_t now;
+    time(&now);
+    snprintf(argres, MAX_DYNVAR_LENGTH, "%d", (int) now);
+}
+
 const rest_var_t ConfigVariables[] =
         {
                 { 0, "netname", &SysConfig.NetBIOSName, VAR_STRING, 3, 31 },
                 { 1, "otaurl", &SysConfig.OTAURL, VAR_STRING, 3, 128 },
                 { 2, "ledenab", &SysConfig.Flags1.bIsLedsEnabled, VAR_BOOL, 0, 1 },
-                { 3, "otaint", &SysConfig.OTAAutoInt, VAR_INT, 0, 65535 }
+                { 3, "otaint", &SysConfig.OTAAutoInt, VAR_INT, 0, 65535 },
+                { 4, "time", &get_time, VAR_FUNCT, 0, 65535 }
+
         };
 
 esp_err_t SetConfVar(char *name, char *val)
@@ -71,6 +80,9 @@ esp_err_t SetConfVar(char *name, char *val)
                 return ESP_ERR_INVALID_ARG;
             strcpy(V->ref, val);
         break;
+        case VAR_FUNCT:
+            ((void (*)(char*)) (V->ref))(val);
+        break;
 
     }
     return ESP_OK;
@@ -99,6 +111,10 @@ esp_err_t GetConfVar(char *name, char *val)
         break;
         case VAR_STRING:
             strcpy(val, (char*) V->ref);
+        break;
+
+        case VAR_FUNCT:
+            ((void (*)(char*)) (V->ref))(val);
         break;
 
     }
