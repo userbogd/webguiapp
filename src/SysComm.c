@@ -44,7 +44,7 @@
  "msgid":123456789,
  "time":"2023-06-03T12:25:24+00:00",
  "msgtype":2,
- "payloadtype":1
+ "payloadtype":1,
  "payload":{
  "variables":[{"name":"netname","val":""},
               {"name":"otaurl","val":""},

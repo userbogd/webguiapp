@@ -27,7 +27,14 @@
 
 extern SYS_CONFIG SysConfig;
 
-static void get_time(char *argres)
+static void funct_addone(char *argres)
+{
+    int arg = atoi(argres);
+    arg *= 2;
+    itoa(arg, argres, 10);
+}
+
+static void funct_time(char *argres)
 {
     time_t now;
     time(&now);
@@ -40,7 +47,8 @@ const rest_var_t ConfigVariables[] =
                 { 1, "otaurl", &SysConfig.OTAURL, VAR_STRING, 3, 128 },
                 { 2, "ledenab", &SysConfig.Flags1.bIsLedsEnabled, VAR_BOOL, 0, 1 },
                 { 3, "otaint", &SysConfig.OTAAutoInt, VAR_INT, 0, 65535 },
-                { 4, "time", &get_time, VAR_FUNCT, 0, 65535 }
+                { 4, "time", &funct_time, VAR_FUNCT, 0, 65535 },
+                { 5, "addone", &funct_addone, VAR_FUNCT, 0, 65535 }
 
         };
 
