@@ -149,7 +149,7 @@ static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
                 else
                     strcpy(VarValue, esp_err_to_name(res));
                 jwObj_string("name", VarName);
-                if (tp == VAR_STRING)
+                if (tp == VAR_STRING || tp == VAR_IPADDR)
                     jwObj_string("val", VarValue);
                 else
                     jwObj_raw("val", VarValue);
@@ -161,7 +161,7 @@ static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
                 if (res != ESP_OK)
                     strcpy(VarValue, esp_err_to_name(res));
                 jwObj_string("name", VarName);
-                if (tp == VAR_STRING)
+                if (tp == VAR_STRING || tp == VAR_IPADDR)
                     jwObj_string("val", VarValue);
                 else
                     jwObj_raw("val", VarValue);
