@@ -62,17 +62,28 @@ static void funct_wifiscanres(char *argres)
 const rest_var_t ConfigVariables[] =
         {
                 { 0, "netname", &SysConfig.NetBIOSName, VAR_STRING, 3, 31 },
-                { 1, "otaurl", &SysConfig.OTAURL, VAR_STRING, 3, 128 },
-                { 2, "ledenab", &SysConfig.Flags1.bIsLedsEnabled, VAR_BOOL, 0, 1 },
-                { 3, "otaint", &SysConfig.OTAAutoInt, VAR_INT, 0, 65535 },
-                { 4, "time", &funct_time, VAR_FUNCT, 0, 0 },
-                { 5, "addone", &funct_addone, VAR_FUNCT, 0, 0 },
-                { 6, "wifiscan", &funct_wifiscan, VAR_FUNCT, 0, 0 },
-                { 7, "wifiscanres", &funct_wifiscanres, VAR_FUNCT, 0, 0 },
-                { 8, "wifi-sta-ip", &SysConfig.wifiSettings.InfIPAddr, VAR_IPADDR, 0, 0 },
-                { 9, "wifi-ap-ip", &SysConfig.wifiSettings.ApIPAddr, VAR_IPADDR, 0, 0 },
-                { 9, "wifi-sta-mask", &SysConfig.wifiSettings.InfMask, VAR_IPADDR, 0, 0 },
-                { 9, "wifi-sta-gw", &SysConfig.wifiSettings.InfGateway, VAR_IPADDR, 0, 0 }
+                { 0, "otaurl", &SysConfig.OTAURL, VAR_STRING, 3, 128 },
+                { 0, "ledenab", &SysConfig.Flags1.bIsLedsEnabled, VAR_BOOL, 0, 1 },
+                { 0, "otaint", &SysConfig.OTAAutoInt, VAR_INT, 0, 65535 },
+                { 0, "time", &funct_time, VAR_FUNCT, 0, 0 },
+                { 0, "addone", &funct_addone, VAR_FUNCT, 0, 0 },
+
+                { 0, "wifiscan", &funct_wifiscan, VAR_FUNCT, 0, 0 },
+                { 0, "wifiscanres", &funct_wifiscanres, VAR_FUNCT, 0, 0 },
+
+                { 0, "wifi-mode", &SysConfig.wifiSettings.WiFiMode, VAR_INT, 0, 0 },
+                { 0, "wifi-sta-ip", &SysConfig.wifiSettings.InfIPAddr, VAR_IPADDR, 0, 0 },
+                { 0, "wifi-sta-mask", &SysConfig.wifiSettings.InfMask, VAR_IPADDR, 0, 0 },
+                { 0, "wifi-sta-gw", &SysConfig.wifiSettings.InfGateway, VAR_IPADDR, 0, 0 },
+                { 0, "wifi-ap-ip", &SysConfig.wifiSettings.ApIPAddr, VAR_IPADDR, 0, 0 },
+                { 0, "wifi-dns1", &SysConfig.wifiSettings.DNSAddr1, VAR_IPADDR, 0, 0 },
+                { 0, "wifi-dns2", &SysConfig.wifiSettings.DNSAddr2, VAR_IPADDR, 0, 0 },
+                { 0, "wifi-dns3", &SysConfig.wifiSettings.DNSAddr3, VAR_IPADDR, 0, 0 },
+                { 0, "wifi-sta-ssid", &SysConfig.wifiSettings.InfSSID, VAR_STRING, 3, 31 },
+                { 0, "wifi-sta-key", &SysConfig.wifiSettings.InfSSID, VAR_STRING, 8, 31 },
+                { 0, "wifi-ap-ssid", &SysConfig.wifiSettings.InfSSID, VAR_STRING, 3, 31 },
+                { 0, "wifi-ap-key", &SysConfig.wifiSettings.InfSSID, VAR_STRING, 8, 31 },
+
 
         };
 

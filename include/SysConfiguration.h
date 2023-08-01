@@ -89,14 +89,7 @@ typedef struct
             char SntpServer3Adr[33];
             struct
             {
-                char b1 :1;
-                char b2 :1;
-                char b3 :1;
-                char b4 :1;
-                char b5 :1;
-                char b6 :1;
-                char b7 :1;
-                char bIsGlobalEnabled :1;
+                bool bIsGlobalEnabled;
             } Flags1;
         } sntpClient;
 
@@ -112,14 +105,7 @@ typedef struct
             char UserPass[32];
             struct
             {
-                char b0 :1;
-                char b1 :1;
-                char b2 :1;
-                char b3 :1;
-                char b4 :1;
-                char b5 :1;
-                char b6 :1;
-                char bIsGlobalEnabled :1;
+                bool bIsGlobalEnabled;
             } Flags1;
         } mqttStation[CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM];
 #endif
@@ -137,14 +123,8 @@ typedef struct
 
             struct
             {
-                char bIsDHCPEnabled :1;
-                char b1 :1;
-                char b2 :1;
-                char b3 :1;
-                char b4 :1;
-                char b5 :1;
-                char b6 :1;
-                char bIsETHEnabled :1;
+                bool bIsDHCPEnabled;
+                bool bIsETHEnabled;
             } Flags1; // Flag structure
 
         } ethSettings;
@@ -172,14 +152,8 @@ typedef struct
 
             struct
             {
-                char bIsDHCPEnabled :1;
-                char b1 :1;
-                char b2 :1;
-                char b3 :1;
-                char b4 :1;
-                char b5 :1;
-                char b6 :1;
-                char bIsWiFiEnabled :1;
+                bool bIsDHCPEnabled :1;
+                bool bIsWiFiEnabled :1;
             } Flags1; // Flag structure
             uint8_t MaxPower;
         } wifiSettings;
@@ -197,14 +171,7 @@ typedef struct
             uint8_t MACAddr[6]; // MAC address
             struct
             {
-                char b0 :1;
-                char b1 :1;
-                char b2 :1;
-                char b3 :1;
-                char b4 :1;
-                char b5 :1;
-                char b6 :1;
-                char bIsGSMEnabled :1;
+                bool bIsGSMEnabled;
             } Flags1; // Flag structure
 
         } gsmSettings;
@@ -218,14 +185,7 @@ typedef struct
 
               struct
               {
-                  char b0 :1;
-                  char b1 :1;
-                  char b2 :1;
-                  char b3 :1;
-                  char b4 :1;
-                  char b5 :1;
-                  char b6 :1;
-                  char bIsLoRaWANEnabled :1;
+                  bool bIsLoRaWANEnabled;
               } Flags1; // Flag structure
 
           } lorawanSettings;
