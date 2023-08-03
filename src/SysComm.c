@@ -125,48 +125,48 @@ static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
     jwObj_int("messtype", DATA_MESSAGE_TYPE_RESPONSE);
     jwObj_int("payloadtype", 1);
     jwObj_object("payload");
-    jwObj_array("variables");
+    jwObj_object("variables");
 
     jRead(MSG->inputDataBuffer, "{'data'{'payload'{'variables'", &result);
-    if (result.dataType == JREAD_ARRAY)
+    if (result.dataType == JREAD_OBJECT)
     { //Write variables
         for (int i = 0; i < result.elements; ++i)
         {
-            jRead_string(MSG->inputDataBuffer, "{'data'{'payload'{'variables'[*{'name'", VarName,
+            jRead_string(MSG->inputDataBuffer, "{'data'{'payload'{'variables'{*", VarName,
             VAR_MAX_NAME_LENGTH,
                          &i);
-            jRead_string(MSG->inputDataBuffer, "{'data'{'payload'{'variables'[*{'val'", VarValue,
-            VAR_MAX_VALUE_LENGTH,
-                         &i);
+            const char parsevar[] = "{'data'{'payload'{'variables'{'";
+            char expr[sizeof(parsevar) + VAR_MAX_NAME_LENGTH];
+            strcpy(expr, parsevar);
+            strcat(expr, VarName);
+            strcat(expr, "'");
+
+            jRead_string(MSG->inputDataBuffer, expr, VarValue, VAR_MAX_VALUE_LENGTH, &i);
+
             ESP_LOGI(TAG, "Got write variable %s:%s", VarName, VarValue);
-            jwArr_object();
+
+            esp_err_t res = ESP_ERR_INVALID_ARG;
+            rest_var_types tp = VAR_ERROR;
             if (MSG->parsedData.msgType == DATA_MESSAGE_TYPE_COMMAND)
             { //Write variables
-                rest_var_types tp;
-                esp_err_t res = SetConfVar(VarName, VarValue, &tp);
+                res = SetConfVar(VarName, VarValue, &tp);
                 if (res == ESP_OK)
                     GetConfVar(VarName, VarValue, &tp);
                 else
                     strcpy(VarValue, esp_err_to_name(res));
-                jwObj_string("name", VarName);
-                if (tp == VAR_STRING || tp == VAR_IPADDR)
-                    jwObj_string("val", VarValue);
-                else
-                    jwObj_raw("val", VarValue);
             }
             else
             { //Read variables
-                rest_var_types tp;
-                esp_err_t res = GetConfVar(VarName, VarValue, &tp);
+                res = GetConfVar(VarName, VarValue, &tp);
                 if (res != ESP_OK)
                     strcpy(VarValue, esp_err_to_name(res));
-                jwObj_string("name", VarName);
-                if (tp == VAR_STRING || tp == VAR_IPADDR)
-                    jwObj_string("val", VarValue);
-                else
-                    jwObj_raw("val", VarValue);
             }
-            jwEnd();
+            //Response with actual data
+            if (tp == VAR_STRING || tp == VAR_IPADDR || tp == VAR_ERROR)
+                jwObj_string(VarName, VarValue);
+            else
+                jwObj_raw(VarName, VarValue);
+
         }
     }
     else

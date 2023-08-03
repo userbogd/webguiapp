@@ -30,6 +30,7 @@
 #include "sdkconfig.h"
 
 typedef enum{
+    VAR_ERROR = -1,
     VAR_BOOL = 0,
     VAR_INT,
     VAR_STRING,
@@ -97,7 +98,7 @@ typedef struct
         struct
         {
             char ServerAddr[64];
-            uint16_t ServerPort;
+            int ServerPort;
             char SystemName[32];
             char GroupName[32];
             char ClientID[32];
@@ -133,7 +134,7 @@ typedef struct
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
         struct
         {
-            uint8_t WiFiMode;
+            int WiFiMode;
             esp_ip4_addr_t InfIPAddr; // IP address in infrastructure(INF) mode
             esp_ip4_addr_t InfMask; // network mask in INF mode
             esp_ip4_addr_t InfGateway; // gateway IP in INF mode
@@ -152,8 +153,8 @@ typedef struct
 
             struct
             {
-                bool bIsDHCPEnabled :1;
-                bool bIsWiFiEnabled :1;
+                bool bIsDHCPEnabled;
+                bool bIsWiFiEnabled;
             } Flags1; // Flag structure
             uint8_t MaxPower;
         } wifiSettings;

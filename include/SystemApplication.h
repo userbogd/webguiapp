@@ -29,7 +29,7 @@
 #include "jWrite.h"
 
 #define EXPECTED_MAX_DATA_RESPONSE_SIZE (4096)
-#define VAR_MAX_NAME_LENGTH 16
+#define VAR_MAX_NAME_LENGTH 32
 #define VAR_MAX_VALUE_LENGTH 128
 
 typedef enum
