@@ -29,27 +29,27 @@
 
 extern SYS_CONFIG SysConfig;
 
-static void funct_addone(char *argres)
+static void funct_addone(char *argres, int rw)
 {
     int arg = atoi(argres);
     arg *= 2;
     itoa(arg, argres, 10);
 }
 
-static void funct_time(char *argres)
+static void funct_time(char *argres, int rw)
 {
     time_t now;
     time(&now);
     snprintf(argres, MAX_DYNVAR_LENGTH, "%d", (int) now);
 }
 
-static void funct_wifiscan(char *argres)
+static void funct_wifiscan(char *argres, int rw)
 {
     if (atoi(argres))
         WiFiScan();
 }
 
-static void funct_wifiscanres(char *argres)
+static void funct_wifiscanres(char *argres, int rw)
 {
     int arg = atoi(argres);
     wifi_ap_record_t *R = GetWiFiAPRecord(arg);
@@ -57,6 +57,19 @@ static void funct_wifiscanres(char *argres)
         return;
     snprintf(argres, MAX_DYNVAR_LENGTH, "{\"ssid\":\"%s\",\"rssi\":%i,\"ch\":%d}", R->ssid, R->rssi,
              R->primary);
+}
+
+static void funct_wifimode(char *argres, int rw)
+{
+    switch (rw)
+    {
+        case 0:
+            SysConfig.wifiSettings.WiFiMode = atoi(argres);
+            break;
+        case 1:
+            itoa(SysConfig.wifiSettings.WiFiMode, argres, 10);
+            break;
+    }
 }
 
 const rest_var_t ConfigVariables[] =
@@ -113,12 +126,12 @@ const rest_var_t ConfigVariables[] =
 #endif
 
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
-                { 0, "eth-ip", &SysConfig.wifiSettings.InfIPAddr, VAR_IPADDR, 0, 0 },
-                { 0, "eth-mask", &SysConfig.wifiSettings.InfMask, VAR_IPADDR, 0, 0 },
-                { 0, "eth-gw", &SysConfig.wifiSettings.InfGateway, VAR_IPADDR, 0, 0 },
-                { 0, "eth-dns1", &SysConfig.wifiSettings.DNSAddr1, VAR_IPADDR, 0, 0 },
-                { 0, "eth-dns2", &SysConfig.wifiSettings.DNSAddr2, VAR_IPADDR, 0, 0 },
-                { 0, "eth-dns3", &SysConfig.wifiSettings.DNSAddr3, VAR_IPADDR, 0, 0 },
+                { 0, "eth_ip", &SysConfig.wifiSettings.InfIPAddr, VAR_IPADDR, 0, 0 },
+                { 0, "eth_mask", &SysConfig.wifiSettings.InfMask, VAR_IPADDR, 0, 0 },
+                { 0, "eth_gw", &SysConfig.wifiSettings.InfGateway, VAR_IPADDR, 0, 0 },
+                { 0, "eth_dns1", &SysConfig.wifiSettings.DNSAddr1, VAR_IPADDR, 0, 0 },
+                { 0, "eth_dns2", &SysConfig.wifiSettings.DNSAddr2, VAR_IPADDR, 0, 0 },
+                { 0, "eth_dns3", &SysConfig.wifiSettings.DNSAddr3, VAR_IPADDR, 0, 0 },
 
 
 
@@ -126,7 +139,7 @@ const rest_var_t ConfigVariables[] =
 #endif
 
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
-                { 0, "wifi_mode", &SysConfig.wifiSettings.WiFiMode, VAR_INT, 1, 3 },
+                { 0, "wifi_mode", &funct_wifimode, VAR_FUNCT, 1, 3 },
                 { 0, "wifi_sta_ip", &SysConfig.wifiSettings.InfIPAddr, VAR_IPADDR, 0, 0 },
                 { 0, "wifi_sta_mask", &SysConfig.wifiSettings.InfMask, VAR_IPADDR, 0, 0 },
                 { 0, "wifi_sta_gw", &SysConfig.wifiSettings.InfGateway, VAR_IPADDR, 0, 0 },
@@ -192,7 +205,7 @@ esp_err_t SetConfVar(char *name, char *val, rest_var_types *tp)
             esp_netif_str_to_ip4(val, (esp_ip4_addr_t*) (V->ref));
         break;
         case VAR_FUNCT:
-            ((void (*)(char*)) (V->ref))(val);
+            ((void (*)(char*, int)) (V->ref))(val, 1);
         break;
         case VAR_ERROR:
             break;
@@ -230,7 +243,7 @@ esp_err_t GetConfVar(char *name, char *val, rest_var_types *tp)
             esp_ip4addr_ntoa((const esp_ip4_addr_t*) V->ref, val, 16);
         break;
         case VAR_FUNCT:
-            ((void (*)(char*)) (V->ref))(val);
+            ((void (*)(char*, int)) (V->ref))(val, 0);
         break;
         case VAR_ERROR:
             break;
