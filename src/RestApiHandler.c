@@ -59,21 +59,6 @@ static void funct_wifiscanres(char *argres, int rw)
              R->primary);
 }
 
-static void funct_wifimode(char *argres, int rw)
-{
-    switch (rw)
-    {
-        case 0:
-            *argres = '"';
-            itoa(SysConfig.wifiSettings.WiFiMode, argres+1, 10);
-            strcat(argres, "\"");
-            break;
-        case 1:
-            SysConfig.wifiSettings.WiFiMode = atoi(argres);
-
-            break;
-    }
-}
 
 const rest_var_t ConfigVariables[] =
         {
