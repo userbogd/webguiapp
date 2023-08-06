@@ -31,10 +31,23 @@
  "payloadtype":1,
  "payload":{
  "applytype":1,
- "variables":[{"name":"netname","val":"DEVICE_HOSTNAME"},
- {"name":"otaurl","val":"https://iotronic.cloud/firmware/firmware.bin"},
- {"name":"ledenab","val":"0"},
- {"name":"otaint","val":"3600"}]
+ "variables":{
+ "wifi_mode":"",
+ "wifi_sta_ip":"",
+ "wifi_sta_mask":"",
+ "wifi_sta_gw":"",
+ "wifi_ap_ip":"",
+ "wifi_dns1":"",
+ "wifi_dns2":"",
+ "wifi_dns3":"",
+ "wifi_sta_ssid":"",
+ "wifi_sta_key":"",
+ "wifi_ap_ssid":"",
+ "wifi_ap_key":"",
+ "wifi_enab":"",
+ "wifi_isdhcp":"",
+ "wifi_power":""
+ }
  }},
  "signature":"6a11b872e8f766673eb82e127b6918a0dc96a42c5c9d184604f9787f3d27bcef"}
 

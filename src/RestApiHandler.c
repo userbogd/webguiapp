@@ -64,10 +64,13 @@ static void funct_wifimode(char *argres, int rw)
     switch (rw)
     {
         case 0:
-            SysConfig.wifiSettings.WiFiMode = atoi(argres);
+            *argres = '"';
+            itoa(SysConfig.wifiSettings.WiFiMode, argres+1, 10);
+            strcat(argres, "\"");
             break;
         case 1:
-            itoa(SysConfig.wifiSettings.WiFiMode, argres, 10);
+            SysConfig.wifiSettings.WiFiMode = atoi(argres);
+
             break;
     }
 }
@@ -139,7 +142,7 @@ const rest_var_t ConfigVariables[] =
 #endif
 
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
-                { 0, "wifi_mode", &funct_wifimode, VAR_FUNCT, 1, 3 },
+                { 0, "wifi_mode", &SysConfig.wifiSettings.WiFiMode, VAR_INT, 1, 3 },
                 { 0, "wifi_sta_ip", &SysConfig.wifiSettings.InfIPAddr, VAR_IPADDR, 0, 0 },
                 { 0, "wifi_sta_mask", &SysConfig.wifiSettings.InfMask, VAR_IPADDR, 0, 0 },
                 { 0, "wifi_sta_gw", &SysConfig.wifiSettings.InfGateway, VAR_IPADDR, 0, 0 },
