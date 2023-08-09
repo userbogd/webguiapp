@@ -39,6 +39,15 @@ static void funct_time(char *argres, int rw)
     snprintf(argres, MAX_DYNVAR_LENGTH, "%d", (int) now);
 }
 
+static void funct_idf_ver(char *argres, int rw)
+{
+    esp_app_desc_t cur_app_info;
+    if (esp_ota_get_partition_description(esp_ota_get_running_partition(), &cur_app_info) == ESP_OK)
+        snprintf(argres, MAX_DYNVAR_LENGTH, "\"%s\"", cur_app_info.idf_ver);
+    else
+        snprintf(argres, MAX_DYNVAR_LENGTH, "%s", "ESP_ERR_NOT_SUPPORTED");
+}
+
 static void funct_fw_ver(char *argres, int rw)
 {
     esp_app_desc_t cur_app_info;
@@ -73,6 +82,8 @@ static void funct_wifiscanres(char *argres, int rw)
     Rec->primary);
 }
 
+const int hw_rev = CONFIG_BOARD_HARDWARE_REVISION;
+
 const rest_var_t ConfigVariables[] =
         {
                 /*FUNCTIONS*/
@@ -80,11 +91,12 @@ const rest_var_t ConfigVariables[] =
                 { 0, "wifi_scan", &funct_wifiscan, VAR_FUNCT, R, 0, 0 },
                 { 0, "wifi_scan_res", &funct_wifiscanres, VAR_FUNCT, R, 0, 0 },
                 { 0, "fw_rev", &funct_fw_ver, VAR_FUNCT, R, 0, 0 },
+                { 0, "idf_rev", &funct_idf_ver, VAR_FUNCT, R, 0, 0 },
                 { 0, "build_date", &funct_build_date, VAR_FUNCT, R, 0, 0 },
 
                 /*CONSTANTS*/
                 { 0, "model_name", CONFIG_DEVICE_MODEL_NAME, VAR_STRING, R, 1, 64 },
-                { 0, "hv_rev", CONFIG_BOARD_HARDWARE_REVISION, VAR_INT, R, 1, 1024 },
+                { 0, "hw_rev",     ((int*)&hw_rev), VAR_INT, R, 1, 1024 },
                 { 0, "build_date", CONFIG_DEVICE_MODEL_NAME, VAR_STRING, R, 1, 64 },
                 { 0, "model_name", CONFIG_DEVICE_MODEL_NAME, VAR_STRING, R, 1, 64 },
 
@@ -187,7 +199,7 @@ esp_err_t SetConfVar(char *name, char *val, rest_var_types *tp)
     if (!V)
         return ESP_ERR_NOT_FOUND;
     if(V->varattr == R)
-        return ESP_ERR_NOT_SUPPORTED;
+        return ESP_OK;
     int constr;
     *tp = V->vartype;
     switch (V->vartype)
