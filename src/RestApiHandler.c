@@ -26,21 +26,35 @@
 #include <webguiapp.h>
 #include "esp_wifi.h"
 #include "esp_netif.h"
+#include "esp_ota_ops.h"
+#include "romfs.h"
+#include "esp_idf_version.h"
 
 extern SYS_CONFIG SysConfig;
-
-static void funct_addone(char *argres, int rw)
-{
-    int arg = atoi(argres);
-    arg *= 2;
-    itoa(arg, argres, 10);
-}
 
 static void funct_time(char *argres, int rw)
 {
     time_t now;
     time(&now);
     snprintf(argres, MAX_DYNVAR_LENGTH, "%d", (int) now);
+}
+
+static void funct_fw_ver(char *argres, int rw)
+{
+    esp_app_desc_t cur_app_info;
+    if (esp_ota_get_partition_description(esp_ota_get_running_partition(), &cur_app_info) == ESP_OK)
+        snprintf(argres, MAX_DYNVAR_LENGTH, "\"%s\"", cur_app_info.version);
+    else
+        snprintf(argres, MAX_DYNVAR_LENGTH, "%s", "ESP_ERR_NOT_SUPPORTED");
+}
+
+static void funct_build_date(char *argres, int rw)
+{
+    esp_app_desc_t cur_app_info;
+    if (esp_ota_get_partition_description(esp_ota_get_running_partition(), &cur_app_info) == ESP_OK)
+        snprintf(argres, MAX_DYNVAR_LENGTH, "\"%s %s\"", cur_app_info.date, cur_app_info.time);
+    else
+        snprintf(argres, MAX_DYNVAR_LENGTH, "%s", "ESP_ERR_NOT_SUPPORTED");
 }
 
 static void funct_wifiscan(char *argres, int rw)
@@ -63,12 +77,17 @@ const rest_var_t ConfigVariables[] =
         {
                 /*FUNCTIONS*/
                 { 0, "time", &funct_time, VAR_FUNCT, R, 0, 0 },
-                { 0, "addone", &funct_addone, VAR_FUNCT, R, 0, 0 },
                 { 0, "wifi_scan", &funct_wifiscan, VAR_FUNCT, R, 0, 0 },
                 { 0, "wifi_scan_res", &funct_wifiscanres, VAR_FUNCT, R, 0, 0 },
+                { 0, "fw_rev", &funct_fw_ver, VAR_FUNCT, R, 0, 0 },
+                { 0, "build_date", &funct_build_date, VAR_FUNCT, R, 0, 0 },
 
                 /*CONSTANTS*/
-                { 0, "firm_vers", CONFIG_IDF_TARGET_ARCH, VAR_STRING, R, 1, 64 },
+                { 0, "model_name", CONFIG_DEVICE_MODEL_NAME, VAR_STRING, R, 1, 64 },
+                { 0, "hv_rev", CONFIG_BOARD_HARDWARE_REVISION, VAR_INT, R, 1, 1024 },
+                { 0, "build_date", CONFIG_DEVICE_MODEL_NAME, VAR_STRING, R, 1, 64 },
+                { 0, "model_name", CONFIG_DEVICE_MODEL_NAME, VAR_STRING, R, 1, 64 },
+
 
                 /*VARIABLES*/
                 { 0, "net_bios_name", &SysConfig.NetBIOSName, VAR_STRING, RW, 3, 31 },
@@ -167,6 +186,8 @@ esp_err_t SetConfVar(char *name, char *val, rest_var_types *tp)
     }
     if (!V)
         return ESP_ERR_NOT_FOUND;
+    if(V->varattr == R)
+        return ESP_ERR_NOT_SUPPORTED;
     int constr;
     *tp = V->vartype;
     switch (V->vartype)

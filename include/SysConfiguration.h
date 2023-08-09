@@ -29,8 +29,11 @@
 #include "esp_netif.h"
 #include "sdkconfig.h"
 
-#define R   (0)
-#define RW  (1)
+typedef enum
+{
+    R = 0,
+    RW,
+}rest_var_attr;
 
 typedef enum{
     VAR_ERROR = -1,
@@ -49,7 +52,7 @@ typedef struct
   char alias[32];
   void* ref;
   rest_var_types vartype;
-  int isWritable;
+  rest_var_attr varattr;
   int minlen;
   int maxlen;
 } rest_var_t;
