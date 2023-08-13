@@ -155,9 +155,9 @@ static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
             strcat(expr, "'");
 
             jRead_string(MSG->inputDataBuffer, expr, VarValue, VAR_MAX_VALUE_LENGTH, &i);
-
+#if REAST_API_DEBUG_MODE
             ESP_LOGI(TAG, "Got write variable %s:%s", VarName, VarValue);
-
+#endif
             esp_err_t res = ESP_ERR_INVALID_ARG;
             rest_var_types tp = VAR_ERROR;
             if (MSG->parsedData.msgType == DATA_MESSAGE_TYPE_COMMAND)
@@ -201,7 +201,9 @@ static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
         unsigned char sha_print[32 * 2 + 1];
         BytesToStr(MSG->parsedData.sha256, sha_print, 32);
         sha_print[32 * 2] = 0x00;
+#if REAST_API_DEBUG_MODE
         ESP_LOGI(TAG, "SHA256 of DATA object is %s", sha_print);
+#endif
         jwObj_string("signature", (char*) sha_print);
     }
     else
@@ -257,7 +259,9 @@ static sys_error_code SysDataParser(data_message_t *MSG)
         unsigned char sha_print[32 * 2 + 1];
         BytesToStr(MSG->parsedData.sha256, sha_print, 32);
         sha_print[32 * 2] = 0x00;
+#if REAST_API_DEBUG_MODE
         ESP_LOGI(TAG, "SHA256 of DATA object is %s", sha_print);
+#endif
         free(hashbuf);
     }
     else

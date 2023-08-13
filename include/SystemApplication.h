@@ -28,6 +28,8 @@
 #include "jRead.h"
 #include "jWrite.h"
 
+#define REAST_API_DEBUG_MODE 1
+
 #define EXPECTED_MAX_DATA_RESPONSE_SIZE (4096)
 #define VAR_MAX_NAME_LENGTH 32
 #define VAR_MAX_VALUE_LENGTH 128

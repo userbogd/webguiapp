@@ -597,6 +597,7 @@ static void wifi_scan(void *arg)
 {
     uint16_t number = DEFAULT_SCAN_LIST_SIZE;
     uint16_t ap_count = 0;
+    vTaskDelay(pdMS_TO_TICKS(2000)); //delay for command result get before network break
     memset(ap_info, 0, sizeof(ap_info));
     while (esp_wifi_scan_start(NULL, true) == ESP_ERR_WIFI_STATE)
     {
