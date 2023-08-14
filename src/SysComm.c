@@ -78,14 +78,14 @@ static esp_err_t SHA256hmacHash(unsigned char *data,
 }
 
 /*
-static void Timestamp(char *ts)
-{
-    struct timeval tp;
-    gettimeofday(&tp, NULL);
-    unsigned long long ms = (((unsigned long long) tp.tv_sec) * 1000000 + tp.tv_usec);
-    sprintf(ts, "%llu", ms);
-}
-*/
+ static void Timestamp(char *ts)
+ {
+ struct timeval tp;
+ gettimeofday(&tp, NULL);
+ unsigned long long ms = (((unsigned long long) tp.tv_sec) * 1000000 + tp.tv_usec);
+ sprintf(ts, "%llu", ms);
+ }
+ */
 
 static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
 {
