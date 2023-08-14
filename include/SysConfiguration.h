@@ -40,6 +40,7 @@ typedef enum{
     VAR_BOOL = 0,
     VAR_INT,
     VAR_STRING,
+    VAR_PASS,
     VAR_IPADDR,
     VAR_FUNCT
 } rest_var_types;

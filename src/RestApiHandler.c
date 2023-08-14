@@ -172,7 +172,7 @@ const rest_var_t ConfigVariables[] =
                 /*VARIABLES*/
                 { 0, "net_bios_name", &SysConfig.NetBIOSName, VAR_STRING, RW, 3, 31 },
                 { 0, "sys_name", &SysConfig.SysName, VAR_STRING, RW, 3, 31 },
-                { 0, "sys_pass", &SysConfig.SysPass, VAR_STRING, RW, 3, 31 },
+                { 0, "sys_pass", &SysConfig.SysPass, VAR_PASS, RW, 3, 31 },
                 { 0, "ota_url", &SysConfig.OTAURL, VAR_STRING, RW, 3, 128 },
                 { 0, "ota_auto_int", &SysConfig.OTAAutoInt, VAR_INT, RW, 0, 65535 },
                 { 0, "ser_num", &SysConfig.SN, VAR_STRING, RW, 10, 10 },
@@ -199,7 +199,7 @@ const rest_var_t ConfigVariables[] =
                 { 0, "mqtt_1_group", &SysConfig.mqttStation[0].GroupName, VAR_STRING, RW, 3, 31 },
                 { 0, "mqtt_1_clid", &SysConfig.mqttStation[0].ClientID, VAR_STRING, RW, 3, 31 },
                 { 0, "mqtt_1_uname", &SysConfig.mqttStation[0].UserName, VAR_STRING, RW, 3, 31 },
-                { 0, "mqtt_1_pass", &SysConfig.mqttStation[0].UserPass, VAR_STRING, RW, 3, 31 },
+                { 0, "mqtt_1_pass", &SysConfig.mqttStation[0].UserPass, VAR_PASS, RW, 3, 31 },
                 { 0, "mqtt_1_stat", &funct_mqtt_1_stat, VAR_FUNCT, R, 0, 0 },
 
 #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
@@ -210,7 +210,7 @@ const rest_var_t ConfigVariables[] =
                 { 0, "mqtt_2_group", &SysConfig.mqttStation[1].GroupName, VAR_STRING, RW, 3, 31 },
                 { 0, "mqtt_2_clid", &SysConfig.mqttStation[1].ClientID, VAR_STRING, RW, 3, 31 },
                 { 0, "mqtt_2_uname", &SysConfig.mqttStation[1].UserName, VAR_STRING, RW, 3, 31 },
-                { 0, "mqtt_2_pass", &SysConfig.mqttStation[1].UserPass, VAR_STRING, RW, 3, 31 },
+                { 0, "mqtt_2_pass", &SysConfig.mqttStation[1].UserPass, VAR_PASS, RW, 3, 31 },
                 { 0, "mqtt_2_stat", &funct_mqtt_2_stat, VAR_FUNCT, R, 0, 0 },
 
 #endif
@@ -239,9 +239,9 @@ const rest_var_t ConfigVariables[] =
                 { 0, "wifi_dns2", &SysConfig.wifiSettings.DNSAddr2, VAR_IPADDR, RW, 0, 0 },
                 { 0, "wifi_dns3", &SysConfig.wifiSettings.DNSAddr3, VAR_IPADDR, RW, 0, 0 },
                 { 0, "wifi_sta_ssid", &SysConfig.wifiSettings.InfSSID, VAR_STRING, RW, 3, 31 },
-                { 0, "wifi_sta_key", &SysConfig.wifiSettings.InfSecurityKey, VAR_STRING, RW, 8, 31 },
+                { 0, "wifi_sta_key", &SysConfig.wifiSettings.InfSecurityKey, VAR_PASS, RW, 8, 31 },
                 { 0, "wifi_ap_ssid", &SysConfig.wifiSettings.ApSSID, VAR_STRING, RW, 3, 31 },
-                { 0, "wifi_ap_key", &SysConfig.wifiSettings.ApSecurityKey, VAR_STRING, RW, 8, 31 },
+                { 0, "wifi_ap_key", &SysConfig.wifiSettings.ApSecurityKey, VAR_PASS, RW, 8, 31 },
 
                 { 0, "wifi_enab", &SysConfig.wifiSettings.Flags1.bIsWiFiEnabled, VAR_BOOL, RW, 0, 1 },
                 { 0, "wifi_isdhcp", &SysConfig.wifiSettings.Flags1.bIsDHCPEnabled, VAR_BOOL, RW, 0, 1 },
@@ -293,6 +293,7 @@ esp_err_t SetConfVar(char *name, char *val, rest_var_types *tp)
             *((int*) V->ref) = constr;
         break;
         case VAR_STRING:
+        case VAR_PASS:
             constr = strlen(val);
             if (constr < V->minlen || constr > V->maxlen)
                 return ESP_ERR_INVALID_ARG;
@@ -336,6 +337,9 @@ esp_err_t GetConfVar(char *name, char *val, rest_var_types *tp)
         case VAR_STRING:
             strcpy(val, (char*) V->ref);
         break;
+        case VAR_PASS:
+            strcpy(val, "******");
+            break;
         case VAR_IPADDR:
             esp_ip4addr_ntoa((const esp_ip4_addr_t*) V->ref, val, 16);
         break;

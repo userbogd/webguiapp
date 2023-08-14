@@ -175,7 +175,7 @@ static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
                     strcpy(VarValue, esp_err_to_name(res));
             }
             //Response with actual data
-            if (tp == VAR_STRING || tp == VAR_IPADDR || tp == VAR_ERROR)
+            if (tp == VAR_STRING || tp == VAR_IPADDR || tp == VAR_ERROR || tp == VAR_PASS)
                 jwObj_string(VarName, VarValue);
             else
                 jwObj_raw(VarName, VarValue);
