@@ -50,39 +50,6 @@
  }
  }},
  "signature":"6a11b872e8f766673eb82e127b6918a0dc96a42c5c9d184604f9787f3d27bcef"}
-
- //Example of GET [msgtype=2] variables [payloadtype=1]
- {
- "data":{
- "msgid":123456789,
- "time":"2023-06-03T12:25:24+00:00",
- "msgtype":2,
- "payloadtype":1,
- "payload":{
- "variables":[{"name":"netname","val":""},
- {"name":"otaurl","val":""},
- {"name":"ledenab","val":""},
- {"name":"otaint","val":""}]
- }},
- "signature":"3c1254d5b0e7ecc7e662dd6397554f02622ef50edba18d0b30ecb5d53e409bcb"}
-
-
- //Example of RESPONSE [msgtype=3] with variables [payloadtype=1]
- {
- "data":{
- "msgid":123456789,
- "time":"2023-06-03T12:25:24+00:00",
- "msgtype": 3,
- "payloadtype":1,
- "payload":{
- "variables":[{"name":"netname","val":"DEVICE_HOSTNAME"},
- {"name":"otaurl","val":"https://iotronic.cloud/firmware/firmware.bin"},
- {"name":"ledenab","val":"0"},
- {"name":"otaint","val":"3600"}]
- },
- "error":"SYS_OK",
- "error_descr":"Result successful"},
- "signature":"0d3b545b7c86274a6bf5a6e606b260f32b1999de40cb7d29d0949ecc9389cd9d"}
  */
 
 #include "webguiapp.h"
@@ -110,6 +77,7 @@ static esp_err_t SHA256hmacHash(unsigned char *data,
     return ESP_OK;
 }
 
+/*
 static void Timestamp(char *ts)
 {
     struct timeval tp;
@@ -117,6 +85,7 @@ static void Timestamp(char *ts)
     unsigned long long ms = (((unsigned long long) tp.tv_sec) * 1000000 + tp.tv_usec);
     sprintf(ts, "%llu", ms);
 }
+*/
 
 static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
 {
@@ -273,7 +242,7 @@ static sys_error_code SysDataParser(data_message_t *MSG)
     jRead(MSG->inputDataBuffer, "{'signature'", &result);
     if (result.elements == 1)
     {
-        ESP_LOGI(TAG, "Signature is %.*s", 64, (char* )result.pValue);
+        //ESP_LOGI(TAG, "Signature is %.*s", 64, (char* )result.pValue);
         //Here compare calculated and received signature;
     }
     else
