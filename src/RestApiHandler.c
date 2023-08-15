@@ -140,22 +140,6 @@ static void funct_wifiscanres(char *argres, int rw)
 {
     int arg = atoi(argres);
     wifi_ap_record_t *Rec;
-    /*
-     char onerec[64];
-     strcpy(argres, "[");
-     for (int i = 0; i < arg; i++)
-     {
-     Rec = GetWiFiAPRecord(i);
-     if (!Rec)
-     return;
-     snprintf(onerec, MAX_DYNVAR_LENGTH, "{\"ssid\":\"%s\",\"rssi\":%i,\"ch\":%d}", Rec->ssid, Rec->rssi,
-     Rec->primary);
-     strcat(argres, onerec);
-     if (i < arg - 1)
-     strcat(argres, ",");
-     }
-     strcat(argres, "]");
-     */
     struct jWriteControl jwc;
     jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_ARRAY, JW_COMPACT);
     for (int i = 0; i < arg; i++)
@@ -170,8 +154,13 @@ static void funct_wifiscanres(char *argres, int rw)
             jwEnd(&jwc);
         }
     }
-    jwClose(&jwc);
-
+    int err = jwClose(&jwc);
+    if (err == JWRITE_OK)
+        return;
+    if(err > JWRITE_BUF_FULL )
+        strcpy(argres, "\"SYS_ERROR_NO_MEMORY\"");
+    else
+        strcpy(argres, "\"SYS_ERROR_UNKNOWN\"");
 }
 
 const int hw_rev = CONFIG_BOARD_HARDWARE_REVISION;
