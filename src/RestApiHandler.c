@@ -150,7 +150,8 @@ static void funct_wifiscanres(char *argres, int rw)
         snprintf(onerec, MAX_DYNVAR_LENGTH, "{\"ssid\":\"%s\",\"rssi\":%i,\"ch\":%d}", Rec->ssid, Rec->rssi,
                  Rec->primary);
         strcat(argres, onerec);
-        if (i < arg - 1)strcat(argres, ",");
+        if (i < arg - 1)
+            strcat(argres, ",");
     }
     strcat(argres, "]");
 }
@@ -301,12 +302,19 @@ esp_err_t SetConfVar(char *name, char *val, rest_var_types *tp)
             *((int*) V->ref) = constr;
         break;
         case VAR_STRING:
-            case VAR_PASS:
             constr = strlen(val);
             if (constr < V->minlen || constr > V->maxlen)
                 return ESP_ERR_INVALID_ARG;
             strcpy(V->ref, val);
         break;
+        case VAR_PASS:
+            constr = strlen(val);
+            if (constr < V->minlen || constr > V->maxlen)
+                return ESP_ERR_INVALID_ARG;
+            if (strcmp(val, "******"))
+                strcpy(V->ref, val);
+        break;
+
         case VAR_IPADDR:
             esp_netif_str_to_ip4(val, (esp_ip4_addr_t*) (V->ref));
         break;
