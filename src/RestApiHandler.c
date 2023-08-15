@@ -308,11 +308,13 @@ esp_err_t SetConfVar(char *name, char *val, rest_var_types *tp)
             strcpy(V->ref, val);
         break;
         case VAR_PASS:
-            constr = strlen(val);
-            if (constr < V->minlen || constr > V->maxlen)
-                return ESP_ERR_INVALID_ARG;
-            if (strcmp(val, "******"))
+            if (val[0] != '*')
+            {
+                constr = strlen(val);
+                if (constr < V->minlen || constr > V->maxlen)
+                    return ESP_ERR_INVALID_ARG;
                 strcpy(V->ref, val);
+            }
         break;
 
         case VAR_IPADDR:
