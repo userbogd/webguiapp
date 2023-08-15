@@ -89,8 +89,6 @@ static esp_err_t SHA256hmacHash(unsigned char *data,
 
 static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
 {
-    char VarName[VAR_MAX_NAME_LENGTH];
-    char VarValue[VAR_MAX_VALUE_LENGTH];
     struct jReadElement result;
     const char *err_br;
     const char *err_desc;
@@ -112,6 +110,11 @@ static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
     jRead(MSG->inputDataBuffer, "{'data'{'payload'{'variables'", &result);
     if (result.dataType == JREAD_OBJECT)
     { //Write variables
+        char VarName[VAR_MAX_NAME_LENGTH];
+        char *VarValue = malloc(VAR_MAX_VALUE_LENGTH);
+        if (!VarValue)
+            return SYS_ERROR_NO_MEMORY;
+
         for (int i = 0; i < result.elements; ++i)
         {
             jRead_string(MSG->inputDataBuffer, "{'data'{'payload'{'variables'{*", VarName,
@@ -150,6 +153,7 @@ static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
                 jwObj_raw(VarName, VarValue);
 
         }
+        free(VarValue);
     }
     else
         return SYS_ERROR_PARSE_VARIABLES;

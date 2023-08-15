@@ -35,7 +35,8 @@ extern SYS_CONFIG SysConfig;
 
 static void PrintInterfaceState(char *argres, int rw, esp_netif_t *netif)
 {
-    snprintf(argres, MAX_DYNVAR_LENGTH, (netif != NULL && esp_netif_is_netif_up(netif))?"\"CONNECTED\"":"\"DISCONNECTED\"");
+    snprintf(argres, MAX_DYNVAR_LENGTH,
+             (netif != NULL && esp_netif_is_netif_up(netif)) ? "\"CONNECTED\"" : "\"DISCONNECTED\"");
 }
 
 static void funct_wifi_stat(char *argres, int rw)
@@ -60,20 +61,18 @@ static void funct_gsm_stat(char *argres, int rw)
 }
 #endif
 
-
 static void funct_mqtt_1_stat(char *argres, int rw)
 {
-        snprintf(argres, MAX_DYNVAR_LENGTH, (GetMQTT1Connected())?"\"CONNECTED\"":"\"DISCONNECTED\"");
+    snprintf(argres, MAX_DYNVAR_LENGTH, (GetMQTT1Connected()) ? "\"CONNECTED\"" : "\"DISCONNECTED\"");
 }
 static void funct_mqtt_2_stat(char *argres, int rw)
 {
-    snprintf(argres, MAX_DYNVAR_LENGTH, (GetMQTT2Connected())?"\"CONNECTED\"":"\"DISCONNECTED\"");
+    snprintf(argres, MAX_DYNVAR_LENGTH, (GetMQTT2Connected()) ? "\"CONNECTED\"" : "\"DISCONNECTED\"");
 }
 static void funct_def_interface(char *argres, int rw)
 {
     GetDefaultNetIFName(argres);
 }
-
 
 static void funct_time(char *argres, int rw)
 {
@@ -140,11 +139,20 @@ static void funct_wifiscan(char *argres, int rw)
 static void funct_wifiscanres(char *argres, int rw)
 {
     int arg = atoi(argres);
-    wifi_ap_record_t *Rec = GetWiFiAPRecord(arg);
-    if (!Rec)
-        return;
-    snprintf(argres, MAX_DYNVAR_LENGTH, "{\"ssid\":\"%s\",\"rssi\":%i,\"ch\":%d}", Rec->ssid, Rec->rssi,
-             Rec->primary);
+    char onerec[64];
+    wifi_ap_record_t *Rec;
+    strcpy(argres, "[");
+    for (int i = 0; i < arg; i++)
+    {
+        Rec = GetWiFiAPRecord(i);
+        if (!Rec)
+            return;
+        snprintf(onerec, MAX_DYNVAR_LENGTH, "{\"ssid\":\"%s\",\"rssi\":%i,\"ch\":%d}", Rec->ssid, Rec->rssi,
+                 Rec->primary);
+        strcat(argres, onerec);
+        if (i < arg - 1)strcat(argres, ",");
+    }
+    strcat(argres, "]");
 }
 
 const int hw_rev = CONFIG_BOARD_HARDWARE_REVISION;
@@ -293,7 +301,7 @@ esp_err_t SetConfVar(char *name, char *val, rest_var_types *tp)
             *((int*) V->ref) = constr;
         break;
         case VAR_STRING:
-        case VAR_PASS:
+            case VAR_PASS:
             constr = strlen(val);
             if (constr < V->minlen || constr > V->maxlen)
                 return ESP_ERR_INVALID_ARG;
@@ -339,7 +347,7 @@ esp_err_t GetConfVar(char *name, char *val, rest_var_types *tp)
         break;
         case VAR_PASS:
             strcpy(val, "******");
-            break;
+        break;
         case VAR_IPADDR:
             esp_ip4addr_ntoa((const esp_ip4_addr_t*) V->ref, val, 16);
         break;
