@@ -140,39 +140,37 @@ static void funct_wifiscanres(char *argres, int rw)
 {
     int arg = atoi(argres);
     wifi_ap_record_t *Rec;
-
-    char onerec[64];
-    strcpy(argres, "[");
-    for (int i = 0; i < arg; i++)
-    {
-        Rec = GetWiFiAPRecord(i);
-        if (!Rec)
-            return;
-        snprintf(onerec, MAX_DYNVAR_LENGTH, "{\"ssid\":\"%s\",\"rssi\":%i,\"ch\":%d}", Rec->ssid, Rec->rssi,
-                 Rec->primary);
-        strcat(argres, onerec);
-        if (i < arg - 1)
-            strcat(argres, ",");
-    }
-    strcat(argres, "]");
     /*
-     struct jWriteControl jwc;
-     jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_ARRAY, JW_COMPACT);
+     char onerec[64];
+     strcpy(argres, "[");
      for (int i = 0; i < arg; i++)
      {
      Rec = GetWiFiAPRecord(i);
-     if (Rec)
-     {
-     jwArr_object(&jwc);
-     jwObj_string(&jwc,"ssid", (char*) Rec->ssid);
-     jwObj_int(&jwc,"rssi", Rec->rssi);
-     jwObj_int(&jwc,"ch", Rec->primary);
-     jwEnd(&jwc);
+     if (!Rec)
+     return;
+     snprintf(onerec, MAX_DYNVAR_LENGTH, "{\"ssid\":\"%s\",\"rssi\":%i,\"ch\":%d}", Rec->ssid, Rec->rssi,
+     Rec->primary);
+     strcat(argres, onerec);
+     if (i < arg - 1)
+     strcat(argres, ",");
      }
-     }
-     jwClose(&jwc);
+     strcat(argres, "]");
      */
-    ESP_LOGI("REST", "%s", argres);
+    struct jWriteControl jwc;
+    jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_ARRAY, JW_COMPACT);
+    for (int i = 0; i < arg; i++)
+    {
+        Rec = GetWiFiAPRecord(i);
+        if (Rec)
+        {
+            jwArr_object(&jwc);
+            jwObj_string(&jwc, "ssid", (char*) Rec->ssid);
+            jwObj_int(&jwc, "rssi", Rec->rssi);
+            jwObj_int(&jwc, "ch", Rec->primary);
+            jwEnd(&jwc);
+        }
+    }
+    jwClose(&jwc);
 
 }
 

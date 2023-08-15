@@ -95,17 +95,17 @@ static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
 
     if (!(MSG->parsedData.msgType == DATA_MESSAGE_TYPE_COMMAND || MSG->parsedData.msgType == DATA_MESSAGE_TYPE_REQUEST))
         return SYS_ERROR_PARSE_MSGTYPE;
-
-    jwOpen(MSG->outputDataBuffer, MSG->outputDataLength, JW_OBJECT, JW_COMPACT);
-    jwObj_object("data");
-    jwObj_int("msgid", MSG->parsedData.msgID);
+    struct jWriteControl jwc;
+    jwOpen(&jwc, MSG->outputDataBuffer, MSG->outputDataLength, JW_OBJECT, JW_COMPACT);
+    jwObj_object(&jwc, "data");
+    jwObj_int(&jwc, "msgid", MSG->parsedData.msgID);
     char time[RFC3339_TIMESTAMP_LENGTH];
     GetRFC3339Time(time);
-    jwObj_string("time", time);
-    jwObj_int("messtype", DATA_MESSAGE_TYPE_RESPONSE);
-    jwObj_int("payloadtype", 1);
-    jwObj_object("payload");
-    jwObj_object("variables");
+    jwObj_string(&jwc, "time", time);
+    jwObj_int(&jwc, "messtype", DATA_MESSAGE_TYPE_RESPONSE);
+    jwObj_int(&jwc, "payloadtype", 1);
+    jwObj_object(&jwc, "payload");
+    jwObj_object(&jwc, "variables");
 
     jRead(MSG->inputDataBuffer, "{'data'{'payload'{'variables'", &result);
     if (result.dataType == JREAD_OBJECT)
@@ -148,9 +148,9 @@ static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
             }
             //Response with actual data
             if (tp == VAR_STRING || tp == VAR_IPADDR || tp == VAR_ERROR || tp == VAR_PASS)
-                jwObj_string(VarName, VarValue);
+                jwObj_string(&jwc, VarName, VarValue);
             else
-                jwObj_raw(VarName, VarValue);
+                jwObj_raw(&jwc, VarName, VarValue);
 
         }
         free(VarValue);
@@ -158,12 +158,12 @@ static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
     else
         return SYS_ERROR_PARSE_VARIABLES;
 
-    jwEnd();
-    jwEnd();
+    jwEnd(&jwc);
+    jwEnd(&jwc);
     GetSysErrorDetales((sys_error_code) MSG->err_code, &err_br, &err_desc);
-    jwObj_string("error", (char*) err_br);
-    jwObj_string("error_descr", (char*) err_desc);
-    jwEnd();
+    jwObj_string(&jwc, "error", (char*) err_br);
+    jwObj_string(&jwc, "error_descr", (char*) err_desc);
+    jwEnd(&jwc);
 
     char *datap = strstr(MSG->outputDataBuffer, "\"data\":");
     if (datap)
@@ -177,12 +177,12 @@ static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
 #if REAST_API_DEBUG_MODE
         ESP_LOGI(TAG, "SHA256 of DATA object is %s", sha_print);
 #endif
-        jwObj_string("signature", (char*) sha_print);
+        jwObj_string(&jwc, "signature", (char*) sha_print);
     }
     else
         return SYS_ERROR_SHA256_DATA;
-    jwEnd();
-    jwClose();
+    jwEnd(&jwc);
+    jwClose(&jwc);
 
     jRead(MSG->inputDataBuffer, "{'data'{'payload'{'applytype'", &result);
     if (result.elements == 1)
@@ -303,19 +303,20 @@ esp_err_t SysServiceDataHandler(data_message_t *MSG)
     MSG->err_code = (int) SysDataParser(MSG);
     if (MSG->err_code)
     {
-        jwOpen(MSG->outputDataBuffer, MSG->outputDataLength, JW_OBJECT, JW_PRETTY);
-        jwObj_int("msgid", MSG->parsedData.msgID);
+        struct jWriteControl jwc;
+        jwOpen(&jwc, MSG->outputDataBuffer, MSG->outputDataLength, JW_OBJECT, JW_PRETTY);
+        jwObj_int(&jwc, "msgid", MSG->parsedData.msgID);
         char time[RFC3339_TIMESTAMP_LENGTH];
         GetRFC3339Time(time);
-        jwObj_string("time", time);
-        jwObj_int("messtype", DATA_MESSAGE_TYPE_RESPONSE);
+        jwObj_string(&jwc, "time", time);
+        jwObj_int(&jwc, "messtype", DATA_MESSAGE_TYPE_RESPONSE);
         const char *err_br;
         const char *err_desc;
         GetSysErrorDetales((sys_error_code) MSG->err_code, &err_br, &err_desc);
-        jwObj_string("error", (char*) err_br);
-        jwObj_string("error_descr", (char*) err_desc);
-        jwEnd();
-        jwClose();
+        jwObj_string(&jwc, "error", (char*) err_br);
+        jwObj_string(&jwc, "error_descr", (char*) err_desc);
+        jwEnd(&jwc);
+        jwClose(&jwc);
     }
 
     return ESP_OK;

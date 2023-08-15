@@ -989,8 +989,8 @@ void GenerateSystemSettingsJSONFile(void)
     char *buf = malloc(2048);
     if (!buf)
         return;
-
-    jwOpen(buf, 2048, JW_OBJECT, JW_PRETTY);
+    struct jWriteControl jwc;
+    jwOpen(&jwc, buf, 2048, JW_OBJECT, JW_PRETTY);
     for (int i = 0; i < (sizeof(HANDLERS_ARRAY) / sizeof(HANDLERS_ARRAY[0])); ++i)
     {
         char val[18];
@@ -998,10 +998,10 @@ void GenerateSystemSettingsJSONFile(void)
         strcat(val, "~");
         strcat(val, HANDLERS_ARRAY[i].tag);
         strcat(val, "~");
-        jwObj_string((char*) HANDLERS_ARRAY[i].tag, val);
+        jwObj_string(&jwc, (char*) HANDLERS_ARRAY[i].tag, val);
     }
-    jwEnd();
-    jwClose();
+    jwEnd(&jwc);
+    jwClose(&jwc);
     ESP_LOGI(TAG, "%s", buf);
     free(buf);
 }
