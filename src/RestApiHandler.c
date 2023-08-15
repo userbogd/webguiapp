@@ -139,8 +139,9 @@ static void funct_wifiscan(char *argres, int rw)
 static void funct_wifiscanres(char *argres, int rw)
 {
     int arg = atoi(argres);
-    char onerec[64];
     wifi_ap_record_t *Rec;
+
+    char onerec[64];
     strcpy(argres, "[");
     for (int i = 0; i < arg; i++)
     {
@@ -154,6 +155,25 @@ static void funct_wifiscanres(char *argres, int rw)
             strcat(argres, ",");
     }
     strcat(argres, "]");
+    /*
+     struct jWriteControl jwc;
+     jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_ARRAY, JW_COMPACT);
+     for (int i = 0; i < arg; i++)
+     {
+     Rec = GetWiFiAPRecord(i);
+     if (Rec)
+     {
+     jwArr_object(&jwc);
+     jwObj_string(&jwc,"ssid", (char*) Rec->ssid);
+     jwObj_int(&jwc,"rssi", Rec->rssi);
+     jwObj_int(&jwc,"ch", Rec->primary);
+     jwEnd(&jwc);
+     }
+     }
+     jwClose(&jwc);
+     */
+    ESP_LOGI("REST", "%s", argres);
+
 }
 
 const int hw_rev = CONFIG_BOARD_HARDWARE_REVISION;
