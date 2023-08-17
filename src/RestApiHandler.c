@@ -33,6 +33,15 @@
 
 extern SYS_CONFIG SysConfig;
 
+
+rest_var_t *AppVars = NULL;
+int AppVarsSize = 0;
+void SetAppVars( rest_var_t* appvars, int size)
+{
+    AppVars = appvars;
+    AppVarsSize = size;
+}
+
 static void PrintInterfaceState(char *argres, int rw, esp_netif_t *netif)
 {
     snprintf(argres, MAX_DYNVAR_LENGTH,
@@ -165,7 +174,9 @@ static void funct_wifiscanres(char *argres, int rw)
 
 const int hw_rev = CONFIG_BOARD_HARDWARE_REVISION;
 
-const rest_var_t ConfigVariables[] =
+
+
+const rest_var_t SystemVariables[] =
         {
                 /*FUNCTIONS*/
                 { 0, "time", &funct_time, VAR_FUNCT, R, 0, 0 },
@@ -278,14 +289,28 @@ const rest_var_t ConfigVariables[] =
 esp_err_t SetConfVar(char *name, char *val, rest_var_types *tp)
 {
     rest_var_t *V = NULL;
-    for (int i = 0; i < sizeof(ConfigVariables) / sizeof(rest_var_t); ++i)
+    //Search for system variables
+    for (int i = 0; i < sizeof(SystemVariables) / sizeof(rest_var_t); ++i)
     {
-        if (!strcmp(ConfigVariables[i].alias, name))
+        if (!strcmp(SystemVariables[i].alias, name))
         {
-            V = (rest_var_t*) (&ConfigVariables[i]);
+            V = (rest_var_t*) (&SystemVariables[i]);
             break;
         }
     }
+    //Search for user variables
+    if(AppVars)
+    {
+        for (int i = 0; i < AppVarsSize; ++i)
+        {
+            if (!strcmp(AppVars[i].alias, name))
+            {
+                V = (rest_var_t*) (&AppVars[i]);
+                break;
+            }
+        }
+    }
+
     if (!V)
         return ESP_ERR_NOT_FOUND;
     if (V->varattr == R)
@@ -340,12 +365,24 @@ esp_err_t SetConfVar(char *name, char *val, rest_var_types *tp)
 esp_err_t GetConfVar(char *name, char *val, rest_var_types *tp)
 {
     rest_var_t *V = NULL;
-    for (int i = 0; i < sizeof(ConfigVariables) / sizeof(rest_var_t); ++i)
+    for (int i = 0; i < sizeof(SystemVariables) / sizeof(rest_var_t); ++i)
     {
-        if (!strcmp(ConfigVariables[i].alias, name))
+        if (!strcmp(SystemVariables[i].alias, name))
         {
-            V = (rest_var_t*) (&ConfigVariables[i]);
+            V = (rest_var_t*) (&SystemVariables[i]);
             break;
+        }
+    }
+    //Search for user variables
+    if(AppVars)
+    {
+        for (int i = 0; i < AppVarsSize; ++i)
+        {
+            if (!strcmp(AppVars[i].alias, name))
+            {
+                V = (rest_var_t*) (&AppVars[i]);
+                break;
+            }
         }
     }
     if (!V)
