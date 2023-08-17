@@ -34,10 +34,12 @@
 #include "esp_system.h"
 #include "driver/spi_master.h"
 
+#include "SystemApplication.h"
 #include "UserCallbacks.h"
+#include "SysConfiguration.h"
 
 esp_err_t spi_device_polling_transmit_synchronized(spi_device_handle_t handle, spi_transaction_t *trans_desc);
-
+void SetAppVars( rest_var_t* appvars, int size);
 bool GetUserAppNeedReset(void);
 void SetUserAppNeedReset(bool res);
 void LogFile(char *fname, char *format, ...);

@@ -58,9 +58,10 @@ static void mqtt1_user_event_handler(void *handler_args, esp_event_base_t base, 
 static void mqtt2_user_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
 
 void (*UserEventHandler)(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
-static void* UserArg;
+static void *UserArg;
 void regUserEventHandler(
-        void (*event_handler)(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data), void* user_arg)
+        void (*event_handler)(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data),
+        void *user_arg)
 {
     UserEventHandler = event_handler;
     UserArg = user_arg;
@@ -138,23 +139,24 @@ mqtt_app_err_t PublicTestMQTT(int idx)
     char tmp[10];
     char resp[256];
     char JSONMess[512];
-    jwOpen(JSONMess, MAX_ERROR_JSON, JW_OBJECT, JW_PRETTY);
+    struct jWriteControl jwc;
+    jwOpen(&jwc, JSONMess, MAX_ERROR_JSON, JW_OBJECT, JW_PRETTY);
     time_t now;
     time(&now);
-    jwObj_int("time", (unsigned int) now);
-    jwObj_string("event", "MQTT_TEST_MESSAGE)");
+    jwObj_int(&jwc, "time", (unsigned int) now);
+    jwObj_string(&jwc, "event", "MQTT_TEST_MESSAGE)");
     strcpy(resp, "mqtt://");
     strcat(resp, GetSysConf()->mqttStation[idx].ServerAddr);
     itoa(GetSysConf()->mqttStation[idx].ServerPort, tmp, 10);
     strcat(resp, ":");
     strcat(resp, tmp);
-    jwObj_string("url", resp);
+    jwObj_string(&jwc, "url", resp);
     ComposeTopic(resp, idx, "SYSTEM", "UPLINK");
-    jwObj_string("tx_topic", resp);
+    jwObj_string(&jwc, "tx_topic", resp);
     ComposeTopic(resp, idx, "SYSTEM", "DWLINK");
-    jwObj_string("rx_topic", resp);
-    jwEnd();
-    jwClose();
+    jwObj_string(&jwc, "rx_topic", resp);
+    jwEnd(&jwc);
+    jwClose(&jwc);
     char *buf = (char*) malloc(strlen(JSONMess) + 1);
     if (buf)
     {
@@ -176,7 +178,6 @@ mqtt_app_err_t PublicTestMQTT(int idx)
         return API_INTERNAL_ERR;
     }
 }
-
 
 static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_base_t base, int32_t event_id,
                                       void *event_data)
@@ -461,7 +462,5 @@ static void mqtt2_user_event_handler(void *handler_args, esp_event_base_t base, 
 {
     UserEventHandler(1, handler_args, base, event_id, event_data);
 }
-
-
 
 #endif

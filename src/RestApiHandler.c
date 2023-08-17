@@ -33,6 +33,15 @@
 
 extern SYS_CONFIG SysConfig;
 
+
+rest_var_t *AppVars = NULL;
+int AppVarsSize = 0;
+void SetAppVars( rest_var_t* appvars, int size)
+{
+    AppVars = appvars;
+    AppVarsSize = size;
+}
+
 static void PrintInterfaceState(char *argres, int rw, esp_netif_t *netif)
 {
     snprintf(argres, MAX_DYNVAR_LENGTH,
@@ -140,45 +149,34 @@ static void funct_wifiscanres(char *argres, int rw)
 {
     int arg = atoi(argres);
     wifi_ap_record_t *Rec;
-
-    char onerec[64];
-    strcpy(argres, "[");
+    struct jWriteControl jwc;
+    jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_ARRAY, JW_COMPACT);
     for (int i = 0; i < arg; i++)
     {
         Rec = GetWiFiAPRecord(i);
-        if (!Rec)
-            return;
-        snprintf(onerec, MAX_DYNVAR_LENGTH, "{\"ssid\":\"%s\",\"rssi\":%i,\"ch\":%d}", Rec->ssid, Rec->rssi,
-                 Rec->primary);
-        strcat(argres, onerec);
-        if (i < arg - 1)
-            strcat(argres, ",");
+        if (Rec)
+        {
+            jwArr_object(&jwc);
+            jwObj_string(&jwc, "ssid", (char*) Rec->ssid);
+            jwObj_int(&jwc, "rssi", Rec->rssi);
+            jwObj_int(&jwc, "ch", Rec->primary);
+            jwEnd(&jwc);
+        }
     }
-    strcat(argres, "]");
-    /*
-     struct jWriteControl jwc;
-     jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_ARRAY, JW_COMPACT);
-     for (int i = 0; i < arg; i++)
-     {
-     Rec = GetWiFiAPRecord(i);
-     if (Rec)
-     {
-     jwArr_object(&jwc);
-     jwObj_string(&jwc,"ssid", (char*) Rec->ssid);
-     jwObj_int(&jwc,"rssi", Rec->rssi);
-     jwObj_int(&jwc,"ch", Rec->primary);
-     jwEnd(&jwc);
-     }
-     }
-     jwClose(&jwc);
-     */
-    ESP_LOGI("REST", "%s", argres);
-
+    int err = jwClose(&jwc);
+    if (err == JWRITE_OK)
+        return;
+    if(err > JWRITE_BUF_FULL )
+        strcpy(argres, "\"SYS_ERROR_NO_MEMORY\"");
+    else
+        strcpy(argres, "\"SYS_ERROR_UNKNOWN\"");
 }
 
 const int hw_rev = CONFIG_BOARD_HARDWARE_REVISION;
 
-const rest_var_t ConfigVariables[] =
+
+
+const rest_var_t SystemVariables[] =
         {
                 /*FUNCTIONS*/
                 { 0, "time", &funct_time, VAR_FUNCT, R, 0, 0 },
@@ -291,14 +289,28 @@ const rest_var_t ConfigVariables[] =
 esp_err_t SetConfVar(char *name, char *val, rest_var_types *tp)
 {
     rest_var_t *V = NULL;
-    for (int i = 0; i < sizeof(ConfigVariables) / sizeof(rest_var_t); ++i)
+    //Search for system variables
+    for (int i = 0; i < sizeof(SystemVariables) / sizeof(rest_var_t); ++i)
     {
-        if (!strcmp(ConfigVariables[i].alias, name))
+        if (!strcmp(SystemVariables[i].alias, name))
         {
-            V = (rest_var_t*) (&ConfigVariables[i]);
+            V = (rest_var_t*) (&SystemVariables[i]);
             break;
         }
     }
+    //Search for user variables
+    if(AppVars)
+    {
+        for (int i = 0; i < AppVarsSize; ++i)
+        {
+            if (!strcmp(AppVars[i].alias, name))
+            {
+                V = (rest_var_t*) (&AppVars[i]);
+                break;
+            }
+        }
+    }
+
     if (!V)
         return ESP_ERR_NOT_FOUND;
     if (V->varattr == R)
@@ -353,12 +365,24 @@ esp_err_t SetConfVar(char *name, char *val, rest_var_types *tp)
 esp_err_t GetConfVar(char *name, char *val, rest_var_types *tp)
 {
     rest_var_t *V = NULL;
-    for (int i = 0; i < sizeof(ConfigVariables) / sizeof(rest_var_t); ++i)
+    for (int i = 0; i < sizeof(SystemVariables) / sizeof(rest_var_t); ++i)
     {
-        if (!strcmp(ConfigVariables[i].alias, name))
+        if (!strcmp(SystemVariables[i].alias, name))
         {
-            V = (rest_var_t*) (&ConfigVariables[i]);
+            V = (rest_var_t*) (&SystemVariables[i]);
             break;
+        }
+    }
+    //Search for user variables
+    if(AppVars)
+    {
+        for (int i = 0; i < AppVarsSize; ++i)
+        {
+            if (!strcmp(AppVars[i].alias, name))
+            {
+                V = (rest_var_t*) (&AppVars[i]);
+                break;
+            }
         }
     }
     if (!V)

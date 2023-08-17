@@ -37,7 +37,7 @@ const char url_adapters[] = "adapters.html";
 const char url_services[] = "services.html";
 const char url_system[] = "system.html";
 const char url_reboot[] = "reboot.html";
-const char url_sysapi[] = "sysapi";
+const char url_api[] = "api";
 
 static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, char *PostData);
 static HTTP_IO_RESULT HTTPPostAdaptersSettings(httpd_req_t *req, char *PostData);
@@ -86,7 +86,7 @@ HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostDat
 
 static HTTP_IO_RESULT AfterPostHandler(httpd_req_t *req, const char *filename, char *PostData)
 {
-    if (!memcmp(filename, url_sysapi, sizeof(url_sysapi)))
+    if (!memcmp(filename, url_api, sizeof(url_api)))
         return HTTPPostSysAPI(req, PostData);
     if (!memcmp(filename, url_adapters, sizeof(url_adapters)))
         return HTTPPostAdaptersSettings(req, PostData);
