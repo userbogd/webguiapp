@@ -34,6 +34,7 @@
 #include "esp_system.h"
 #include "driver/spi_master.h"
 
+#include "SystemApplication.h"
 #include "UserCallbacks.h"
 #include "SysConfiguration.h"
 
