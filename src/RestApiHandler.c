@@ -244,16 +244,15 @@ const rest_var_t SystemVariables[] =
 #endif
 
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
-                { 0, "eth_ip", &SysConfig.wifiSettings.InfIPAddr, VAR_IPADDR,RW, 0, 0 },
-                { 0, "eth_mask", &SysConfig.wifiSettings.InfMask, VAR_IPADDR,RW, 0, 0 },
-                { 0, "eth_gw", &SysConfig.wifiSettings.InfGateway, VAR_IPADDR,RW, 0, 0 },
-                { 0, "eth_dns1", &SysConfig.wifiSettings.DNSAddr1, VAR_IPADDR,RW, 0, 0 },
-                { 0, "eth_dns2", &SysConfig.wifiSettings.DNSAddr2, VAR_IPADDR,RW, 0, 0 },
-                { 0, "eth_dns3", &SysConfig.wifiSettings.DNSAddr3, VAR_IPADDR,RW, 0, 0 },
+                { 0, "eth_enab", &SysConfig.ethSettings.Flags1.bIsETHEnabled, VAR_BOOL, RW, 0, 1 },
+                { 0, "eth_isdhcp", &SysConfig.ethSettings.Flags1.bIsDHCPEnabled, VAR_BOOL, RW, 0, 1 },
+                { 0, "eth_ip", &SysConfig.ethSettings.IPAddr, VAR_IPADDR,RW, 0, 0 },
+                { 0, "eth_mask", &SysConfig.ethSettings.Mask, VAR_IPADDR,RW, 0, 0 },
+                { 0, "eth_gw", &SysConfig.ethSettings.Gateway, VAR_IPADDR,RW, 0, 0 },
+                { 0, "eth_dns1", &SysConfig.ethSettings.DNSAddr1, VAR_IPADDR,RW, 0, 0 },
+                { 0, "eth_dns2", &SysConfig.ethSettings.DNSAddr2, VAR_IPADDR,RW, 0, 0 },
+                { 0, "eth_dns3", &SysConfig.ethSettings.DNSAddr3, VAR_IPADDR,RW, 0, 0 },
                 { 0, "eth_stat", &funct_eth_stat, VAR_FUNCT, R, 0, 0 },
-
-
-
 #endif
 
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE

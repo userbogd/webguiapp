@@ -115,6 +115,9 @@ static void got_ip_event_handler(void *arg, esp_event_base_t event_base,
 {
     ip_event_got_ip_t *event = (ip_event_got_ip_t*) event_data;
     const esp_netif_ip_info_t *ip_info = &event->ip_info;
+    memcpy(&GetSysConf()->ethSettings.IPAddr, &event->ip_info.ip, sizeof(event->ip_info.ip));
+    memcpy(&GetSysConf()->ethSettings.Mask, &event->ip_info.netmask, sizeof(event->ip_info.netmask));
+    memcpy(&GetSysConf()->ethSettings.Gateway, &event->ip_info.gw, sizeof(event->ip_info.gw));
     ESP_LOGI(TAG, "Ethernet Got IP Address");
     ESP_LOGI(TAG, "~~~~~~~~~~~");
     ESP_LOGI(TAG, "ETHIP:" IPSTR, IP2STR(&ip_info->ip));
