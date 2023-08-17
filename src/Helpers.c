@@ -234,7 +234,7 @@ unsigned long ulTotalRunTime, ulStatsAsPercentage;
 
             if( ulStatsAsPercentage > 0UL )
             {
-               sprintf( pcWriteBuffer, "%s----%llu----%lu%%----%d\r\n",
+               sprintf( pcWriteBuffer, "%-32s %-10llu %-10lu%% %d\r\n",
                                  pxTaskStatusArray[ x ].pcTaskName,
                                  (uint64_t)pxTaskStatusArray[ x ].ulRunTimeCounter,
                                  ulStatsAsPercentage,
@@ -244,7 +244,7 @@ unsigned long ulTotalRunTime, ulStatsAsPercentage;
             {
                /* If the percentage is zero here then the task has
                consumed less than 1% of the total run time. */
-               sprintf( pcWriteBuffer, "%s----%llu----<1%%----%d\r\n",
+               sprintf( pcWriteBuffer, "%-32s %-10llu <1%%  %d\r\n",
                                  pxTaskStatusArray[ x ].pcTaskName,
                                  (uint64_t)pxTaskStatusArray[ x ].ulRunTimeCounter,
                                  (int)pxTaskStatusArray[ x ].usStackHighWaterMark);
