@@ -174,6 +174,8 @@ static void funct_wifiscanres(char *argres, int rw)
 
 const int hw_rev = CONFIG_BOARD_HARDWARE_REVISION;
 
+const bool VAR_TRUE = true;
+const bool VAR_FALSE = false;
 
 
 const rest_var_t SystemVariables[] =
@@ -253,6 +255,9 @@ const rest_var_t SystemVariables[] =
                 { 0, "eth_dns2", &SysConfig.ethSettings.DNSAddr2, VAR_IPADDR,RW, 0, 0 },
                 { 0, "eth_dns3", &SysConfig.ethSettings.DNSAddr3, VAR_IPADDR,RW, 0, 0 },
                 { 0, "eth_stat", &funct_eth_stat, VAR_FUNCT, R, 0, 0 },
+                { 0, "eth_visible", (bool*)(&VAR_TRUE), VAR_BOOL, R, 0, 1 },
+#else
+                { 0, "eth_visible", (bool*)(&VAR_FALSE), VAR_BOOL, R, 0, 1 },
 #endif
 
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
