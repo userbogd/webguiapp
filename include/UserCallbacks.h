@@ -21,7 +21,8 @@
 
 #ifndef COMPONENTS_WEBGUIAPP_INCLUDE_USERCALLBACKS_H_
 #define COMPONENTS_WEBGUIAPP_INCLUDE_USERCALLBACKS_H_
-#include "HTTPServer.h"
+
+#include "webguiapp.h"
 
 //Callback for current time obtain notification
 void regTimeSyncCallback(void (*time_sync)(struct timeval *tv));
@@ -37,5 +38,8 @@ void regHTTPPrintCustom(int (*print_handler)(httpd_req_t *req, char *buf, char *
 
 //User handler of variables 'var1=value1&var2=value2' styled in POST requests.
 void regAfterPostHandlerCustom(HTTP_IO_RESULT (*post_handler)(httpd_req_t *req, const char *filename, char *PostData));
+
+//User handler for various payload types
+void regCustomPayloadTypeHandler(sys_error_code (*payload_handler)(data_message_t *MSG));
 
 #endif /* COMPONENTS_WEBGUIAPP_INCLUDE_USERCALLBACKS_H_ */

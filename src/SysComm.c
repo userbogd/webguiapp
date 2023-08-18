@@ -60,6 +60,15 @@
 
 #define MAX_JSON_DATA_SIZE 1024
 
+//sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
+
+sys_error_code (*CustomPayloadTypeHandler)(data_message_t *MSG);
+
+void regCustomPayloadTypeHandler(sys_error_code (*payload_handler)(data_message_t *MSG))
+{
+    CustomPayloadTypeHandler = payload_handler;
+}
+
 static esp_err_t SHA256hmacHash(unsigned char *data,
                                 int datalen,
                                 unsigned char *key,
@@ -291,8 +300,12 @@ static sys_error_code SysDataParser(data_message_t *MSG)
             //MSG->parsedData.payload = malloc(sizeof(payload_type_vars));   Not needed for this case
             return SysPayloadTypeVarsHandler(MSG);
         break;
+
         default:
-            return SYS_ERROR_PARSE_PAYLOADTYPE;
+            if (CustomPayloadTypeHandler)
+                CustomPayloadTypeHandler(MSG);
+            else
+                return SYS_ERROR_PARSE_PAYLOADTYPE;
     }
 
     return SYS_ERROR_UNKNOWN;

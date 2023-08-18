@@ -23,7 +23,7 @@
 
 #ifndef COMPONENTS_WEBGUIAPP_INCLUDE_SYSTEMAPPLICATION_H_
 #define COMPONENTS_WEBGUIAPP_INCLUDE_SYSTEMAPPLICATION_H_
-#include "webguiapp.h"
+#include "SysConfiguration.h"
 #include "esp_err.h"
 #include "jRead.h"
 #include "jWrite.h"
