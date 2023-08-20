@@ -139,6 +139,35 @@ static void funct_build_date(char *argres, int rw)
         snprintf(argres, MAX_DYNVAR_LENGTH, "%s", "ESP_ERR_NOT_SUPPORTED");
 }
 
+static void PrintMACFromInterface(char *argres, int rw, esp_netif_t *netif)
+{
+    uint8_t mac_addr[6] = { 0 };
+    esp_netif_get_mac(netif, mac_addr);
+    snprintf(argres, MAX_DYNVAR_LENGTH, "\"%02x-%02x-%02x-%02x-%02x-%02x\"",
+             mac_addr[0],
+             mac_addr[1],
+             mac_addr[2],
+             mac_addr[3],
+             mac_addr[4],
+             mac_addr[5]);
+}
+
+
+static void funct_wifi_ap_mac(char *argres, int rw)
+{
+    PrintMACFromInterface(argres, rw, GetAPNetifAdapter());
+}
+
+static void funct_wifi_sta_mac(char *argres, int rw)
+{
+    PrintMACFromInterface(argres, rw, GetSTANetifAdapter());
+}
+static void funct_eth_mac(char *argres, int rw)
+{
+    PrintMACFromInterface(argres, rw, GetETHNetifAdapter());
+}
+
+
 static void funct_wifiscan(char *argres, int rw)
 {
     if (atoi(argres))
@@ -256,6 +285,7 @@ const rest_var_t SystemVariables[] =
                 { 0, "eth_dns3", &SysConfig.ethSettings.DNSAddr3, VAR_IPADDR,RW, 0, 0 },
                 { 0, "eth_stat", &funct_eth_stat, VAR_FUNCT, R, 0, 0 },
                 { 0, "eth_visible", (bool*)(&VAR_TRUE), VAR_BOOL, R, 0, 1 },
+                { 0, "eth_mac", &funct_eth_mac, VAR_FUNCT, R, 0, 0 },
 #else
                 { 0, "eth_visible", (bool*)(&VAR_FALSE), VAR_BOOL, R, 0, 1 },
 #endif
@@ -277,6 +307,8 @@ const rest_var_t SystemVariables[] =
                 { 0, "wifi_enab", &SysConfig.wifiSettings.Flags1.bIsWiFiEnabled, VAR_BOOL, RW, 0, 1 },
                 { 0, "wifi_isdhcp", &SysConfig.wifiSettings.Flags1.bIsDHCPEnabled, VAR_BOOL, RW, 0, 1 },
                 { 0, "wifi_power", &SysConfig.wifiSettings.MaxPower, VAR_INT, RW, 0, 80 },
+                { 0, "wifi_sta_mac", &funct_wifi_sta_mac, VAR_FUNCT, R, 0, 0 },
+                { 0, "wifi_ap_mac", &funct_wifi_ap_mac, VAR_FUNCT, R, 0, 0 },
                 { 0, "wifi_stat", &funct_wifi_stat, VAR_FUNCT, R, 0, 0 },
                 { 0, "wifi_scan", &funct_wifiscan, VAR_FUNCT, R, 0, 0 },
                 { 0, "wifi_scan_res", &funct_wifiscanres, VAR_FUNCT, R, 0, 0 },
