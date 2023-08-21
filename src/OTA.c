@@ -43,7 +43,7 @@ extern const uint8_t server_cert_pem_start[] asm("_binary_ca_cert_pem_start");
 extern const uint8_t server_cert_pem_end[] asm("_binary_ca_cert_pem_end");
 
 char AvailFwVersion[32] = "Unknown";
-char FwUpdStatus[64] = "<div class='clok'>Updated</div>";
+char FwUpdStatus[64] = "<span class='clok'>Updated</span>";
 
 #define HASH_LEN 32
 #define REPORT_PACKETS_EVERY 100
@@ -192,7 +192,7 @@ esp_err_t my_esp_https_ota(const esp_http_client_config_t *config)
             }
             if (++countPackets >= REPORT_PACKETS_EVERY)
             {
-                sprintf(FwUpdStatus, "<div class='clok'>Updated %d bytes...</div>",
+                sprintf(FwUpdStatus, "<span class='clok'>Updated %d bytes...</span>",
                         esp_https_ota_get_image_len_read(https_ota_handle));
                 ESP_LOGI(TAG, "%s", FwUpdStatus);
                 countPackets = 0;
@@ -202,14 +202,14 @@ esp_err_t my_esp_https_ota(const esp_http_client_config_t *config)
         if (err != ESP_OK)
         {
             esp_https_ota_abort(https_ota_handle);
-            strcpy(FwUpdStatus, "<div class='clerr'>Error update</div>");
+            strcpy(FwUpdStatus, "<span class='clerr'>Error update</span>");
             return err;
         }
     }
     else
     {
         ESP_LOGI(TAG, "New firmware has NOT newer build, SKIP update firmware");
-        strcpy(FwUpdStatus, "<div class='clok'>Updated actual</div>");
+        strcpy(FwUpdStatus, "<span class='clok'>Updated actual</span>");
     }
 
     esp_err_t ota_finish_err = esp_https_ota_finish(https_ota_handle);
@@ -220,7 +220,7 @@ esp_err_t my_esp_https_ota(const esp_http_client_config_t *config)
     if (need_to_update)
     {
         ESP_LOGI(TAG, "Firmware updated");
-        strcpy(FwUpdStatus, "<div class='clok'>Updated ok. Restart...</div>");
+        strcpy(FwUpdStatus, "<span class='clok'>Updated ok. Restart...</span>");
         if (GetSysConf()->Flags1.bIsResetOTAEnabled)
         {
             ESP_ERROR_CHECK(nvs_flash_erase());
@@ -282,7 +282,7 @@ static void OTATask(void *pvParameter)
     else
     {
         ESP_LOGE(TAG, "Firmware upgrade failed");
-        strcpy(FwUpdStatus, "<div class='clerr'>Error update</div>");
+        strcpy(FwUpdStatus, "<span class='clerr'>Error update</span>");
     }
     /*
      free(certbuf);
@@ -311,7 +311,7 @@ esp_err_t StartOTA(void)
         return ESP_ERR_NOT_FINISHED;
     }
     ESP_LOGI(TAG, "Starting OTA Task");
-    strcpy(FwUpdStatus, "<div class='clwarn'>Start update...</div>");
+    strcpy(FwUpdStatus, "<span class='clwarn'>Start update...</span>");
     xTaskCreate(OTATask, "OTATask", 1024 * 8, (void*) 0, 5, NULL);
     return ESP_OK;
 }
