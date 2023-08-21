@@ -33,10 +33,9 @@
 
 extern SYS_CONFIG SysConfig;
 
-
 rest_var_t *AppVars = NULL;
 int AppVarsSize = 0;
-void SetAppVars( rest_var_t* appvars, int size)
+void SetAppVars(rest_var_t *appvars, int size)
 {
     AppVars = appvars;
     AppVarsSize = size;
@@ -152,7 +151,6 @@ static void PrintMACFromInterface(char *argres, int rw, esp_netif_t *netif)
              mac_addr[5]);
 }
 
-
 static void funct_wifi_ap_mac(char *argres, int rw)
 {
     PrintMACFromInterface(argres, rw, GetAPNetifAdapter());
@@ -166,7 +164,6 @@ static void funct_eth_mac(char *argres, int rw)
 {
     PrintMACFromInterface(argres, rw, GetETHNetifAdapter());
 }
-
 
 static void funct_wifiscan(char *argres, int rw)
 {
@@ -195,44 +192,57 @@ static void funct_wifiscanres(char *argres, int rw)
     int err = jwClose(&jwc);
     if (err == JWRITE_OK)
         return;
-    if(err > JWRITE_BUF_FULL )
+    if (err > JWRITE_BUF_FULL)
         strcpy(argres, "\"SYS_ERROR_NO_MEMORY\"");
     else
         strcpy(argres, "\"SYS_ERROR_UNKNOWN\"");
 }
 
-const int hw_rev = CONFIG_BOARD_HARDWARE_REVISION;
+static void funct_ota_state(char *argres, int rw)
+{
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", GetUpdateStatus());
+}
 
+static void funct_ota_start(char *argres, int rw)
+{
+    StartOTA();
+}
+static void funct_ota_newver(char *argres, int rw)
+{
+    snprintf(argres, MAX_DYNVAR_LENGTH, "\"%s\"", GetAvailVersion());
+}
+
+const int hw_rev = CONFIG_BOARD_HARDWARE_REVISION;
 const bool VAR_TRUE = true;
 const bool VAR_FALSE = false;
 
-
 const rest_var_t SystemVariables[] =
         {
-                /*FUNCTIONS*/
-                { 0, "time", &funct_time, VAR_FUNCT, R, 0, 0 },
-                { 0, "uptime", &funct_uptime, VAR_FUNCT, R, 0, 0 },
 
+        { 0, "time", &funct_time, VAR_FUNCT, R, 0, 0 },
+                { 0, "uptime", &funct_uptime, VAR_FUNCT, R, 0, 0 },
                 { 0, "free_ram", &funct_fram, VAR_FUNCT, R, 0, 0 },
                 { 0, "free_ram_min", &funct_fram_min, VAR_FUNCT, R, 0, 0 },
                 { 0, "def_interface", &funct_def_interface, VAR_FUNCT, R, 0, 0 },
-
                 { 0, "fw_rev", &funct_fw_ver, VAR_FUNCT, R, 0, 0 },
                 { 0, "idf_rev", &funct_idf_ver, VAR_FUNCT, R, 0, 0 },
                 { 0, "build_date", &funct_build_date, VAR_FUNCT, R, 0, 0 },
 
-                /*CONSTANTS*/
                 { 0, "model_name", CONFIG_DEVICE_MODEL_NAME, VAR_STRING, R, 1, 64 },
                 { 0, "hw_rev", ((int*) &hw_rev), VAR_INT, R, 1, 1024 },
                 { 0, "build_date", CONFIG_DEVICE_MODEL_NAME, VAR_STRING, R, 1, 64 },
                 { 0, "model_name", CONFIG_DEVICE_MODEL_NAME, VAR_STRING, R, 1, 64 },
 
-                /*VARIABLES*/
                 { 0, "net_bios_name", &SysConfig.NetBIOSName, VAR_STRING, RW, 3, 31 },
                 { 0, "sys_name", &SysConfig.SysName, VAR_STRING, RW, 3, 31 },
                 { 0, "sys_pass", &SysConfig.SysPass, VAR_PASS, RW, 3, 31 },
+
                 { 0, "ota_url", &SysConfig.OTAURL, VAR_STRING, RW, 3, 128 },
                 { 0, "ota_auto_int", &SysConfig.OTAAutoInt, VAR_INT, RW, 0, 65535 },
+                { 0, "ota_state", &funct_ota_state, VAR_FUNCT, R, 0, 0 },
+                { 0, "ota_start", &funct_ota_start, VAR_FUNCT, R, 0, 0 },
+                { 0, "ota_newver", &funct_ota_newver, VAR_FUNCT, R, 0, 0 },
+
                 { 0, "ser_num", &SysConfig.SN, VAR_STRING, RW, 10, 10 },
                 { 0, "dev_id", &SysConfig.ID, VAR_STRING, RW, 8, 8 },
                 { 0, "color_scheme", &SysConfig.ColorSheme, VAR_INT, RW, 1, 2 },
@@ -287,8 +297,8 @@ const rest_var_t SystemVariables[] =
                 { 0, "eth_visible", (bool*)(&VAR_TRUE), VAR_BOOL, R, 0, 1 },
                 { 0, "eth_mac", &funct_eth_mac, VAR_FUNCT, R, 0, 0 },
 #else
-                { 0, "eth_visible", (bool*)(&VAR_FALSE), VAR_BOOL, R, 0, 1 },
-#endif
+                { 0, "eth_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
+                #endif
 
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
                 { 0, "wifi_mode", &SysConfig.wifiSettings.WiFiMode, VAR_INT, RW, 1, 3 },
@@ -335,7 +345,7 @@ esp_err_t SetConfVar(char *name, char *val, rest_var_types *tp)
         }
     }
     //Search for user variables
-    if(AppVars)
+    if (AppVars)
     {
         for (int i = 0; i < AppVarsSize; ++i)
         {
@@ -410,7 +420,7 @@ esp_err_t GetConfVar(char *name, char *val, rest_var_types *tp)
         }
     }
     //Search for user variables
-    if(AppVars)
+    if (AppVars)
     {
         for (int i = 0; i < AppVarsSize; ++i)
         {
