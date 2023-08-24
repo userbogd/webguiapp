@@ -468,7 +468,7 @@ static void wifi_init_apsta(void *pvParameter)
 
     wifi_country_t CC;
     esp_wifi_get_country(&CC);
-    ESP_LOGW(TAG, "Country code %.*s, start_ch=%d, total_ch=%d, max power %d", 3, CC.cc, CC.schan, CC.nchan,
+    ESP_LOGI(TAG, "Country code %.*s, start_ch=%d, total_ch=%d, max power %d", 3, CC.cc, CC.schan, CC.nchan,
              CC.max_tx_power);
 
     ESP_LOGI(TAG, "wifi_init_softap_sta finished");
