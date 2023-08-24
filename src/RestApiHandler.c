@@ -77,6 +77,20 @@ static void funct_mqtt_2_stat(char *argres, int rw)
 {
     snprintf(argres, MAX_DYNVAR_LENGTH, (GetMQTT2Connected()) ? "\"CONNECTED\"" : "\"DISCONNECTED\"");
 }
+static void funct_mqtt_1_test(char *argres, int rw)
+{
+    if (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled)
+        PublicTestMQTT(0);
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled) ? "\"OK\"" : "\"NOT_AVAIL\"");
+
+}
+static void funct_mqtt_2_test(char *argres, int rw)
+{
+    if (GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled)
+        PublicTestMQTT(1);
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled) ? "\"OK\"" : "\"NOT_AVAIL\"");
+}
+
 static void funct_def_interface(char *argres, int rw)
 {
     GetDefaultNetIFName(argres);
@@ -269,6 +283,7 @@ const rest_var_t SystemVariables[] =
                 { 0, "mqtt_1_uname", &SysConfig.mqttStation[0].UserName, VAR_STRING, RW, 3, 31 },
                 { 0, "mqtt_1_pass", &SysConfig.mqttStation[0].UserPass, VAR_PASS, RW, 3, 31 },
                 { 0, "mqtt_1_stat", &funct_mqtt_1_stat, VAR_FUNCT, R, 0, 0 },
+                { 0, "mqtt_1_test", &funct_mqtt_1_test, VAR_FUNCT, RW, 0, 0 },
 
 #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
                 { 0, "mqtt_2_enab", &SysConfig.mqttStation[1].Flags1.bIsGlobalEnabled, VAR_BOOL, RW, 0, 1 },
@@ -280,6 +295,7 @@ const rest_var_t SystemVariables[] =
                 { 0, "mqtt_2_uname", &SysConfig.mqttStation[1].UserName, VAR_STRING, RW, 3, 31 },
                 { 0, "mqtt_2_pass", &SysConfig.mqttStation[1].UserPass, VAR_PASS, RW, 3, 31 },
                 { 0, "mqtt_2_stat", &funct_mqtt_2_stat, VAR_FUNCT, R, 0, 0 },
+                { 0, "mqtt_2_test", &funct_mqtt_2_test, VAR_FUNCT, RW, 0, 0 },
 
 #endif
 #endif
@@ -287,16 +303,16 @@ const rest_var_t SystemVariables[] =
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
                 { 0, "eth_enab", &SysConfig.ethSettings.Flags1.bIsETHEnabled, VAR_BOOL, RW, 0, 1 },
                 { 0, "eth_isdhcp", &SysConfig.ethSettings.Flags1.bIsDHCPEnabled, VAR_BOOL, RW, 0, 1 },
-                { 0, "eth_ip", &SysConfig.ethSettings.IPAddr, VAR_IPADDR,RW, 0, 0 },
-                { 0, "eth_mask", &SysConfig.ethSettings.Mask, VAR_IPADDR,RW, 0, 0 },
-                { 0, "eth_gw", &SysConfig.ethSettings.Gateway, VAR_IPADDR,RW, 0, 0 },
-                { 0, "eth_dns1", &SysConfig.ethSettings.DNSAddr1, VAR_IPADDR,RW, 0, 0 },
-                { 0, "eth_dns2", &SysConfig.ethSettings.DNSAddr2, VAR_IPADDR,RW, 0, 0 },
-                { 0, "eth_dns3", &SysConfig.ethSettings.DNSAddr3, VAR_IPADDR,RW, 0, 0 },
+                { 0, "eth_ip", &SysConfig.ethSettings.IPAddr, VAR_IPADDR, RW, 0, 0 },
+                { 0, "eth_mask", &SysConfig.ethSettings.Mask, VAR_IPADDR, RW, 0, 0 },
+                { 0, "eth_gw", &SysConfig.ethSettings.Gateway, VAR_IPADDR, RW, 0, 0 },
+                { 0, "eth_dns1", &SysConfig.ethSettings.DNSAddr1, VAR_IPADDR, RW, 0, 0 },
+                { 0, "eth_dns2", &SysConfig.ethSettings.DNSAddr2, VAR_IPADDR, RW, 0, 0 },
+                { 0, "eth_dns3", &SysConfig.ethSettings.DNSAddr3, VAR_IPADDR, RW, 0, 0 },
                 { 0, "eth_stat", &funct_eth_stat, VAR_FUNCT, R, 0, 0 },
-                { 0, "eth_visible", (bool*)(&VAR_TRUE), VAR_BOOL, R, 0, 1 },
+                { 0, "eth_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
                 { 0, "eth_mac", &funct_eth_mac, VAR_FUNCT, R, 0, 0 },
-#else
+                #else
                 { 0, "eth_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
                 #endif
 
