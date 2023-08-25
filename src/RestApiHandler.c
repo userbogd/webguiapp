@@ -468,7 +468,7 @@ esp_err_t GetConfVar(char *name, char *val, rest_var_types *tp)
             esp_ip4addr_ntoa((const esp_ip4_addr_t*) V->ref, val, 16);
         break;
         case VAR_FUNCT:
-            ((void (*)(char*, int)) (V->ref))(val, 1);
+            ((void (*)(char*, int)) (V->ref))(val, 0);
         break;
         case VAR_ERROR:
             break;
