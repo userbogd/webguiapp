@@ -194,7 +194,7 @@ static void funct_wifiscanres(char *argres, int rw)
     for (int i = 0; i < arg; i++)
     {
         Rec = GetWiFiAPRecord(i);
-        if (Rec)
+        if (Rec && strlen((const char*)Rec->ssid) > 0)
         {
             jwArr_object(&jwc);
             jwObj_string(&jwc, "ssid", (char*) Rec->ssid);
