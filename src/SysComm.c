@@ -35,18 +35,6 @@
  "wifi_mode":"",
  "wifi_sta_ip":"",
  "wifi_sta_mask":"",
- "wifi_sta_gw":"",
- "wifi_ap_ip":"",
- "wifi_dns1":"",
- "wifi_dns2":"",
- "wifi_dns3":"",
- "wifi_sta_ssid":"",
- "wifi_sta_key":"",
- "wifi_ap_ssid":"",
- "wifi_ap_key":"",
- "wifi_enab":"",
- "wifi_isdhcp":"",
- "wifi_power":""
  }
  }},
  "signature":"6a11b872e8f766673eb82e127b6918a0dc96a42c5c9d184604f9787f3d27bcef"}
@@ -59,9 +47,6 @@
 #define TAG "SysComm"
 
 #define MAX_JSON_DATA_SIZE 1024
-
-//sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
-
 sys_error_code (*CustomPayloadTypeHandler)(data_message_t *MSG);
 
 void regCustomPayloadTypeHandler(sys_error_code (*payload_handler)(data_message_t *MSG))
@@ -86,17 +71,8 @@ static esp_err_t SHA256hmacHash(unsigned char *data,
     return ESP_OK;
 }
 
-/*
- static void Timestamp(char *ts)
- {
- struct timeval tp;
- gettimeofday(&tp, NULL);
- unsigned long long ms = (((unsigned long long) tp.tv_sec) * 1000000 + tp.tv_usec);
- sprintf(ts, "%llu", ms);
- }
- */
 
-static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
+static sys_error_code PayloadType_1_Handler(data_message_t *MSG)
 {
     struct jReadElement result;
     const char *err_br;
@@ -222,7 +198,7 @@ static sys_error_code SysPayloadTypeVarsHandler(data_message_t *MSG)
     return SYS_OK_DATA;
 }
 
-static sys_error_code SysDataParser(data_message_t *MSG)
+static sys_error_code DataHeaderParser(data_message_t *MSG)
 {
     struct jReadElement result;
     jRead(MSG->inputDataBuffer, "", &result);
@@ -297,8 +273,7 @@ static sys_error_code SysDataParser(data_message_t *MSG)
     switch (MSG->parsedData.payloadType)
     {
         case 1:
-            //MSG->parsedData.payload = malloc(sizeof(payload_type_vars));   Not needed for this case
-            return SysPayloadTypeVarsHandler(MSG);
+            return PayloadType_1_Handler(MSG);
         break;
 
         default:
@@ -311,9 +286,9 @@ static sys_error_code SysDataParser(data_message_t *MSG)
     return SYS_ERROR_UNKNOWN;
 }
 
-esp_err_t SysServiceDataHandler(data_message_t *MSG)
+esp_err_t ServiceDataHandler(data_message_t *MSG)
 {
-    MSG->err_code = (int) SysDataParser(MSG);
+    MSG->err_code = (int) DataHeaderParser(MSG);
     if (MSG->err_code)
     {
         struct jWriteControl jwc;

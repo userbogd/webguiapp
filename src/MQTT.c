@@ -26,6 +26,11 @@
 #include "MQTT.h"
 #include "UserCallbacks.h"
 
+#define TAG "MQTT"
+#define SERVICE_NAME "SYSTEM"          // Dedicated service name
+#define UPLINK_SUBTOPIC "UPLINK"        // Device publish to this topic
+#define DOWNLINK_SUBTOPIC "DWLINK"      // Device listen from this topic
+
 #define MQTT_DEBUG_MODE  CONFIG_WEBGUIAPP_MQTT_DEBUG_LEVEL
 
 #define MQTT_MESSAGE_BUFER_LENTH 5  //size of mqtt queue
@@ -47,7 +52,7 @@ uint8_t MQTT2MessagesQueueStorageArea[MQTT_MESSAGE_BUFER_LENTH * sizeof(MQTT_DAT
 
 mqtt_client_t mqtt[CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM] = { 0 };
 
-#define TAG "MQTTApp"
+
 
 static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_base_t base, int32_t event_id,
                                       void *event_data);
@@ -119,7 +124,7 @@ esp_err_t SysServiceMQTTSend(char *data, int len, int idx)
     {
         memcpy(buf, data, len);
         MQTT_DATA_SEND_STRUCT DSS;
-        ComposeTopic(DSS.topic, idx, "SYSTEM", "UPLINK");
+        ComposeTopic(DSS.topic, idx, SERVICE_NAME, UPLINK_SUBTOPIC);
         DSS.raw_data_ptr = buf;
         DSS.data_length = len;
         if (xQueueSend(GetMQTTHandlesPool(idx)->mqtt_queue, &DSS, pdMS_TO_TICKS(1000)) == pdPASS)
@@ -151,32 +156,16 @@ mqtt_app_err_t PublicTestMQTT(int idx)
     strcat(resp, ":");
     strcat(resp, tmp);
     jwObj_string(&jwc, "url", resp);
-    ComposeTopic(resp, idx, "SYSTEM", "UPLINK");
+    ComposeTopic(resp, idx, SERVICE_NAME, UPLINK_SUBTOPIC);
     jwObj_string(&jwc, "tx_topic", resp);
-    ComposeTopic(resp, idx, "SYSTEM", "DWLINK");
+    ComposeTopic(resp, idx, SERVICE_NAME, DOWNLINK_SUBTOPIC);
     jwObj_string(&jwc, "rx_topic", resp);
     jwEnd(&jwc);
     jwClose(&jwc);
-    char *buf = (char*) malloc(strlen(JSONMess) + 1);
-    if (buf)
-    {
-        memcpy(buf, JSONMess, strlen(JSONMess));
-        MQTT_DATA_SEND_STRUCT DSS;
-        ComposeTopic(DSS.topic, idx, "SYSTEM", "UPLINK");
-        DSS.raw_data_ptr = buf;
-        DSS.data_length = strlen(JSONMess);
-        if (xQueueSend(GetMQTTHandlesPool(idx)->mqtt_queue, &DSS, pdMS_TO_TICKS(1000)) == pdPASS)
-            return API_OK;
-        else
-        {
-            free(buf);
-            return API_INTERNAL_ERR;
-        }
-    }
-    else
-    {  // ERR internal error on publish error
-        return API_INTERNAL_ERR;
-    }
+    mqtt_app_err_t merr = API_OK;
+    if (SysServiceMQTTSend(JSONMess, strlen(JSONMess), idx) != ESP_OK)
+        merr = API_INTERNAL_ERR;
+    return merr;
 }
 
 static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_base_t base, int32_t event_id,
@@ -200,7 +189,7 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
 #if MQTT_DEBUG_MODE > 0
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED client %d", idx);
 #endif
-            ComposeTopic(topic, idx, "SYSTEM", "DWLINK");
+            ComposeTopic(topic, idx, SERVICE_NAME, DOWNLINK_SUBTOPIC);
             msg_id = esp_mqtt_client_subscribe(client, (const char*) topic, 0);
 #if MQTT_DEBUG_MODE > 0
             ESP_LOGI(TAG, "Subscribe to %s", topic);
@@ -242,7 +231,7 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
             ESP_LOGI(TAG, "MQTT_EVENT_DATA, client %d", idx);
 #endif
             //Check if topic is SYSTEM and pass data to handler
-            ComposeTopic(topic, idx, "SYSTEM", "DWLINK");
+            ComposeTopic(topic, idx, SERVICE_NAME, DOWNLINK_SUBTOPIC);
             if (!memcmp(topic, event->topic, event->topic_len))
             {
                 //SystemDataHandler(event->data, event->data_len, idx);  //Old API
@@ -255,7 +244,7 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
                     M.chlidx = idx;
                     M.outputDataBuffer = respbuf;
                     M.outputDataLength = EXPECTED_MAX_DATA_RESPONSE_SIZE;
-                    SysServiceDataHandler(&M);
+                    ServiceDataHandler(&M);
                     SysServiceMQTTSend(M.outputDataBuffer, strlen(M.outputDataBuffer), idx);
                     free(respbuf);
 #if(MQTT_DEBUG_MODE > 0)

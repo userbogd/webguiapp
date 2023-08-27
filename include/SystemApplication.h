@@ -97,7 +97,7 @@ typedef struct
 esp_err_t GetConfVar(char* name, char* val, rest_var_types *tp);
 esp_err_t SetConfVar(char* name, char* val, rest_var_types *tp);
 
-esp_err_t SysServiceDataHandler(data_message_t *MSG);
+esp_err_t ServiceDataHandler(data_message_t *MSG);
 sys_error_code SysVarsPayloadHandler(data_message_t *MSG);
 void GetSysErrorDetales(sys_error_code err, const char **br, const char **ds);
 

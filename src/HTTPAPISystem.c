@@ -40,7 +40,7 @@ HTTP_IO_RESULT HTTPPostSysAPI(httpd_req_t *req, char *PostData)
             M.chlidx = 100;
             M.outputDataBuffer = respbuf;
             M.outputDataLength = EXPECTED_MAX_DATA_RESPONSE_SIZE;
-            SysServiceDataHandler(&M);
+            ServiceDataHandler(&M);
             httpd_resp_set_type(req, "application/json");
             httpd_resp_sendstr(req, respbuf);
             free(respbuf);
