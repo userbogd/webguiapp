@@ -88,7 +88,7 @@ static void funct_mqtt_2_test(char *argres, int rw)
 {
     if (GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled)
         PublicTestMQTT(1);
-    snprintf(argres, VAR_MAX_VALUE_LENGTH, (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled) ? "\"OK\"" : "\"NOT_AVAIL\"");
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, (GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled) ? "\"OK\"" : "\"NOT_AVAIL\"");
 }
 
 static void funct_def_interface(char *argres, int rw)
