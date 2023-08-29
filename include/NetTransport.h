@@ -107,6 +107,7 @@ void SetDefaultNetIF(esp_netif_t *IF);
 void NextDefaultNetIF(void);
 void PrintDefaultNetIF(void);
 void GetDefaultNetIFName(char *name);
+esp_netif_t* GetNetifCurrentDefault();
 
 void PrintNetifs(void);
 void GotEthIF(void);

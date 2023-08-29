@@ -28,6 +28,11 @@
 
 extern struct netif *netif_default;
 
+esp_netif_t* GetNetifCurrentDefault()
+{
+    return netif_default;
+}
+
 esp_netif_t* GetNetifByName(char *name)
 {
     return esp_netif_get_handle_from_ifkey(name);
