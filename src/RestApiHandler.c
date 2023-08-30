@@ -81,14 +81,16 @@ static void funct_mqtt_1_test(char *argres, int rw)
 {
     if (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled)
         PublicTestMQTT(0);
-    snprintf(argres, VAR_MAX_VALUE_LENGTH, (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled) ? "\"OK\"" : "\"NOT_AVAIL\"");
+    snprintf(argres, VAR_MAX_VALUE_LENGTH,
+             (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled) ? "\"OK\"" : "\"NOT_AVAIL\"");
 
 }
 static void funct_mqtt_2_test(char *argres, int rw)
 {
     if (GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled)
         PublicTestMQTT(1);
-    snprintf(argres, VAR_MAX_VALUE_LENGTH, (GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled) ? "\"OK\"" : "\"NOT_AVAIL\"");
+    snprintf(argres, VAR_MAX_VALUE_LENGTH,
+             (GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled) ? "\"OK\"" : "\"NOT_AVAIL\"");
 }
 
 static void funct_def_interface(char *argres, int rw)
@@ -194,7 +196,7 @@ static void funct_wifiscanres(char *argres, int rw)
     for (int i = 0; i < arg; i++)
     {
         Rec = GetWiFiAPRecord(i);
-        if (Rec && strlen((const char*)Rec->ssid) > 0)
+        if (Rec && strlen((const char*) Rec->ssid) > 0)
         {
             jwArr_object(&jwc);
             jwObj_string(&jwc, "ssid", (char*) Rec->ssid);
@@ -210,6 +212,23 @@ static void funct_wifiscanres(char *argres, int rw)
         strcpy(argres, "\"SYS_ERROR_NO_MEMORY\"");
     else
         strcpy(argres, "\"SYS_ERROR_UNKNOWN\"");
+}
+
+void funct_gsm_module(char *argres, int rw)
+{
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", GetPPPModemInfo()->model);
+}
+void funct_gsm_operator(char *argres, int rw)
+{
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", GetPPPModemInfo()->oper);
+}
+void funct_gsm_imei(char *argres, int rw)
+{
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", GetPPPModemInfo()->imei);
+}
+void funct_gsm_imsi(char *argres, int rw)
+{
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", GetPPPModemInfo()->imsi);
 }
 
 static void funct_ota_state(char *argres, int rw)
@@ -339,11 +358,24 @@ const rest_var_t SystemVariables[] =
                 { 0, "wifi_scan", &funct_wifiscan, VAR_FUNCT, R, 0, 0 },
                 { 0, "wifi_scan_res", &funct_wifiscanres, VAR_FUNCT, R, 0, 0 },
                 { 0, "wifi_level", &funct_wifi_level, VAR_FUNCT, R, 0, 0 },
-        #endif
+                #endif
 
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
+                { 0, "gsm_enab", &SysConfig.gsmSettings.Flags1.bIsGSMEnabled, VAR_BOOL, RW, 0, 1 },
+                { 0, "gsm_module", &funct_gsm_module, VAR_FUNCT, R, 0, 0 },
+                { 0, "gsm_operator", &funct_gsm_operator, VAR_FUNCT, R, 0, 0 },
+                { 0, "gsm_imei", &funct_gsm_imei, VAR_FUNCT, R, 0, 0 },
+                { 0, "gsm_imsi", &funct_gsm_imsi, VAR_FUNCT, R, 0, 0 },
+                { 0, "gsm_ip", &SysConfig.gsmSettings.IPAddr, VAR_IPADDR, RW, 0, 0 },
+                { 0, "gsm_mask", &SysConfig.gsmSettings.Mask, VAR_IPADDR, RW, 0, 0 },
+                { 0, "gsm_gw", &SysConfig.gsmSettings.Gateway, VAR_IPADDR, RW, 0, 0 },
+                { 0, "gsm_dns1", &SysConfig.gsmSettings.DNSAddr1, VAR_IPADDR, RW, 0, 0 },
+                { 0, "gsm_dns2", &SysConfig.gsmSettings.DNSAddr2, VAR_IPADDR, RW, 0, 0 },
+                { 0, "gsm_dns3", &SysConfig.gsmSettings.DNSAddr3, VAR_IPADDR, RW, 0, 0 },
                 { 0, "gsm_stat", &funct_gsm_stat, VAR_FUNCT, R, 0, 0 },
-
+                { 0, "gsm_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
+        #else
+                { 0, "gsm_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
 #endif
 
         };
