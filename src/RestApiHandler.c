@@ -214,6 +214,8 @@ static void funct_wifiscanres(char *argres, int rw)
         strcpy(argres, "\"SYS_ERROR_UNKNOWN\"");
 }
 
+
+#if CONFIG_WEBGUIAPP_GPRS_ENABLE
 void funct_gsm_module(char *argres, int rw)
 {
     snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", GetPPPModemInfo()->model);
@@ -230,6 +232,36 @@ void funct_gsm_imsi(char *argres, int rw)
 {
     snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", GetPPPModemInfo()->imsi);
 }
+#endif
+
+
+#ifdef CONFIG_WEBGUIAPP_LORAWAN_ENABLE
+void funct_lora_stat(char *argres, int rw)
+{
+    snprintf(argres, VAR_MAX_VALUE_LENGTH,
+                 (isLORAConnected()) ? "\"CONNECTED\"" : "\"DISCONNECTED\"");
+}
+void funct_lora_devid(char *argres, int rw)
+{
+    uint8_t temp[16];
+    BytesToStr((unsigned char*) &GetSysConf()->lorawanSettings.DevEui, temp, 8);
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", temp);
+}
+
+void funct_lora_appid(char *argres, int rw)
+{
+    uint8_t temp[16];
+    BytesToStr((unsigned char*) &GetSysConf()->lorawanSettings.AppEui, temp, 8);
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", temp);
+}
+void funct_lora_appkey(char *argres, int rw)
+{
+    uint8_t temp[32];
+    BytesToStr((unsigned char*) &GetSysConf()->lorawanSettings.AppKey, temp, 16);
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", temp);
+}
+#endif
+
 
 static void funct_ota_state(char *argres, int rw)
 {
@@ -244,6 +276,9 @@ static void funct_ota_newver(char *argres, int rw)
 {
     snprintf(argres, MAX_DYNVAR_LENGTH, "\"%s\"", GetAvailVersion());
 }
+
+
+
 
 const int hw_rev = CONFIG_BOARD_HARDWARE_REVISION;
 const bool VAR_TRUE = true;
@@ -374,8 +409,20 @@ const rest_var_t SystemVariables[] =
                 { 0, "gsm_dns3", &SysConfig.gsmSettings.DNSAddr3, VAR_IPADDR, RW, 0, 0 },
                 { 0, "gsm_stat", &funct_gsm_stat, VAR_FUNCT, R, 0, 0 },
                 { 0, "gsm_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
-        #else
+                #else
                 { 0, "gsm_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
+#endif
+
+#ifdef CONFIG_WEBGUIAPP_LORAWAN_ENABLE
+                { 0, "lora_enab", &SysConfig.lorawanSettings.Flags1.bIsLoRaWANEnabled, VAR_BOOL, RW, 0, 1 },
+                { 0, "lora_visible", (bool*) (&VAR_TRUE), VAR_BOOL, RW, 0, 1 },
+                { 0, "lora_devid", &funct_lora_devid, VAR_FUNCT, RW, 0, 0 },
+                { 0, "lora_appid", &funct_lora_appid, VAR_FUNCT, RW, 0, 0 },
+                { 0, "lora_appkey", &funct_lora_appkey, VAR_FUNCT, RW, 0, 0 },
+
+
+#else
+                { 0, "lora_visible", (bool*) (&VAR_FALSE), VAR_BOOL, RW, 0, 1 },
 #endif
 
         };
