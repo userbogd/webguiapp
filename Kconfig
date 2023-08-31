@@ -762,6 +762,26 @@ menu "WebGUIApp"
 	   endif
 	endmenu
 	
+	menu "Modbus settings"
+		config WEBGUIAPP_MBTCP_ENABLED
+			bool "Enabled modbus TCP"
+	        default n
+	        help
+	        	Set enabled Modbus TCP
+	    
+	    if WEBGUIAPP_MBTCP_ENABLED
+	    	config WEBGUIAPP_MBTCP_ON
+				bool "Default modbus TCP switched on"
+	        	default y
+	     	
+	     	config WEBGUIAPP_MBTCP_SERVER_PORT
+	    		int "Modbus TCP server port"
+	    		range 1 65535
+	    		default 502 				            
+	   endif
+	endmenu
+	
+	
     
 	menu "MQTT settings"
 		config WEBGUIAPP_MQTT_ENABLE

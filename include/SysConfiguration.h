@@ -201,6 +201,13 @@ typedef struct
 
           } lorawanSettings;
 
+          struct
+          {
+            bool IsModbusTCPEnabled;
+            int ModbusTCPPort;
+
+          } modbusSettings;
+
 
     } SYS_CONFIG;
 
