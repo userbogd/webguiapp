@@ -453,3 +453,55 @@ static void mqtt2_user_event_handler(void *handler_args, esp_event_base_t base, 
 }
 
 #endif
+
+#define MAX_MQTT_LOG_MESSAGE (1024)
+#define SPIRAL_LOG_TAG "SystemExtendedLog"
+char data[MAX_MQTT_LOG_MESSAGE];
+esp_err_t  ExtendedLog(esp_log_level_t level, char *format, ...)
+{
+    va_list arg;
+    va_start(arg, format);
+    va_end(arg);
+    vsnprintf(data, MAX_MQTT_LOG_MESSAGE,  format, arg);
+    switch(level)
+    {
+        case ESP_LOG_INFO:
+            case ESP_LOG_DEBUG:
+            case ESP_LOG_VERBOSE:
+            case ESP_LOG_NONE:
+            ESP_LOGI(SPIRAL_LOG_TAG, "%s", data);
+            break;
+        case ESP_LOG_WARN:
+            ESP_LOGW(SPIRAL_LOG_TAG, "%s", data);
+            break;
+        case ESP_LOG_ERROR:
+            ESP_LOGE(SPIRAL_LOG_TAG, "%s", data);
+            break;
+    }
+
+    for (int idx = 0; idx < 2; idx++)
+    {
+        if (GetMQTTHandlesPool(idx)->mqtt_queue == NULL)
+            continue;
+        char time[RFC3339_TIMESTAMP_LENGTH];
+        GetRFC3339Time(time);
+        char *buf = (char*) malloc(strlen(data) + RFC3339_TIMESTAMP_LENGTH + 2);
+        if (buf)
+        {
+            strcpy(buf, time);
+            strcat(buf, "  ");
+            strcat(buf, data);
+            MQTT_DATA_SEND_STRUCT DSS;
+            ComposeTopic(DSS.topic, idx, "LOG", "UPLINK");
+            DSS.raw_data_ptr = buf;
+            DSS.data_length = strlen(buf);
+            if (xQueueSend(GetMQTTHandlesPool(idx)->mqtt_queue, &DSS, pdMS_TO_TICKS(1000)) != pdPASS)
+                free(buf);
+            continue;
+        }
+        return ESP_ERR_NO_MEM;
+    }
+    return ESP_OK;
+}
+
+

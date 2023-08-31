@@ -128,4 +128,5 @@ void RegGSMReset(void (*gsm_rst)(uint8_t level));
 void GenerateSystemSettingsJSONFile(void);
 void mDNSServiceStart(void);
 
+esp_err_t  ExtendedLog(esp_log_level_t level, char *format, ...);
 #endif /* MAIN_INCLUDE_NETTRANSPORT_H_ */
