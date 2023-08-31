@@ -418,19 +418,19 @@ const rest_var_t SystemVariables[] =
                 { 0, "lora_visible", (bool*) (&VAR_TRUE), VAR_BOOL, RW, 0, 1 },
                 { 0, "lora_devid", &funct_lora_devid, VAR_FUNCT, RW, 0, 0 },
                 { 0, "lora_appid", &funct_lora_appid, VAR_FUNCT, RW, 0, 0 },
-                { 0, "lora_appkey", &funct_lora_appkey, VAR_FUNCT, RW, 0, 0 },
+                { 0, "lora_appkey", &funct_lora_appkey, VAR_FUNCT, R, 0, 0 },
 
 
 #else
-                { 0, "lora_visible", (bool*) (&VAR_FALSE), VAR_BOOL, RW, 0, 1 },
+                { 0, "lora_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
 #endif
 
 #ifdef CONFIG_WEBGUIAPP_MBTCP_ENABLED
                 { 0, "mbtcp_enab", &SysConfig.modbusSettings.IsModbusTCPEnabled, VAR_BOOL, RW, 0, 1 },
                 { 0, "mbtcp_port", &SysConfig.modbusSettings.ModbusTCPPort, VAR_INT, RW, 1, 65534 },
-                { 0, "mbtcp_visible", (bool*) (&VAR_TRUE), VAR_BOOL, RW, 0, 1 },
+                { 0, "mbtcp_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
 #else
-                { 0, "mbtcp_visible", (bool*) (&VAR_FALSE), VAR_BOOL, RW, 0, 1 },
+                { 0, "mbtcp_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
 #endif
         };
 
