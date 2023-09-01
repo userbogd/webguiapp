@@ -35,6 +35,11 @@ void bin_to_hex_str(const uint8_t *buf, int len, char *hex);
 void UnencodeURL(char* URL);
 esp_err_t SHA256Hash(unsigned char *data, int datalen,
                                  unsigned char *res);
+esp_err_t SHA256hmacHash(unsigned char *data,
+                                int datalen,
+                                unsigned char *key,
+                                int keylen,
+                                unsigned char *res);
 #if (CONFIG_FREERTOS_USE_TRACE_FACILITY == 1)
 void vTaskGetRunTimeStatsCustom( char *pcWriteBuffer );
 #endif

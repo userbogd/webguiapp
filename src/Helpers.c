@@ -191,6 +191,23 @@ esp_err_t SHA256Hash(unsigned char *data, int datalen,
     return ESP_OK;
 }
 
+esp_err_t SHA256hmacHash(unsigned char *data,
+                                int datalen,
+                                unsigned char *key,
+                                int keylen,
+                                unsigned char *res)
+{
+    mbedtls_md_context_t ctx;
+    mbedtls_md_type_t md_type = MBEDTLS_MD_SHA256;
+    mbedtls_md_init(&ctx);
+    mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(md_type), 1);
+    mbedtls_md_hmac_starts(&ctx, key, keylen);
+    mbedtls_md_hmac_update(&ctx, (const unsigned char*) data, datalen);
+    mbedtls_md_hmac_finish(&ctx, res);
+    mbedtls_md_free(&ctx);
+    return ESP_OK;
+}
+
 # if(CONFIG_FREERTOS_USE_TRACE_FACILITY == 1)
 void vTaskGetRunTimeStatsCustom( char *pcWriteBuffer )
 {
