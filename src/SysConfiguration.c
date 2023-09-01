@@ -306,7 +306,10 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
 #endif
 
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
-Conf->ethSettings.Flags1.bIsETHEnabled = CONFIG_WEBGUIAPP_ETHERNET_ON;
+Conf->ethSettings.Flags1.bIsETHEnabled = false;
+#if CONFIG_WEBGUIAPP_ETHERNET_ON
+Conf->ethSettings.Flags1.bIsETHEnabled = true;
+#endif
 esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_ETH_IP_DEFAULT, (esp_ip4_addr_t*) &Conf->ethSettings.IPAddr);
 esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_ETH_MASK_DEFAULT, (esp_ip4_addr_t*) &Conf->ethSettings.Mask);
 esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_ETH_GATEWAY_DEFAULT, (esp_ip4_addr_t*) &Conf->ethSettings.Gateway);

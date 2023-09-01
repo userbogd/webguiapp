@@ -48,13 +48,16 @@
 
 #define MAX_JSON_DATA_SIZE 1024
 sys_error_code (*CustomPayloadTypeHandler)(data_message_t *MSG);
+esp_err_t (*CustomSaveConf)(void);
 
 void regCustomPayloadTypeHandler(sys_error_code (*payload_handler)(data_message_t *MSG))
 {
     CustomPayloadTypeHandler = payload_handler;
 }
-
-
+void regCustomSaveConf(esp_err_t (custom_saveconf)(void))
+{
+    CustomSaveConf = custom_saveconf;
+}
 
 static sys_error_code PayloadType_1_Handler(data_message_t *MSG)
 {
@@ -163,9 +166,13 @@ static sys_error_code PayloadType_1_Handler(data_message_t *MSG)
                 break;
             case 1:
                 WriteNVSSysConfig(GetSysConf());
+                if (CustomSaveConf != NULL)
+                    CustomSaveConf();
             break;
             case 2:
                 WriteNVSSysConfig(GetSysConf());
+                if (CustomSaveConf != NULL)
+                    CustomSaveConf();
                 DelayedRestart();
             break;
             default:
