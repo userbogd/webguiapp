@@ -314,8 +314,14 @@ static void eth_init(void *pvParameter)
     for (int i = 0; i < CONFIG_SPI_ETHERNETS_NUM; i++)
     {
         esp_eth_config_t eth_config_spi = ETH_DEFAULT_CONFIG(mac_spi[i], phy_spi[i]);
-        ESP_ERROR_CHECK(esp_eth_driver_install(&eth_config_spi, &eth_handle_spi[i]));
-
+        //ESP_ERROR_CHECK(esp_eth_driver_install(&eth_config_spi, &eth_handle_spi[i]));
+        esp_err_t driverr = esp_eth_driver_install(&eth_config_spi, &eth_handle_spi[i]);
+        if(driverr != ESP_OK)
+        {
+            ESP_LOGE(TAG, "Ethernet SPI driver error:%s", esp_err_to_name(driverr));
+            ///TODO Free all resources
+            vTaskDelete(NULL);
+        }
         /* The SPI Ethernet module might not have a burned factory MAC address, we cat to set it manually.
          02:00:00 is a Locally Administered OUI range so should not be used except when testing on a LAN under your control.
          */
