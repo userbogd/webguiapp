@@ -48,6 +48,8 @@ char FwUpdStatus[64] = "<span class='clok'>Updated</span>";
 #define HASH_LEN 32
 #define REPORT_PACKETS_EVERY 100
 
+static bool isManualUpdate = false;
+
 void (*HookBeforeUpdate)(void);
 void regHookBeforeUpdate(void (*before_update)(void))
 {
@@ -177,9 +179,17 @@ esp_err_t my_esp_https_ota(const esp_http_client_config_t *config)
              GetBuildNumber(new_app_info.version));
     bool need_to_update = GetBuildNumber(new_app_info.version) > GetBuildNumber(cur_app_info.version);
 
+    if (isManualUpdate)
+    {
+        need_to_update = true;
+    }
+
     if (need_to_update)
     {
-        ESP_LOGW(TAG, "New firmware has newer build, START update firmware");
+        if (!isManualUpdate)
+            ESP_LOGI(TAG, "New firmware has newer build, START update firmware");
+        else
+            ESP_LOGW(TAG, "Manual update, no checking version, START update firmware");
         if (HookBeforeUpdate != NULL)
             HookBeforeUpdate();
         int countPackets = 0;
@@ -303,7 +313,7 @@ static void OTATask(void *pvParameter)
  *         ESP_ERR_NOT_FINISHED on attempt rerun existing thread
  */
 
-esp_err_t StartOTA(void)
+esp_err_t StartOTA(bool isManual)
 {
     if (xTaskGetHandle("OTATask") != NULL)
     {
@@ -311,6 +321,7 @@ esp_err_t StartOTA(void)
         return ESP_ERR_NOT_FINISHED;
     }
     ESP_LOGI(TAG, "Starting OTA Task");
+    isManualUpdate = isManual;
     strcpy(FwUpdStatus, "<span class='clwarn'>Start update...</span>");
     xTaskCreate(OTATask, "OTATask", 1024 * 8, (void*) 0, 5, NULL);
     return ESP_OK;

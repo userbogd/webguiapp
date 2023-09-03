@@ -270,7 +270,7 @@ static void funct_ota_state(char *argres, int rw)
 
 static void funct_ota_start(char *argres, int rw)
 {
-    StartOTA();
+    StartOTA(true);
 }
 static void funct_ota_newver(char *argres, int rw)
 {

@@ -537,7 +537,7 @@ static HTTP_IO_RESULT HTTPPostSystemSettings(httpd_req_t *req, char *PostData)
     {
         if (!strcmp(tmp, (const char*) "prs"))
         {
-            StartOTA();
+            StartOTA(true);
         }
     }
     if (httpd_query_key_value(PostData, "rtos", tmp, sizeof(tmp)) == ESP_OK)

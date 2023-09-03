@@ -115,7 +115,7 @@ void GotEthIF(void);
 void GetRFC3339Time(char *t);
 void StartTimeGet(void);
 
-esp_err_t StartOTA(void);
+esp_err_t StartOTA(bool isManual);
 char* GetAvailVersion();
 char* GetUpdateStatus();
 
