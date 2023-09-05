@@ -193,7 +193,7 @@ static sys_error_code PayloadType_1_Handler(data_message_t *MSG)
 static sys_error_code DataHeaderParser(data_message_t *MSG)
 {
     struct jReadElement result;
-    jRead(MSG->inputDataBuffer, "", &result);
+    jRead(MSG->inputDataBuffer, "{", &result);
     if (result.dataType != JREAD_OBJECT)
         return SYS_ERROR_WRONG_JSON_FORMAT;
     MSG->parsedData.msgID = 0;
@@ -283,7 +283,21 @@ static sys_error_code DataHeaderParser(data_message_t *MSG)
 
 esp_err_t ServiceDataHandler(data_message_t *MSG)
 {
-    MSG->err_code = (int) DataHeaderParser(MSG);
+    if (MSG == NULL)
+    {
+        ESP_LOGE(TAG, "MSG object is NULL");
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    if (MSG->inputDataLength == 0)
+    {
+        ESP_LOGE(TAG, "Data for parser is 0 length");
+        if (MSG != NULL)
+            MSG->err_code = SYS_ERROR_UNKNOWN;
+    }
+    else
+        MSG->err_code = (int) DataHeaderParser(MSG);
+
     if (MSG->err_code)
     {
         struct jWriteControl jwc;
