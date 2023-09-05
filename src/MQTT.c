@@ -172,7 +172,7 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
                                       void *event_data)
 {
     xSemaphoreTake(xSemaphoreMQTTHandle, pdMS_TO_TICKS(1000));
-#if MQTT_DEBUG_MODE > 0
+#if MQTT_DEBUG_MODE > 1
     ESP_LOGI(TAG, "Event dispatched from event loop base=%s, event_id=%d", base, (int )event_id);
 #endif
     esp_mqtt_event_handle_t event = event_data;
@@ -221,13 +221,13 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
 #endif
         break;
         case MQTT_EVENT_PUBLISHED:
-            #if MQTT_DEBUG_MODE > 0
+            #if MQTT_DEBUG_MODE > 1
             ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
 #endif
         break;
         case MQTT_EVENT_DATA:
 
-#if MQTT_DEBUG_MODE > 0
+#if MQTT_DEBUG_MODE > 1
             ESP_LOGI(TAG, "MQTT_EVENT_DATA, client %d", idx);
 #endif
             //Check if topic is SYSTEM and pass data to handler
@@ -247,7 +247,7 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
                     ServiceDataHandler(&M);
                     SysServiceMQTTSend(M.outputDataBuffer, strlen(M.outputDataBuffer), idx);
                     free(respbuf);
-#if(MQTT_DEBUG_MODE > 0)
+#if(MQTT_DEBUG_MODE > 1)
                     ESP_LOGI(TAG, "SERVICE data handler on client %d", idx);
 #endif
                 }
