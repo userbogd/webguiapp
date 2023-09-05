@@ -31,7 +31,7 @@ HTTP_IO_RESULT HTTPPostSysAPI(httpd_req_t *req, char *PostData)
     httpd_req_get_hdr_value_str(req, "Content-Type", (char*) data, 31);
     if (!memcmp(data, "application/json", sizeof("application/json")))
     {
-        char *respbuf = malloc(EXPECTED_MAX_DATA_RESPONSE_SIZE);
+        char *respbuf = malloc(EXPECTED_MAX_DATA_SIZE);
         if (respbuf)
         {
             data_message_t M = { 0 };
@@ -39,7 +39,7 @@ HTTP_IO_RESULT HTTPPostSysAPI(httpd_req_t *req, char *PostData)
             M.inputDataLength = strlen(PostData);
             M.chlidx = 100;
             M.outputDataBuffer = respbuf;
-            M.outputDataLength = EXPECTED_MAX_DATA_RESPONSE_SIZE;
+            M.outputDataLength = EXPECTED_MAX_DATA_SIZE;
             ServiceDataHandler(&M);
             httpd_resp_set_type(req, "application/json");
             httpd_resp_sendstr(req, respbuf);

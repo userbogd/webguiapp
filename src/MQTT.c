@@ -235,7 +235,7 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
             if (!memcmp(topic, event->topic, event->topic_len))
             {
                 //SystemDataHandler(event->data, event->data_len, idx);  //Old API
-                char *respbuf = malloc(EXPECTED_MAX_DATA_RESPONSE_SIZE);
+                char *respbuf = malloc(EXPECTED_MAX_DATA_SIZE);
                 if (respbuf != NULL)
                 {
                     data_message_t M = { 0 };
@@ -243,7 +243,7 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
                     M.inputDataLength = event->data_len;
                     M.chlidx = idx;
                     M.outputDataBuffer = respbuf;
-                    M.outputDataLength = EXPECTED_MAX_DATA_RESPONSE_SIZE;
+                    M.outputDataLength = EXPECTED_MAX_DATA_SIZE;
                     ServiceDataHandler(&M);
                     SysServiceMQTTSend(M.outputDataBuffer, strlen(M.outputDataBuffer), idx);
                     free(respbuf);
@@ -371,6 +371,8 @@ static void start_mqtt()
             strcat(url, ":");
             strcat(url, tmp);
 #if ESP_IDF_VERSION_MAJOR >= 5
+            mqtt_cfg.buffer.out_size = EXPECTED_MAX_DATA_SIZE;
+            mqtt_cfg.buffer.size = EXPECTED_MAX_DATA_SIZE;
             mqtt_cfg.broker.address.uri = url;
             mqtt_cfg.credentials.username = GetSysConf()->mqttStation[i].UserName;
             mqtt_cfg.credentials.authentication.password = GetSysConf()->mqttStation[i].UserPass;

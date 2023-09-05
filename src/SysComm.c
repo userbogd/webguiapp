@@ -74,9 +74,10 @@ static sys_error_code PayloadType_1_Handler(data_message_t *MSG)
     char time[RFC3339_TIMESTAMP_LENGTH];
     GetRFC3339Time(time);
     jwObj_string(&jwc, "time", time);
-    jwObj_int(&jwc, "messtype", DATA_MESSAGE_TYPE_RESPONSE);
+    jwObj_int(&jwc, "msgtype", DATA_MESSAGE_TYPE_RESPONSE);
     jwObj_int(&jwc, "payloadtype", 1);
     jwObj_object(&jwc, "payload");
+    jwObj_int(&jwc, "applytype", 0);
     jwObj_object(&jwc, "variables");
 
     jRead(MSG->inputDataBuffer, "{'data'{'payload'{'variables'", &result);
@@ -222,7 +223,10 @@ static sys_error_code DataHeaderParser(data_message_t *MSG)
     jRead(MSG->inputDataBuffer, "{'signature'", &result);
     if (result.elements == 1)
     {
-        //ESP_LOGI(TAG, "Signature is %.*s", 64, (char* )result.pValue);
+#if REAST_API_DEBUG_MODE
+        ESP_LOGI(TAG, "Signature is %.*s", 64, (char* )result.pValue);
+#endif
+
         //Here compare calculated and received signature;
     }
     else

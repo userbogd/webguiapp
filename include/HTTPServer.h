@@ -41,7 +41,7 @@
 #include "esp_netif.h"
 #include "esp_eth.h"
 #include "mbedtls/base64.h"
-#include "SysConfiguration.h"
+#include "SystemApplication.h"
 
 #define MAX_DYNVAR_NAME_LENGTH 32
 #define MAX_DYNVAR_LENGTH 256
@@ -53,7 +53,7 @@
 #define MAX_FILE_SIZE_STR "200KB"
 
 /* Scratch buffer size */
-#define SCRATCH_BUFSIZE  4096
+#define SCRATCH_BUFSIZE  EXPECTED_MAX_DATA_SIZE
 #define AUTH_DATA_MAX_LENGTH 16
 
 #define HTTP_SERVER_DEBUG_LEVEL 0
