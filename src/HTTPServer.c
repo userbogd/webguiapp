@@ -171,16 +171,6 @@ static const char* get_path_from_uri(char *dest, const char *base_path,
     return dest + base_pathlen;
 }
 
-static esp_err_t RestApiHandler(httpd_req_t *req)
-{
-#if HTTP_SERVER_DEBUG_LEVEL > 0
-    ESP_LOGI(TAG, "REST API handler");
-#endif
-
-    httpd_resp_sendstr(req, "{\"apiver\":\"1.00\",\"result\":\"OK\"}");  // Response body can be empty
-    return ESP_OK;
-}
-
 static esp_err_t POSTHandler(httpd_req_t *req)
 {
 #if HTTP_SERVER_DEBUG_LEVEL > 0
@@ -283,7 +273,6 @@ static esp_err_t GETHandler(httpd_req_t *req)
     char filepath[FILE_PATH_MAX];
     espfs_file_t *file;
     struct espfs_stat_t stat;
-    bool isDynamicVars = false;
     uint32_t bufSize;       //size of ram buffer for chunk of data, read from file
     uint32_t readBytes;     //number of bytes, read from file. used for information only
 
@@ -348,7 +337,8 @@ static esp_err_t GETHandler(httpd_req_t *req)
     bufSize = MIN(stat.size, SCRATCH_BUFSIZE - MAX_DYNVAR_LENGTH);
     readBytes = 0;
 //allocate buffer for file data
-    if(bufSize == 0) bufSize = 1;
+    if (bufSize == 0)
+        bufSize = 1;
     char *buf = (char*) malloc(bufSize);
     if (!buf)
     {
@@ -361,21 +351,12 @@ static esp_err_t GETHandler(httpd_req_t *req)
 //read first portion of data from file
     readBytes = espfs_fread(file, buf, bufSize);
 
-
-//check if the file can contains dynamic variables
-    if (IS_FILE_EXT(filename, ".json") )
-        isDynamicVars = true;
-
-
 //check if file is compressed by GZIP and add correspondent header
     if (memmem(buf, 3, GZIP_SIGN, 3))
     {
         httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
-        //httpd_resp_set_hdr(req, "Cache-Control", "max-age=600");
-        isDynamicVars = false;
     }
 
-    isDynamicVars = false;
     httpd_resp_set_hdr(req, "Cache-Control", "max-age=600");
 
     do
@@ -384,56 +365,7 @@ static esp_err_t GETHandler(httpd_req_t *req)
         int preparedBytes = 0;
         while (pt < bufSize)
         {
-            if (buf[pt] == '~' && isDynamicVars) //open tag
-            {
-                int k = 0;
-                char ch = 0x00;
-                char DynVarName[MAX_DYNVAR_NAME_LENGTH];
-                pt++; //skip open tag
-                while (k < MAX_DYNVAR_NAME_LENGTH)
-                {
-                    if (pt < bufSize)
-                    {
-                        if (buf[pt] != '~')
-                            DynVarName[k++] = buf[pt++]; //continue extract variable name from buf
-                        else
-                            break; //found close tag
-                    }
-                    else //need read more characters directly from file
-                    {
-                        if (espfs_fread(file, &ch, 1))
-                        {
-                            readBytes++;
-                            if (ch != '~')
-                                DynVarName[k++] = ch; //continue extract variable name from file
-                            else
-                                break; //found close tag
-                        }
-                        else
-                        //unexpected end of file
-                        {
-                            ESP_LOGE(TAG, "Unexpected end of file");
-                            goto file_send_error;
-                        }
-                    }
-                }
-                if (buf[pt] == '~' || ch == '~')   //close tag, got valid dynamic variable name
-                {
-                    DynVarName[k] = 0x00;
-                    preparedBytes += HTTPPrint(req, &chunk[preparedBytes], DynVarName);
-                    //skip close '~' in buf but not directly in file!
-                    if (ch != '~')
-                        pt++;
-                }
-                else
-                //not found close tag, exit by overflow max variable size or file end
-                {
-                    ESP_LOGE(TAG, "Dyn variable close tag not found");
-                    goto file_send_error;
-                }
-            }
-            else
-                chunk[preparedBytes++] = buf[pt++]; //write to chunk ordinary character
+            chunk[preparedBytes++] = buf[pt++]; //write to chunk ordinary character
 
             //check if scratch buffer is full and need send chunk
             if (preparedBytes >= (SCRATCH_BUFSIZE - MAX_DYNVAR_LENGTH))
@@ -494,9 +426,9 @@ static httpd_handle_t start_webserver(void)
 {
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-   // config.lru_purge_enable = true;
+    // config.lru_purge_enable = true;
     config.uri_match_fn = httpd_uri_match_wildcard;
-  //  config.max_open_sockets = 3;
+    //  config.max_open_sockets = 3;
     config.stack_size = (4096 + 1024);
 
 // Start the httpd server
