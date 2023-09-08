@@ -1,4 +1,4 @@
- /* Copyright 2022 Bogdan Pilyugin
+/* Copyright 2022 Bogdan Pilyugin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,9 +37,8 @@ void regTimeSyncCallback(void (*time_sync)(struct timeval *tv))
 
 static void initialize_sntp(void);
 
-
 void SecondTickSystem(void *arg);
-esp_timer_handle_t  system_seconds_timer;
+esp_timer_handle_t system_seconds_timer;
 const esp_timer_create_args_t system_seconds_timer_args = {
         .callback = &SecondTickSystem,
         .name = "secondsTimer"
@@ -47,33 +46,47 @@ const esp_timer_create_args_t system_seconds_timer_args = {
 
 static void obtain_time(void *pvParameter)
 {
-  initialize_sntp();
+    initialize_sntp();
 
-  // wait for time to be set
-  int retry = 0;
-  const int retry_count = 10;
-  while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count)
-  {
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-  }
-  vTaskDelete(NULL);
+    // wait for time to be set
+    int retry = 0;
+    const int retry_count = 10;
+    while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count)
+    {
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+    vTaskDelete(NULL);
 }
 
 static void time_sync_notification_cb(struct timeval *tv)
 {
-    if(time_sync_notif)
+    if (time_sync_notif)
         time_sync_notif(tv);
 }
 
 static void initialize_sntp(void)
 {
+
+#if ESP_IDF_VERSION_MAJOR >= 5
+    esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    esp_sntp_setservername(0, GetSysConf()->sntpClient.SntpServerAdr);
+    esp_sntp_setservername(1, GetSysConf()->sntpClient.SntpServerAdr);
+    esp_sntp_setservername(2, GetSysConf()->sntpClient.SntpServerAdr);
+#else
   sntp_setoperatingmode(SNTP_OPMODE_POLL);
   sntp_setservername(0, GetSysConf()->sntpClient.SntpServerAdr);
   sntp_setservername(1, GetSysConf()->sntpClient.SntpServerAdr);
   sntp_setservername(2, GetSysConf()->sntpClient.SntpServerAdr);
-  sntp_set_sync_interval(6*3600*1000);
-  sntp_set_time_sync_notification_cb(time_sync_notification_cb);
+#endif
+
+    sntp_set_sync_interval(6 * 3600 * 1000);
+    sntp_set_time_sync_notification_cb(time_sync_notification_cb);
+
+#if ESP_IDF_VERSION_MAJOR >= 5
+    esp_sntp_init();
+#else
   sntp_init();
+#endif
 }
 
 void StartTimeGet(void)
@@ -88,12 +101,12 @@ void GetRFC3339Time(char *t)
     time(&now);
     localtime_r(&now, &timeinfo);
     sprintf(t, "%04d-%02d-%02dT%02d:%02d:%02d+00:00",
-                (timeinfo.tm_year) + YEAR_BASE,
-                (timeinfo.tm_mon) + 1,
-                timeinfo.tm_mday,
-                timeinfo.tm_hour,
-                timeinfo.tm_min,
-                timeinfo.tm_sec);
+            (timeinfo.tm_year) + YEAR_BASE,
+            (timeinfo.tm_mon) + 1,
+            timeinfo.tm_mday,
+            timeinfo.tm_hour,
+            timeinfo.tm_min,
+            timeinfo.tm_sec);
 }
 
 void StartSystemTimer(void)

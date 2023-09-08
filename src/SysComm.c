@@ -54,7 +54,7 @@ void regCustomPayloadTypeHandler(sys_error_code (*payload_handler)(data_message_
 {
     CustomPayloadTypeHandler = payload_handler;
 }
-void regCustomSaveConf(esp_err_t (custom_saveconf)(void))
+void regCustomSaveConf(void (*custom_saveconf)(void))
 {
     CustomSaveConf = custom_saveconf;
 }
