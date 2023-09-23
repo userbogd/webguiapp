@@ -3,28 +3,15 @@ include(${CMAKE_CURRENT_LIST_DIR}/extlibs/libespfs/cmake/include.cmake)
 
 if(CONFIG_WEBGUIAPP_LORAWAN_ENABLE)
  set(lora_SRCS "src/LoRaWAN.c")
+ set(lora_REQ "ttn-esp")
 endif()
 
 if(CONFIG_WEBGUIAPP_GPRS_ENABLE)
  set(gprs_SRCS  "src/GSMTransport.c")
+ set(gprs_REQ  "esp_modem")
 endif()
 
-idf_component_register(
-	
-	SRCS ${jreadwrite_SRCS}
-    INCLUDE_DIRS ${jreadwrite_INCLUDE_DIRS}
-    
-    SRCS ${lora_SRCS}
-    REQUIRES ttn-esp32
-    
-    SRCS ${gprs_SRCS}
-    REQUIRES esp_modem
-
-    SRCS ${libespfs_SRCS}
-    INCLUDE_DIRS ${libespfs_INCLUDE_DIRS}
-    PRIV_INCLUDE_DIRS ${libespfs_PRIV_INCLUDE_DIRS}
-    PRIV_REQUIRES ${libespfs_PRIV_REQUIRES}
-    
+idf_component_register( 
     SRCS "src/SysConfiguration.c"
     	 "src/romfs.c"
     	 "src/spifs.c"
@@ -43,12 +30,18 @@ idf_component_register(
     	  src/RestApiHandler.c
     	  src/SysComm.c
     	  src/SysErr.c
-#   	 	 "src/mDNS.c"
+    	  ${lora_SRCS}
+    	  ${gprs_SRCS}
+    	  ${jreadwrite_SRCS}
+    	  ${libespfs_SRCS}
     	    
     INCLUDE_DIRS  "."
     			  "include"
     			  "src"
-    			  "extlibs/jReadWrite"
+    			  ${jreadwrite_INCLUDE_DIRS}
+    			  ${libespfs_INCLUDE_DIRS}
+    			  
+    PRIV_INCLUDE_DIRS ${libespfs_PRIV_INCLUDE_DIRS}			  
     			   
     REQUIRES nvs_flash 
     		 spiffs
@@ -58,10 +51,13 @@ idf_component_register(
     		 mqtt
     		 esp_https_ota
     		 app_update
-#    		 mdns
 			 esp_wifi
 			 esp_http_server
 			 esp_eth
+			 ${lora_REQ}
+			 ${gprs_REQ}
+			 
+	PRIV_REQUIRES ${libespfs_PRIV_REQUIRES}
 		
 	EMBED_FILES "upload_script.html"
 	EMBED_TXTFILES ca_cert.pem
