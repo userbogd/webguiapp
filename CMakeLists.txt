@@ -3,12 +3,10 @@ include(${CMAKE_CURRENT_LIST_DIR}/extlibs/libespfs/cmake/include.cmake)
 
 if(CONFIG_WEBGUIAPP_LORAWAN_ENABLE)
  set(lora_SRCS "src/LoRaWAN.c")
- set(lora_REQ "ttn-esp")
 endif()
 
 if(CONFIG_WEBGUIAPP_GPRS_ENABLE)
  set(gprs_SRCS  "src/GSMTransport.c")
- set(gprs_REQ  "esp_modem")
 endif()
 
 idf_component_register( 
@@ -54,8 +52,9 @@ idf_component_register(
 			 esp_wifi
 			 esp_http_server
 			 esp_eth
-			 ${lora_REQ}
-			 ${gprs_REQ}
+			 esp_modem
+			 ttn-esp32
+			
 			 
 	PRIV_REQUIRES ${libespfs_PRIV_REQUIRES}
 		
