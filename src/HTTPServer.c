@@ -426,9 +426,9 @@ static httpd_handle_t start_webserver(void)
 {
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    // config.lru_purge_enable = true;
+    config.lru_purge_enable = true;
     config.uri_match_fn = httpd_uri_match_wildcard;
-    //  config.max_open_sockets = 3;
+    config.max_open_sockets = 5;
     config.stack_size = (4096 + 1024);
 
 // Start the httpd server

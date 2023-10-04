@@ -53,7 +53,7 @@ idf_component_register(
 			 esp_http_server
 			 esp_eth
 			 esp_modem
-			 ttn-esp32
+#			 ttn-esp32
 			
 			 
 	PRIV_REQUIRES ${libespfs_PRIV_REQUIRES}
