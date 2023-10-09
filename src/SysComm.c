@@ -48,7 +48,7 @@
 
 #define MAX_JSON_DATA_SIZE 1024
 sys_error_code (*CustomPayloadTypeHandler)(data_message_t *MSG);
-esp_err_t (*CustomSaveConf)(void);
+void (*CustomSaveConf)(void);
 
 void regCustomPayloadTypeHandler(sys_error_code (*payload_handler)(data_message_t *MSG))
 {
