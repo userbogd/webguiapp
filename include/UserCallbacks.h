@@ -41,7 +41,11 @@ void regAfterPostHandlerCustom(HTTP_IO_RESULT (*post_handler)(httpd_req_t *req, 
 
 //User handler for various payload types
 void regCustomPayloadTypeHandler(sys_error_code (*payload_handler)(data_message_t *MSG));
+
 //User handler for save App configuration
 void regCustomSaveConf(void (*custom_saveconf)(void));
+
+//User handler for execute command
+void regCustomExecCommand(int(*custom_exec)(char *cmd));
 
 #endif /* COMPONENTS_WEBGUIAPP_INCLUDE_USERCALLBACKS_H_ */

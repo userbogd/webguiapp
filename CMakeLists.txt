@@ -18,6 +18,7 @@ idf_component_register(
     	 "src/HTTPAPISystem.c"
     	 "src/HTTPPrintSystem.c"
     	 "src/HTTPPostSystem.c"
+    	 "src/CommandProcSys.c"
     	 "src/Helpers.c"
     	 "src/NetTransport.c"
     	 "src/WiFiTransport.c"
@@ -52,6 +53,7 @@ idf_component_register(
 			 esp_wifi
 			 esp_http_server
 			 esp_eth
+			 esp_cron
 			 esp_modem
 			 ttn-esp32
 			
