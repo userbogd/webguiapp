@@ -129,29 +129,33 @@ const char* check_expr(const char *expr)
 
 static void ExecuteLastAction()
 {
-    int obj;
-    for (obj = 0; obj < CONFIG_WEBGUIAPP_MAX_OBJECTS_NUM; obj++)
+    int obj_idx;
+    char objname[CONFIG_WEBGUIAPP_MAX_COMMAND_STRING_LENGTH/4 + 1];
+    for (obj_idx = 0; obj_idx < CONFIG_WEBGUIAPP_MAX_OBJECTS_NUM; obj_idx++)
     {
         int shdl;
         time_t now;
         time(&now);
         time_t delta = now;
-        int act = -1;
         int minimal = -1;
 
+        char *obj = GetSystemObjects()[obj_idx].object_name;
+        if (*obj == '\0')
+            break;
 
-        char *obj = GetSystemObjects()->object_name;
-
+        //ESP_LOGI(TAG, "Check object %s", obj);
+        const char del1 = ',';
         for (shdl = 0; shdl < CRON_TIMERS_NUMBER; shdl++)
         {
-            char *obj_in_cron = strtok(GetSysConf()->Timers[shdl].exec, ',');
-
+            memcpy(objname, GetSysConf()->Timers[shdl].exec, CONFIG_WEBGUIAPP_MAX_COMMAND_STRING_LENGTH/4);
+            char *obj_in_cron = strtok(objname, &del1);
             if (GetSysConf()->Timers[shdl].enab &&
                     !GetSysConf()->Timers[shdl].del &&
                     GetSysConf()->Timers[shdl].prev &&
                     !strcmp(obj, obj_in_cron))
 
             {
+                //ESP_LOGI(TAG,  "%s:%s",obj, obj_in_cron);
                 cron_expr cron_exp = { 0 };
                 cron_parse_expr(GetSysConf()->Timers[shdl].cron, &cron_exp, NULL);
                 time_t prev = cron_prev(&cron_exp, now);
@@ -163,10 +167,11 @@ static void ExecuteLastAction()
             }
         }
 
-        if (shdl != -1)
+        if (minimal != -1)
         {
+            ESP_LOGW(TAG, "Run previous CRON \"%s\" with delta %d" , GetSysConf()->Timers[minimal].exec, (int)delta);
+            ExecCommand(GetSysConf()->Timers[minimal].exec);
 
-            ExecCommand(GetSysConf()->Timers[shdl].exec);
         }
     }
 }

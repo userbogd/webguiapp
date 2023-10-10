@@ -85,7 +85,7 @@ const obj_struct_t com_obj_arr[] = {
 
 obj_struct_t* GetSystemObjects()
 {
-    return com_obj_arr;
+    return &com_obj_arr;
 }
 
 obj_struct_t* GetCustomObjects()
