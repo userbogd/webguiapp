@@ -277,8 +277,73 @@ static void funct_ota_newver(char *argres, int rw)
     snprintf(argres, MAX_DYNVAR_LENGTH, "\"%s\"", GetAvailVersion());
 }
 
+//CRON implementation BEGIN
+static void funct_cronrecs(char *argres, int rw)
+{
+    if (rw)
+    {
+        struct jReadElement result;
+        cron_timer_t T = { 0 };
+        jRead(argres, "", &result);
+        if (result.dataType == JREAD_ARRAY)
+        {
+            int i;
+            for (i = 0; i < result.elements; i++)
+            {
+                T.num = jRead_int(argres, "[*{'num'", &i);
+                T.del = jRead_int(argres, "[*{'del'", &i);
+                T.enab = jRead_int(argres, "[*{'enab'", &i);
+                T.prev = jRead_int(argres, "[*{'prev'", &i);
+                jRead_string(argres, "[*{'name'", T.name, sizeof(T.name), &i);
+                T.obj = jRead_int(argres, "[*{'obj'", &i);
+                T.act = jRead_int(argres, "[*{'act'", &i);
+                jRead_string(argres, "[*{'cron'", T.cron, sizeof(T.cron), &i);
+                jRead_string(argres, "[*{'exec'", T.exec, sizeof(T.exec), &i);
+                memcpy(&GetSysConf()->Timers[T.num - 1], &T, sizeof(cron_timer_t));
+            }
+            ReloadCronSheduler();
+        }
+    }
+    else
+    {
+        struct jWriteControl jwc;
+        jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_ARRAY, JW_COMPACT);
+        for (int idx = 0; idx < CRON_TIMERS_NUMBER; idx++)
+        {
+            cron_timer_t T;
+            memcpy(&T, &GetSysConf()->Timers[idx], sizeof(cron_timer_t));
+            jwArr_object(&jwc);
+            jwObj_int(&jwc, "num", (unsigned int) T.num);
+            jwObj_int(&jwc, "del", (T.del) ? 1 : 0);
+            jwObj_int(&jwc, "enab", (T.enab) ? 1 : 0);
+            jwObj_int(&jwc, "prev", (T.prev) ? 1 : 0);
+            jwObj_string(&jwc, "name", T.name);
+            jwObj_int(&jwc, "obj", (unsigned int) T.obj);
+            jwObj_int(&jwc, "act", (unsigned int) T.act);
+            jwObj_string(&jwc, "cron", T.cron);
+            jwObj_string(&jwc, "exec", T.exec);
+            jwEnd(&jwc);
+        }
+        jwClose(&jwc);
+    }
+}
+
+//CRON implementation END
 
 
+static void funct_objsinfo(char *argres, int rw)
+{
+    GetSysObjectsInfo(argres);
+}
+
+
+static void funct_exec(char *argres, int rw)
+{
+    if (rw)
+        ExecCommand(argres);
+    else
+        snprintf(argres, MAX_DYNVAR_LENGTH, "\"EXECUTED\"");
+}
 
 const int hw_rev = CONFIG_BOARD_HARDWARE_REVISION;
 const bool VAR_TRUE = true;
@@ -287,7 +352,8 @@ const bool VAR_FALSE = false;
 const rest_var_t SystemVariables[] =
         {
 
-        { 0, "time", &funct_time, VAR_FUNCT, R, 0, 0 },
+                { 0, "exec", &funct_exec, VAR_FUNCT, RW, 0, 0 },
+                { 0, "time", &funct_time, VAR_FUNCT, R, 0, 0 },
                 { 0, "uptime", &funct_uptime, VAR_FUNCT, R, 0, 0 },
                 { 0, "free_ram", &funct_fram, VAR_FUNCT, R, 0, 0 },
                 { 0, "free_ram_min", &funct_fram_min, VAR_FUNCT, R, 0, 0 },
@@ -435,6 +501,9 @@ const rest_var_t SystemVariables[] =
 #else
                 { 0, "mbtcp_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
 #endif
+                { 0, "cronrecs", &funct_cronrecs, VAR_FUNCT, RW, 0, 0 },
+                { 0, "objsinfo", &funct_objsinfo, VAR_FUNCT, R, 0, 0 },
+
         };
 
 

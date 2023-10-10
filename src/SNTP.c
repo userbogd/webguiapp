@@ -23,9 +23,12 @@
 #include "esp_timer.h"
 #include "NetTransport.h"
 #include "UserCallbacks.h"
+#include "CronTimers.h"
+
 #define YEAR_BASE (1900) //tm structure base year
 
 static uint32_t UpTime = 0;
+
 
 //Pointer to extend user on time got callback
 static void (*time_sync_notif)(struct timeval *tv) = NULL;
@@ -62,6 +65,7 @@ static void time_sync_notification_cb(struct timeval *tv)
 {
     if (time_sync_notif)
         time_sync_notif(tv);
+    TimeObtainHandler(tv);
 }
 
 static void initialize_sntp(void)

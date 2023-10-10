@@ -158,6 +158,7 @@ esp_err_t WebGuiAppInit(void)
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE || CONFIG_WEBGUIAPP_ETHERNET_ENABLE || CONFIG_WEBGUIAPP_WIFI_ENABLE
     ESP_ERROR_CHECK(start_file_server());
     StartTimeGet();
+    //regTimeSyncCallback(&TimeObtainHandler);
     //mDNSServiceStart();
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
@@ -395,6 +396,24 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
 #endif
     Conf->modbusSettings.ModbusTCPPort = CONFIG_WEBGUIAPP_MBTCP_SERVER_PORT;
 #endif
+    for (int i = 0; i < 16; i++ )
+    {
+        Conf->Timers[i].num = i+1;
+        Conf->Timers[i].del = true;
+        Conf->Timers[i].enab = false;
+        Conf->Timers[i].prev = false;
+        Conf->Timers[i].obj = 0;
+        Conf->Timers[i].act = 0;
+        strcpy(Conf->Timers[i].name, "Timer Name");
+        strcpy(Conf->Timers[i].cron, "* * * * * *");
+        strcpy(Conf->Timers[i].exec, "OBJECT,ACTION,ARGUMENTS");
+
+    }
+    for (int i = 0; i < 16; i++ )
+    {
+        strcpy(Conf->CronObjects[i].objname, GetCronObjectNameDef(i));
+        Conf->CronObjects[i].idx = i;
+    }
 
 }
 

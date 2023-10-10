@@ -30,6 +30,7 @@
 #define TIMER_NAME_LENGTH (16)
 #define TIMER_CRONSTRING_LENGTH (32)
 #define CRON_EXPRESS_MAX_LENGTH (128)
+#define TIMER_EXECSTRING_LENGTH (64)
 
 #define CRON_OBJECTS_NUMBER (16)
 #define CRON_OBJECT_NAME_LENGTH (16)
@@ -53,6 +54,7 @@ typedef struct
     int obj; /*!< Index of object scheduler affected on */
     int act; /*!< Index of action with the object*/
     char cron[TIMER_CRONSTRING_LENGTH]; /*!< Cron expression */
+    char exec[TIMER_EXECSTRING_LENGTH]; /*!< Cron command string */
 
 } cron_timer_t;
 
@@ -65,6 +67,8 @@ char* GetCronObjectNameDef(int idx);
 char* GetCronObjectName(int idx);
 char* GetCronActionName(int idx);
 char* GetCronActAvail(int idx);
+
+void TimeObtainHandler(struct timeval *tm);
 
 /**
  * \brief Handle all actions under all objects

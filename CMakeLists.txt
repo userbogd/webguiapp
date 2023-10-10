@@ -25,6 +25,7 @@ idf_component_register(
     	 "src/ETHTransport.c"
     	 "src/SNTP.c"
     	 "src/MQTT.c"
+    	 "src/CronTimers.c"
     	  src/OTA.c
     	  src/RestApiHandler.c
     	  src/SysComm.c

@@ -48,11 +48,11 @@ void regCustomExecCommand(int (*custom_exec)(char *cmd))
 
 static void SYSTEM_TEST_handle(char *obj, char *com, char *arg)
 {
-    ESP_LOGI(TAG, "INPUTS handler command %s with argument %s", com, arg);
+    ESP_LOGI(TAG, "Object:%s, Command:%s, Argument %s",obj, com, arg);
 }
 static void SYSTEM_REBOOT_handle(char *obj, char *com, char *arg)
 {
-    ESP_LOGI(TAG, "SYSTEM handler command %s with argument %s", com, arg);
+    ESP_LOGI(TAG, "Object:%s, Command:%s, Argument %s",obj, com, arg);
 }
 
 typedef struct

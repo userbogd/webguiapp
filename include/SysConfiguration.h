@@ -28,6 +28,7 @@
 #include <stdbool.h>
 #include "esp_netif.h"
 #include "sdkconfig.h"
+#include "CronTimers.h"
 
 typedef enum
 {
@@ -207,6 +208,10 @@ typedef struct
             int ModbusTCPPort;
 
           } modbusSettings;
+
+
+          cron_timer_t Timers[16];
+          cron_obj_t CronObjects[16];
 
 
     } SYS_CONFIG;

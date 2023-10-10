@@ -19,6 +19,18 @@
  * Description:	
  */
 
+//{
+// "data":{
+// "msgid":123456789,
+// "time":"2023-06-03T12:25:24+00:00",
+// "msgtype":1,"payloadtype":1, "payload":{"applytype":1,
+// "variables":{
+// "cronrecs":[{ "num": 1, "del": 0, "enab": 1, "prev": 0, "name": "Timer Name", "obj": 0, "act": 0,
+//              "cron": "*/3 * * * * *",
+//              "exec": "OUTPUTS,TEST,ARGUMENTS"
+//                }]
+// }}},"signature":"6a11b872e8f766673eb82e127b6918a0dc96a42c5c9d184604f9787f3d27bcef"}
+
 #include <CronTimers.h>
 #include "esp_log.h"
 #include "webguiapp.h"
@@ -59,7 +71,7 @@ char* GetCronObjectName(int idx)
 {
     if(idx < 0 || idx >= sizeof(cron_objects)/sizeof(char*))
         return "";
-    return GetAppConf()->CronObjects[idx].objname;
+    return GetSysConf()->CronObjects[idx].objname;
 }
 
 char* GetCronActionName(int idx)
@@ -99,6 +111,8 @@ void custom_cron_execute(int obj, int act)
 
 void custom_cron_job_callback(cron_job *job)
 {
+    ExecCommand(((cron_timer_t*) job->data)->exec);
+    /*
     int act = ((cron_timer_t*) job->data)->act;
     int obj = ((cron_timer_t*) job->data)->obj;
     char *name = ((cron_timer_t*) job->data)->name;
@@ -109,6 +123,7 @@ void custom_cron_job_callback(cron_job *job)
     LogFile("cron.log", "Executed sheduler with action %u under object %u", act, obj);
     custom_cron_execute(obj, act);
     return;
+    */
 }
 
 esp_err_t InitCronSheduler()
@@ -140,18 +155,18 @@ static void ExecuteLastAction()
 
         for (shdl = 0; shdl < CRON_TIMERS_NUMBER; shdl++)
         {
-            if (GetAppConf()->Timers[shdl].enab &&
-                    !GetAppConf()->Timers[shdl].del &&
-                    GetAppConf()->Timers[shdl].prev &&
-                    GetAppConf()->Timers[shdl].obj == obj)
+            if (GetSysConf()->Timers[shdl].enab &&
+                    !GetSysConf()->Timers[shdl].del &&
+                    GetSysConf()->Timers[shdl].prev &&
+                    GetSysConf()->Timers[shdl].obj == obj)
             {
                 cron_expr cron_exp = { 0 };
-                cron_parse_expr(GetAppConf()->Timers[shdl].cron, &cron_exp, NULL);
+                cron_parse_expr(GetSysConf()->Timers[shdl].cron, &cron_exp, NULL);
                 time_t prev = cron_prev(&cron_exp, now);
                 if ((now - prev) < delta)
                 {
                     delta = (now - prev);
-                    act = GetAppConf()->Timers[shdl].act;
+                    act = GetSysConf()->Timers[shdl].act;
                 }
             }
         }
@@ -187,7 +202,7 @@ esp_err_t ReloadCronSheduler()
     bool isExpressError = false;
     for (int i = 0; i < CRON_TIMERS_NUMBER; i++)
     {
-        const char *err = check_expr(GetAppConf()->Timers[i].cron);
+        const char *err = check_expr(GetSysConf()->Timers[i].cron);
         if (err)
         {
             snprintf(cron_express_error, CRON_EXPRESS_MAX_LENGTH - 1, "In timer %d expression error:%s", i + 1, err);
@@ -195,10 +210,10 @@ esp_err_t ReloadCronSheduler()
             isExpressError = true;
             continue;
         }
-        else if (!GetAppConf()->Timers[i].del && GetAppConf()->Timers[i].enab)
+        else if (!GetSysConf()->Timers[i].del && GetSysConf()->Timers[i].enab)
         {
-            JobsList[i] = cron_job_create(GetAppConf()->Timers[i].cron, custom_cron_job_callback,
-                                          (void*) &GetAppConf()->Timers[i]);
+            JobsList[i] = cron_job_create(GetSysConf()->Timers[i].cron, custom_cron_job_callback,
+                                          (void*) &GetSysConf()->Timers[i]);
         }
     }
     if (!isExpressError)
