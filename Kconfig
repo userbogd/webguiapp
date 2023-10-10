@@ -166,6 +166,29 @@ menu "WebGUIApp"
 	            help	
 	            	Timezone in hours. Positive for East and negative for the West                   
 	endmenu  	
+	    
+	menu "Command Processor settings"    
+	    config WEBGUIAPP_MAX_OBJECTS_NUM
+	    int "Max OBJECTS number"
+	    range 4 32
+	    default 8
+	         help
+	         	Max number of OBJECTS for both system and application 
+	    
+	    config WEBGUIAPP_MAX_COMMANDS_NUM
+	    int "Max COMMANDS number"
+	    range 4 32
+	    default 8
+	         help
+	         	Max number of COMMANDS per OBJECT for both system and application	
+	         	
+		config WEBGUIAPP_MAX_COMMAND_STRING_LENGTH
+	    int "Max COMMAND string length"
+	    range 32 128
+	    default 64
+	         help
+	         	Max length of COMMAND string total, 1/4 for object name, 1/4 for command name, 1/2 for argument	         	         	
+	endmenu
 	     
 	menu "CRON settings"
 		config WEBGUIAPP_CRON_ENABLE

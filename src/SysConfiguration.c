@@ -396,7 +396,7 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
 #endif
     Conf->modbusSettings.ModbusTCPPort = CONFIG_WEBGUIAPP_MBTCP_SERVER_PORT;
 #endif
-    for (int i = 0; i < 16; i++ )
+    for (int i = 0; i < CONFIG_WEBGUIAPP_CRON_NUMBER; i++ )
     {
         Conf->Timers[i].num = i+1;
         Conf->Timers[i].del = true;

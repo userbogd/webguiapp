@@ -24,8 +24,8 @@
 
 #define TAG "COMMAND_PROC_SYS"
 
-#define OBJECTS_NUMBER_SYS (1)
-#define EXEC_ACTIONS_MAX_NUMBER_SYS (2)
+//#define MAX_OBJECTS_NUMBER CONFIG_WEBGUIAPP_MAX_OBJECTS_NUM
+//#define MAX_COMMANDS_NUMBER CONFIG_WEBGUIAPP_MAX_COMMANDS_NUM
 
 const char *exec_errors[] = {
         "executed OK",
@@ -38,7 +38,6 @@ const char *exec_errors[] = {
 };
 
 static int ExecCommandParse(char *cmd);
-static int ExecSysCommand(char *cmd);
 
 int (*CustomExecCommand)(char *cmd);
 void regCustomExecCommand(int (*custom_exec)(char *cmd))
@@ -48,40 +47,59 @@ void regCustomExecCommand(int (*custom_exec)(char *cmd))
 
 static void SYSTEM_TEST_handle(char *obj, char *com, char *arg)
 {
-    ESP_LOGI(TAG, "Object:%s, Command:%s, Argument %s",obj, com, arg);
+    ESP_LOGI(TAG, "Object:%s, Command:%s, Argument %s", obj, com, arg);
 }
 static void SYSTEM_REBOOT_handle(char *obj, char *com, char *arg)
 {
-    ESP_LOGI(TAG, "Object:%s, Command:%s, Argument %s",obj, com, arg);
+    ESP_LOGI(TAG, "Object:%s, Command:%s, Argument %s", obj, com, arg);
 }
 
-typedef struct
+obj_struct_t *custom_com_obj_arr = NULL;
+void SetCustomObjects(obj_struct_t *obj)
 {
-    int index;
-    char object_name[EXEC_OBJECT_NAME_MAX_LENGTH];
-    char allowed_actions[EXEC_ACTIONS_MAX_NUMBER_SYS][EXEC_ACTION_NAME_MAX_LENGTH];
-    void (*command_handlers[EXEC_ACTIONS_MAX_NUMBER_SYS])(char *obj, char *com, char *arg);
-} obj_struct_t;
+    custom_com_obj_arr = obj;
+}
 
 const obj_struct_t com_obj_arr[] = {
         {
                 .index = 0,
                 .object_name = "SYSTEM",
-                .allowed_actions = { "TEST", "REBOOT" },
+                .allowed_actions = { "TEST", "REBOOT", "TEST2", "TEST3", "TEST4", "TEST5" },
                 .command_handlers = { &SYSTEM_TEST_handle, &SYSTEM_REBOOT_handle }
-        }
+        },
+        {
+                .index = 0,
+                .object_name = "SYSTEM1",
+                .allowed_actions = { "TEST", "REBOOT", "TEST2", "TEST3", "TEST4" },
+                .command_handlers = { &SYSTEM_TEST_handle, &SYSTEM_REBOOT_handle }
+        },
+        {
+                .index = 0,
+                .object_name = "SYSTEM2",
+                .allowed_actions = { "TEST", "REBOOT", "TEST2", "TEST3", "TEST4" },
+                .command_handlers = { &SYSTEM_TEST_handle, &SYSTEM_REBOOT_handle }
+        },
+        {
+                .index = 0,
+                .object_name = "SYSTEM3",
+                .allowed_actions = { "TEST", "REBOOT", "TEST2", "TEST3", "TEST4", "TEST5" },
+                .command_handlers = { &SYSTEM_TEST_handle, &SYSTEM_REBOOT_handle }
+        },
+        { 0 }
 };
 
-void GetSysObjectsInfo(char *data)
+void GetObjectsInfo(char *data)
 {
     struct jWriteControl jwc;
     jwOpen(&jwc, data, VAR_MAX_VALUE_LENGTH, JW_ARRAY, JW_COMPACT);
-    for (int idx = 0; idx < OBJECTS_NUMBER_SYS; idx++)
+    for (int idx = 0; idx < CONFIG_WEBGUIAPP_MAX_OBJECTS_NUM; idx++)
     {
+        if (com_obj_arr[idx].object_name[0] == NULL)
+            break;
         jwArr_object(&jwc);
         jwObj_string(&jwc, "object", com_obj_arr[idx].object_name);
         jwObj_array(&jwc, "actions");
-        for (int i = 0; i < EXEC_ACTIONS_MAX_NUMBER_SYS; i++)
+        for (int i = 0; i < CONFIG_WEBGUIAPP_MAX_COMMANDS_NUM; i++)
         {
             if ((com_obj_arr[idx].allowed_actions[i])[0] != NULL)
                 jwArr_string(&jwc, com_obj_arr[idx].allowed_actions[i]);
@@ -89,30 +107,32 @@ void GetSysObjectsInfo(char *data)
         jwEnd(&jwc);
         jwEnd(&jwc);
     }
+    for (int idx = 0; idx < CONFIG_WEBGUIAPP_MAX_OBJECTS_NUM; idx++)
+    {
+        if (custom_com_obj_arr[idx].object_name[0] == NULL)
+            break;
+        jwArr_object(&jwc);
+        jwObj_string(&jwc, "object", custom_com_obj_arr[idx].object_name);
+        jwObj_array(&jwc, "actions");
+        for (int i = 0; i < CONFIG_WEBGUIAPP_MAX_COMMANDS_NUM; i++)
+        {
+            if ((custom_com_obj_arr[idx].allowed_actions[i])[0] != NULL)
+                jwArr_string(&jwc, custom_com_obj_arr[idx].allowed_actions[i]);
+        }
+        jwEnd(&jwc);
+        jwEnd(&jwc);
+    }
+
     jwClose(&jwc);
 }
 
 int ExecCommand(char *cmd)
 {
-    int err = ExecSysCommand(cmd);
-    if(err != 4)
-    {
+    int err = ExecCommandParse(cmd);
+    if(err)
         if (err > 0)
             ESP_LOGW(TAG, "Command execution ERROR: %s",exec_errors[err]);
-        return err;
-    }
-
-    if (CustomExecCommand != 0)
-        err = CustomExecCommand(cmd);
-
-    if (err > 0)
-        ESP_LOGW(TAG, "Command execution ERROR: %s",exec_errors[err]);
     return err;
-}
-
-static int ExecSysCommand(char *cmd)
-{
-    return ExecCommandParse(cmd);
 }
 
 static int ExecCommandParse(char *cmd)
@@ -120,9 +140,9 @@ static int ExecCommandParse(char *cmd)
     char *obj = NULL, *com = NULL, *arg = NULL;
     int err = 0;
     int commlen = strlen(cmd);
-    if (commlen > EXEC_COMMAND_MAX_LENGTH)
+    if (commlen > CONFIG_WEBGUIAPP_MAX_COMMAND_STRING_LENGTH)
         return 1;
-    char comm[EXEC_COMMAND_MAX_LENGTH + 1];
+    char comm[CONFIG_WEBGUIAPP_MAX_COMMAND_STRING_LENGTH + 1];
     const char del1 = ',';
     const char del2 = 0x00;
     strcpy(comm, cmd);
@@ -134,27 +154,47 @@ static int ExecCommandParse(char *cmd)
     if (!com)
         return 3;
 
-    err = 4;
-    for (int idx = 0; idx < OBJECTS_NUMBER_SYS; idx++)
+    for (int idx = 0; idx < CONFIG_WEBGUIAPP_MAX_OBJECTS_NUM; idx++)
     {
         if (!strcmp(obj, com_obj_arr[idx].object_name))
         {
-            err = 5;
-            for (int i = 0; i < EXEC_ACTIONS_MAX_NUMBER_SYS; i++)
+            for (int i = 0; i < CONFIG_WEBGUIAPP_MAX_COMMANDS_NUM; i++)
             {
                 if (!strcmp(com, com_obj_arr[idx].allowed_actions[i]))
                 {
                     if (com_obj_arr[idx].command_handlers[i] != NULL)
                     {
                         com_obj_arr[idx].command_handlers[i](obj, com, arg);
-                        err = 0;
+                        return 0;
                     }
                     else
-                        err = 6;
+                        return 6;
                 }
             }
+            return 5;
         }
     }
-    return err;
+
+    for (int idx = 0; idx < CONFIG_WEBGUIAPP_MAX_OBJECTS_NUM; idx++)
+    {
+        if (!strcmp(obj, custom_com_obj_arr[idx].object_name))
+        {
+            for (int i = 0; i < CONFIG_WEBGUIAPP_MAX_COMMANDS_NUM; i++)
+            {
+                if (!strcmp(com, custom_com_obj_arr[idx].allowed_actions[i]))
+                {
+                    if (custom_com_obj_arr[idx].command_handlers[i] != NULL)
+                    {
+                        custom_com_obj_arr[idx].command_handlers[i](obj, com, arg);
+                        return 0;
+                    }
+                    else
+                        return 6;
+                }
+            }
+            return 5;
+        }
+    }
+    return 4;
 }
 

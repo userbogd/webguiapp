@@ -333,7 +333,7 @@ static void funct_cronrecs(char *argres, int rw)
 
 static void funct_objsinfo(char *argres, int rw)
 {
-    GetSysObjectsInfo(argres);
+    GetObjectsInfo(argres);
 }
 
 

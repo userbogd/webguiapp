@@ -45,7 +45,4 @@ void regCustomPayloadTypeHandler(sys_error_code (*payload_handler)(data_message_
 //User handler for save App configuration
 void regCustomSaveConf(void (*custom_saveconf)(void));
 
-//User handler for execute command
-void regCustomExecCommand(int(*custom_exec)(char *cmd));
-
 #endif /* COMPONENTS_WEBGUIAPP_INCLUDE_USERCALLBACKS_H_ */

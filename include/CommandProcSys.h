@@ -25,15 +25,19 @@
 
 #include "esp_err.h"
 
-#define EXEC_COMMAND_MAX_LENGTH (64)
-#define EXEC_OBJECT_NAME_MAX_LENGTH (EXEC_COMMAND_MAX_LENGTH/4)
-#define EXEC_ACTION_NAME_MAX_LENGTH (EXEC_COMMAND_MAX_LENGTH/4)
-#define EXEC_ARGUMENT_MAX_LENGTH (EXEC_COMMAND_MAX_LENGTH/2)
+#define EXEC_ARGUMENT_MAX_LENGTH (CONFIG_WEBGUIAPP_MAX_COMMAND_STRING_LENGTH/2)
 
-
+typedef struct
+{
+    int index;
+    char object_name[CONFIG_WEBGUIAPP_MAX_COMMAND_STRING_LENGTH/4];
+    char allowed_actions[CONFIG_WEBGUIAPP_MAX_COMMANDS_NUM][CONFIG_WEBGUIAPP_MAX_COMMAND_STRING_LENGTH/4];
+    void (*command_handlers[CONFIG_WEBGUIAPP_MAX_COMMANDS_NUM])(char *obj, char *com, char *arg);
+} obj_struct_t;
 
 int ExecCommand(char *cmd);
-void GetSysObjectsInfo(char *data);
+void GetObjectsInfo(char *data);
+void SetCustomObjects(obj_struct_t *obj);
 
 
 #endif /* COMPONENTS_WEBGUIAPP_INCLUDE_COMMANDPROCSYS_H_ */
