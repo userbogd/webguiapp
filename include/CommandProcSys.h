@@ -39,5 +39,9 @@ int ExecCommand(char *cmd);
 void GetObjectsInfo(char *data);
 void SetCustomObjects(obj_struct_t *obj);
 
+obj_struct_t* GetSystemObjects();
+obj_struct_t* GetCustomObjects();
+
+
 
 #endif /* COMPONENTS_WEBGUIAPP_INCLUDE_COMMANDPROCSYS_H_ */

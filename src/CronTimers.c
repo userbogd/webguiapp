@@ -30,15 +30,16 @@
 //              "exec": "OUTPUTS,TEST,ARGUMENTS"
 //                }]
 // }}},"signature":"6a11b872e8f766673eb82e127b6918a0dc96a42c5c9d184604f9787f3d27bcef"}
-
 #include <CronTimers.h>
 #include "esp_log.h"
 #include "webguiapp.h"
 
 #define TAG "CRON_TIMER"
 
+extern obj_struct_t app_com_obj_arr[];
+extern obj_struct_t com_obj_arr[];
 
-const char *cron_actions[] = { "ON", "REBOOT", "TOGGLE", "OFF","VERYLONG_OPERATION" };
+const char *cron_actions[] = { "ON", "REBOOT", "TOGGLE", "OFF", "VERYLONG_OPERATION" };
 const char *cron_objects[] = {
         "RELAY1",
         "RELAY2",
@@ -58,36 +59,35 @@ const char *cron_act_avail[] = {
         "[0,2,3]",
         "[0,2,3]",
         "[0,2,3]",
-        "[1,4]"  };
+        "[1,4]" };
 
 char* GetCronObjectNameDef(int idx)
 {
-    if(idx < 0 || idx >= sizeof(cron_objects)/sizeof(char*))
+    if (idx < 0 || idx >= sizeof(cron_objects) / sizeof(char*))
         return "";
-    return (char*)cron_objects[idx];
+    return (char*) cron_objects[idx];
 }
 
 char* GetCronObjectName(int idx)
 {
-    if(idx < 0 || idx >= sizeof(cron_objects)/sizeof(char*))
+    if (idx < 0 || idx >= sizeof(cron_objects) / sizeof(char*))
         return "";
     return GetSysConf()->CronObjects[idx].objname;
 }
 
 char* GetCronActionName(int idx)
 {
-    if(idx < 0 || idx >= sizeof(cron_actions)/sizeof(char*))
+    if (idx < 0 || idx >= sizeof(cron_actions) / sizeof(char*))
         return "";
-    return (char*)cron_actions[idx];
+    return (char*) cron_actions[idx];
 }
 
 char* GetCronActAvail(int idx)
 {
-    if(idx < 0 || idx >= sizeof(cron_act_avail)/sizeof(char*))
+    if (idx < 0 || idx >= sizeof(cron_act_avail) / sizeof(char*))
         return "[]";
-    return (char*)cron_act_avail[idx];
+    return (char*) cron_act_avail[idx];
 }
-
 
 static cron_job *JobsList[CRON_TIMERS_NUMBER];
 static char cron_express_error[CRON_EXPRESS_MAX_LENGTH];
@@ -105,25 +105,11 @@ char* GetCronError()
 void custom_cron_execute(int obj, int act)
 {
 
-
-
 }
 
 void custom_cron_job_callback(cron_job *job)
 {
     ExecCommand(((cron_timer_t*) job->data)->exec);
-    /*
-    int act = ((cron_timer_t*) job->data)->act;
-    int obj = ((cron_timer_t*) job->data)->obj;
-    char *name = ((cron_timer_t*) job->data)->name;
-    //here call all timers jobs depends on object and action
-    time_t now;
-    time(&now);
-    ESP_LOGI(TAG, "Execute scheduler '%s' action %d under object %d at time %d", name, act, obj, (unsigned int )now);
-    LogFile("cron.log", "Executed sheduler with action %u under object %u", act, obj);
-    custom_cron_execute(obj, act);
-    return;
-    */
 }
 
 esp_err_t InitCronSheduler()
@@ -141,24 +127,30 @@ const char* check_expr(const char *expr)
     return err;
 }
 
-
 static void ExecuteLastAction()
 {
     int obj;
-    for (obj = 0; obj < sizeof(cron_objects); obj++)
+    for (obj = 0; obj < CONFIG_WEBGUIAPP_MAX_OBJECTS_NUM; obj++)
     {
         int shdl;
         time_t now;
         time(&now);
         time_t delta = now;
         int act = -1;
+        int minimal = -1;
+
+
+        char *obj = GetSystemObjects()->object_name;
 
         for (shdl = 0; shdl < CRON_TIMERS_NUMBER; shdl++)
         {
+            char *obj_in_cron = strtok(GetSysConf()->Timers[shdl].exec, ',');
+
             if (GetSysConf()->Timers[shdl].enab &&
                     !GetSysConf()->Timers[shdl].del &&
                     GetSysConf()->Timers[shdl].prev &&
-                    GetSysConf()->Timers[shdl].obj == obj)
+                    !strcmp(obj, obj_in_cron))
+
             {
                 cron_expr cron_exp = { 0 };
                 cron_parse_expr(GetSysConf()->Timers[shdl].cron, &cron_exp, NULL);
@@ -166,16 +158,15 @@ static void ExecuteLastAction()
                 if ((now - prev) < delta)
                 {
                     delta = (now - prev);
-                    act = GetSysConf()->Timers[shdl].act;
+                    minimal = shdl;
                 }
             }
         }
 
-        if(act != -1)
+        if (shdl != -1)
         {
-            ESP_LOGW(TAG, "Execute last action %d with object %d", act, obj);
-            LogFile("cron.log", "Execute last action %d under object %d", act, obj);
-            custom_cron_execute(obj, act);
+
+            ExecCommand(GetSysConf()->Timers[shdl].exec);
         }
     }
 }

@@ -37,13 +37,8 @@ const char *exec_errors[] = {
         "handler not set"
 };
 
-static int ExecCommandParse(char *cmd);
 
-int (*CustomExecCommand)(char *cmd);
-void regCustomExecCommand(int (*custom_exec)(char *cmd))
-{
-    CustomExecCommand = custom_exec;
-}
+static int ExecCommandParse(char *cmd);
 
 static void SYSTEM_TEST_handle(char *obj, char *com, char *arg)
 {
@@ -87,6 +82,17 @@ const obj_struct_t com_obj_arr[] = {
         },
         { 0 }
 };
+
+obj_struct_t* GetSystemObjects()
+{
+    return com_obj_arr;
+}
+
+obj_struct_t* GetCustomObjects()
+{
+    return custom_com_obj_arr;
+}
+
 
 void GetObjectsInfo(char *data)
 {
