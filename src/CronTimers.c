@@ -33,9 +33,9 @@
 #include <CronTimers.h>
 #include "esp_log.h"
 #include "webguiapp.h"
+#include "string.h"
 
 #define TAG "CRON_TIMER"
-
 
 static cron_job *JobsList[CONFIG_WEBGUIAPP_CRON_NUMBER];
 static char cron_express_error[CRON_EXPRESS_MAX_LENGTH];
@@ -65,10 +65,10 @@ const char* check_expr(const char *expr)
     return err;
 }
 
-static void ExecuteLastAction()
+static void ExecuteLastAction(obj_struct_t *objarr)
 {
     int obj_idx;
-    char objname[CONFIG_WEBGUIAPP_MAX_COMMAND_STRING_LENGTH/4 + 1];
+    char objname[CONFIG_WEBGUIAPP_MAX_COMMAND_STRING_LENGTH / 4 + 1];
     for (obj_idx = 0; obj_idx < CONFIG_WEBGUIAPP_MAX_OBJECTS_NUM; obj_idx++)
     {
         int shdl;
@@ -77,23 +77,25 @@ static void ExecuteLastAction()
         time_t delta = now;
         int minimal = -1;
 
-        char *obj = GetSystemObjects()[obj_idx].object_name;
+        char *obj = objarr[obj_idx].object_name;
         if (*obj == '\0')
             break;
 
         //ESP_LOGI(TAG, "Check object %s", obj);
-        const char del1 = ',';
+
         for (shdl = 0; shdl < CRON_TIMERS_NUMBER; shdl++)
         {
-            memcpy(objname, GetSysConf()->Timers[shdl].exec, CONFIG_WEBGUIAPP_MAX_COMMAND_STRING_LENGTH/4);
-            char *obj_in_cron = strtok(objname, &del1);
+            memcpy(objname, GetSysConf()->Timers[shdl].exec, CONFIG_WEBGUIAPP_MAX_COMMAND_STRING_LENGTH / 4);
+            objname[CONFIG_WEBGUIAPP_MAX_COMMAND_STRING_LENGTH / 4] = 0x00;
+            char *obj_in_cron = NULL;
+            obj_in_cron = strtok(objname, ",");
             if (GetSysConf()->Timers[shdl].enab &&
                     !GetSysConf()->Timers[shdl].del &&
                     GetSysConf()->Timers[shdl].prev &&
                     !strcmp(obj, obj_in_cron))
 
             {
-                //ESP_LOGI(TAG,  "%s:%s",obj, obj_in_cron);
+                ESP_LOGI(TAG, "Find %s:%s", obj, obj_in_cron);
                 cron_expr cron_exp = { 0 };
                 cron_parse_expr(GetSysConf()->Timers[shdl].cron, &cron_exp, NULL);
                 time_t prev = cron_prev(&cron_exp, now);
@@ -107,7 +109,7 @@ static void ExecuteLastAction()
 
         if (minimal != -1)
         {
-            ESP_LOGW(TAG, "Run previous CRON \"%s\" with delta %d" , GetSysConf()->Timers[minimal].exec, (int)delta);
+            ESP_LOGW(TAG, "Run previous CRON \"%s\" with delta %d", GetSysConf()->Timers[minimal].exec, (int )delta);
             ExecCommand(GetSysConf()->Timers[minimal].exec);
 
         }
@@ -118,13 +120,15 @@ void TimeObtainHandler(struct timeval *tm)
 {
     ESP_LOGW(TAG, "Current time received with value %d", (unsigned int )tm->tv_sec);
     ReloadCronSheduler();
-    ExecuteLastAction();
+    ExecuteLastAction(GetSystemObjects());
+    ExecuteLastAction(GetCustomObjects());
     LogFile("cron.log", "Cron service started");
 }
 
 void DebugTimer()
 {
-    ExecuteLastAction();
+    ExecuteLastAction(GetSystemObjects());
+    ExecuteLastAction(GetCustomObjects());
 }
 
 esp_err_t ReloadCronSheduler()
