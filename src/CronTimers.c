@@ -19,17 +19,6 @@
  * Description:	
  */
 
-//{
-// "data":{
-// "msgid":123456789,
-// "time":"2023-06-03T12:25:24+00:00",
-// "msgtype":1,"payloadtype":1, "payload":{"applytype":1,
-// "variables":{
-// "cronrecs":[{ "num": 1, "del": 0, "enab": 1, "prev": 0, "name": "Timer Name", "obj": 0, "act": 0,
-//              "cron": "*/3 * * * * *",
-//              "exec": "OUTPUTS,TEST,ARGUMENTS"
-//                }]
-// }}},"signature":"6a11b872e8f766673eb82e127b6918a0dc96a42c5c9d184604f9787f3d27bcef"}
 #include <CronTimers.h>
 #include "esp_log.h"
 #include "webguiapp.h"
