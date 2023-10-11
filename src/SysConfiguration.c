@@ -402,19 +402,11 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
         Conf->Timers[i].del = true;
         Conf->Timers[i].enab = false;
         Conf->Timers[i].prev = false;
-        Conf->Timers[i].obj = 0;
-        Conf->Timers[i].act = 0;
         strcpy(Conf->Timers[i].name, "Timer Name");
         strcpy(Conf->Timers[i].cron, "* * * * * *");
         strcpy(Conf->Timers[i].exec, "OBJECT,ACTION,ARGUMENTS");
 
     }
-    for (int i = 0; i < 16; i++ )
-    {
-        strcpy(Conf->CronObjects[i].objname, GetCronObjectNameDef(i));
-        Conf->CronObjects[i].idx = i;
-    }
-
 }
 
 esp_err_t ReadNVSSysConfig(SYS_CONFIG *SysConf)

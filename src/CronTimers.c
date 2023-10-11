@@ -36,75 +36,13 @@
 
 #define TAG "CRON_TIMER"
 
-extern obj_struct_t app_com_obj_arr[];
-extern obj_struct_t com_obj_arr[];
 
-const char *cron_actions[] = { "ON", "REBOOT", "TOGGLE", "OFF", "VERYLONG_OPERATION" };
-const char *cron_objects[] = {
-        "RELAY1",
-        "RELAY2",
-        "RELAY3",
-        "RELAY4",
-        "RELAY5",
-        "RELAY6",
-        "RELAY7",
-        "RELAY8",
-        "SYSTEM" };
-const char *cron_act_avail[] = {
-        "[0,2,3]",
-        "[0,2,3]",
-        "[0,2,3]",
-        "[0,2,3]",
-        "[0,2,3]",
-        "[0,2,3]",
-        "[0,2,3]",
-        "[0,2,3]",
-        "[1,4]" };
-
-char* GetCronObjectNameDef(int idx)
-{
-    if (idx < 0 || idx >= sizeof(cron_objects) / sizeof(char*))
-        return "";
-    return (char*) cron_objects[idx];
-}
-
-char* GetCronObjectName(int idx)
-{
-    if (idx < 0 || idx >= sizeof(cron_objects) / sizeof(char*))
-        return "";
-    return GetSysConf()->CronObjects[idx].objname;
-}
-
-char* GetCronActionName(int idx)
-{
-    if (idx < 0 || idx >= sizeof(cron_actions) / sizeof(char*))
-        return "";
-    return (char*) cron_actions[idx];
-}
-
-char* GetCronActAvail(int idx)
-{
-    if (idx < 0 || idx >= sizeof(cron_act_avail) / sizeof(char*))
-        return "[]";
-    return (char*) cron_act_avail[idx];
-}
-
-static cron_job *JobsList[CRON_TIMERS_NUMBER];
+static cron_job *JobsList[CONFIG_WEBGUIAPP_CRON_NUMBER];
 static char cron_express_error[CRON_EXPRESS_MAX_LENGTH];
 
 char* GetCronError()
 {
     return cron_express_error;
-}
-
-/**
- * \brief Handle all actions under all objects
- * \param obj  Index of the object
- * \param act  Index of the action
- */
-void custom_cron_execute(int obj, int act)
-{
-
 }
 
 void custom_cron_job_callback(cron_job *job)

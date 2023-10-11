@@ -210,9 +210,7 @@ typedef struct
           } modbusSettings;
 
 
-          cron_timer_t Timers[16];
-          cron_obj_t CronObjects[16];
-
+          cron_timer_t Timers[CONFIG_WEBGUIAPP_CRON_NUMBER];
 
     } SYS_CONFIG;
 
