@@ -149,12 +149,11 @@ static int ExecCommandParse(char *cmd)
     if (commlen > CONFIG_WEBGUIAPP_MAX_COMMAND_STRING_LENGTH)
         return 1;
     char comm[CONFIG_WEBGUIAPP_MAX_COMMAND_STRING_LENGTH + 1];
-    const char del1 = ',';
-    const char del2 = 0x00;
+
     strcpy(comm, cmd);
-    obj = strtok(comm, &del1);
-    com = strtok(NULL, &del1);
-    arg = strtok(NULL, &del2);
+    obj = strtok(comm, ",");
+    com = strtok(NULL, ",");
+    arg = strtok(NULL, "\0");
     if (!obj)
         return 2;
     if (!com)
