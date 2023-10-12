@@ -248,8 +248,10 @@ static sys_error_code DataHeaderParser(data_message_t *MSG)
     if (result.elements == 1)
     {
         MSG->parsedData.msgType = atoi((char*) result.pValue);
-        if (MSG->parsedData.msgType > 2 || MSG->parsedData.msgType < 1)
+        if (MSG->parsedData.msgType > DATA_MESSAGE_TYPE_RESPONSE || MSG->parsedData.msgType < DATA_MESSAGE_TYPE_COMMAND)
             return SYS_ERROR_PARSE_MSGTYPE;
+        if (MSG->parsedData.msgType == DATA_MESSAGE_TYPE_RESPONSE)
+            return SYS_GOT_RESPONSE_MESSAGE;
     }
     else
         return SYS_ERROR_PARSE_MSGTYPE;
@@ -297,6 +299,17 @@ esp_err_t ServiceDataHandler(data_message_t *MSG)
     }
     else
         MSG->err_code = (int) DataHeaderParser(MSG);
+
+    if (MSG->err_code == SYS_GOT_RESPONSE_MESSAGE)
+    {
+        //ToDo Here handler of received data
+#if REAST_API_DEBUG_MODE
+        ESP_LOGI(TAG, "Got response message with msgid=%d", MSG->parsedData.msgID);
+#endif
+        MSG->outputDataBuffer[0] = 0x00;
+        MSG->outputDataLength = 0;
+        return ESP_OK;
+    }
 
     if (MSG->err_code)
     {
