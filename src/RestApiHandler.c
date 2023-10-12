@@ -295,8 +295,6 @@ static void funct_cronrecs(char *argres, int rw)
                 T.enab = jRead_int(argres, "[*{'enab'", &i);
                 T.prev = jRead_int(argres, "[*{'prev'", &i);
                 jRead_string(argres, "[*{'name'", T.name, sizeof(T.name), &i);
-                T.obj = jRead_int(argres, "[*{'obj'", &i);
-                T.act = jRead_int(argres, "[*{'act'", &i);
                 jRead_string(argres, "[*{'cron'", T.cron, sizeof(T.cron), &i);
                 jRead_string(argres, "[*{'exec'", T.exec, sizeof(T.exec), &i);
                 memcpy(&GetSysConf()->Timers[T.num - 1], &T, sizeof(cron_timer_t));
@@ -318,8 +316,6 @@ static void funct_cronrecs(char *argres, int rw)
             jwObj_int(&jwc, "enab", (T.enab) ? 1 : 0);
             jwObj_int(&jwc, "prev", (T.prev) ? 1 : 0);
             jwObj_string(&jwc, "name", T.name);
-            jwObj_int(&jwc, "obj", (unsigned int) T.obj);
-            jwObj_int(&jwc, "act", (unsigned int) T.act);
             jwObj_string(&jwc, "cron", T.cron);
             jwObj_string(&jwc, "exec", T.exec);
             jwEnd(&jwc);
