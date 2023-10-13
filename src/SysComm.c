@@ -71,6 +71,7 @@ static sys_error_code PayloadType_1_Handler(data_message_t *MSG)
     jwOpen(&jwc, MSG->outputDataBuffer, MSG->outputDataLength, JW_OBJECT, JW_COMPACT);
     jwObj_object(&jwc, "data");
     jwObj_int(&jwc, "msgid", MSG->parsedData.msgID);
+    jwObj_string(&jwc, "devid", GetSysConf()->ID);
     char time[RFC3339_TIMESTAMP_LENGTH];
     GetRFC3339Time(time);
     jwObj_string(&jwc, "time", time);
@@ -316,6 +317,7 @@ esp_err_t ServiceDataHandler(data_message_t *MSG)
         struct jWriteControl jwc;
         jwOpen(&jwc, MSG->outputDataBuffer, MSG->outputDataLength, JW_OBJECT, JW_PRETTY);
         jwObj_int(&jwc, "msgid", MSG->parsedData.msgID);
+        jwObj_string(&jwc, "devid", GetSysConf()->ID);
         char time[RFC3339_TIMESTAMP_LENGTH];
         GetRFC3339Time(time);
         jwObj_string(&jwc, "time", time);
