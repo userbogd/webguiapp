@@ -89,6 +89,8 @@ typedef struct
     struct
     {
         uint64_t msgID;
+        char srcID[9];
+        char dstID[9];
         time_t time;
         int msgType;
         int payloadType;

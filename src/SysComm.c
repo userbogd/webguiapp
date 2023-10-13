@@ -71,7 +71,8 @@ static sys_error_code PayloadType_1_Handler(data_message_t *MSG)
     jwOpen(&jwc, MSG->outputDataBuffer, MSG->outputDataLength, JW_OBJECT, JW_COMPACT);
     jwObj_object(&jwc, "data");
     jwObj_int(&jwc, "msgid", MSG->parsedData.msgID);
-    jwObj_string(&jwc, "devid", GetSysConf()->ID);
+    jwObj_string(&jwc, "srcid", GetSysConf()->ID);
+    jwObj_string(&jwc, "dstid", MSG->parsedData.srcID);
     char time[RFC3339_TIMESTAMP_LENGTH];
     GetRFC3339Time(time);
     jwObj_string(&jwc, "time", time);
@@ -244,6 +245,25 @@ static sys_error_code DataHeaderParser(data_message_t *MSG)
     else
         return SYS_ERROR_PARSE_MESSAGEID;
 
+
+    jRead(MSG->inputDataBuffer, "{'data'{'srcid'", &result);
+    if (result.elements == 1)
+    {
+        jRead_string(MSG->inputDataBuffer, "{'data'{'srcid'", MSG->parsedData.srcID, 9, 0);
+    }
+    else
+        strcpy(MSG->parsedData.srcID, "FFFFFFFF");
+
+
+    jRead(MSG->inputDataBuffer, "{'data'{'dstid'", &result);
+    if (result.elements == 1)
+    {
+        jRead_string(MSG->inputDataBuffer, "{'data'{'dstid'", MSG->parsedData.dstID, 9, 0);
+    }
+    else
+        strcpy(MSG->parsedData.dstID, "FFFFFFFF");
+
+
     //Extract 'msgtype' or throw exception
     jRead(MSG->inputDataBuffer, "{'data'{'msgtype'", &result);
     if (result.elements == 1)
@@ -317,7 +337,8 @@ esp_err_t ServiceDataHandler(data_message_t *MSG)
         struct jWriteControl jwc;
         jwOpen(&jwc, MSG->outputDataBuffer, MSG->outputDataLength, JW_OBJECT, JW_PRETTY);
         jwObj_int(&jwc, "msgid", MSG->parsedData.msgID);
-        jwObj_string(&jwc, "devid", GetSysConf()->ID);
+        jwObj_string(&jwc, "srcid", GetSysConf()->ID);
+        jwObj_string(&jwc, "dstid", MSG->parsedData.srcID);
         char time[RFC3339_TIMESTAMP_LENGTH];
         GetRFC3339Time(time);
         jwObj_string(&jwc, "time", time);
