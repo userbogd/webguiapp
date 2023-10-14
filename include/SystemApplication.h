@@ -58,6 +58,7 @@ typedef enum
     SYS_ERROR_PARSE_VARIABLES,
 
     SYS_ERROR_NO_MEMORY = 300,
+    SYS_ERROR_HANDLER_NOT_SET,
     SYS_ERROR_UNKNOWN,
 
 } sys_error_code;
@@ -94,6 +95,7 @@ typedef struct
         time_t time;
         int msgType;
         int payloadType;
+        char payloadTypeStr[16];
         void *payload;
         unsigned char sha256[32];
     } parsedData;

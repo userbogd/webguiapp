@@ -59,7 +59,20 @@ void regCustomSaveConf(void (*custom_saveconf)(void))
     CustomSaveConf = custom_saveconf;
 }
 
-static sys_error_code PayloadType_1_Handler(data_message_t *MSG)
+static sys_error_code PayloadType1000Handler(data_message_t *MSG)
+{
+    return SYS_ERROR_HANDLER_NOT_SET;
+}
+static sys_error_code PayloadType1001Handler(data_message_t *MSG)
+{
+    return SYS_ERROR_HANDLER_NOT_SET;
+}
+static sys_error_code PayloadType1002Handler(data_message_t *MSG)
+{
+    return SYS_ERROR_HANDLER_NOT_SET;
+}
+
+static sys_error_code PayloadDefaultTypeHandler(data_message_t *MSG)
 {
     struct jReadElement result;
     const char *err_br;
@@ -245,7 +258,6 @@ static sys_error_code DataHeaderParser(data_message_t *MSG)
     else
         return SYS_ERROR_PARSE_MESSAGEID;
 
-
     jRead(MSG->inputDataBuffer, "{'data'{'srcid'", &result);
     if (result.elements == 1)
     {
@@ -254,7 +266,6 @@ static sys_error_code DataHeaderParser(data_message_t *MSG)
     else
         strcpy(MSG->parsedData.srcID, "FFFFFFFF");
 
-
     jRead(MSG->inputDataBuffer, "{'data'{'dstid'", &result);
     if (result.elements == 1)
     {
@@ -262,7 +273,6 @@ static sys_error_code DataHeaderParser(data_message_t *MSG)
     }
     else
         strcpy(MSG->parsedData.dstID, "FFFFFFFF");
-
 
     //Extract 'msgtype' or throw exception
     jRead(MSG->inputDataBuffer, "{'data'{'msgtype'", &result);
@@ -282,26 +292,39 @@ static sys_error_code DataHeaderParser(data_message_t *MSG)
     if (result.elements == 1)
     {
         MSG->parsedData.payloadType = atoi((char*) result.pValue);
-        if (MSG->parsedData.payloadType < 1 && MSG->parsedData.payloadType > 100)
-            return SYS_ERROR_PARSE_PAYLOADTYPE;
+        jRead_string(MSG->inputDataBuffer, "{'data'{'payloadtype'", MSG->parsedData.payloadTypeStr, 16, 0);
     }
     else
         return SYS_ERROR_PARSE_PAYLOADTYPE;
 
+    sys_error_code err = SYS_ERROR_HANDLER_NOT_SET;
+
+    //ToDo move payload type from integer to string
     switch (MSG->parsedData.payloadType)
     {
-        case 1:
-            return PayloadType_1_Handler(MSG);
+        case 1000:
+            err = PayloadType1000Handler(MSG);
         break;
 
-        default:
-            if (CustomPayloadTypeHandler)
-                CustomPayloadTypeHandler(MSG);
-            else
-                return SYS_ERROR_PARSE_PAYLOADTYPE;
-    }
+        case 1001:
+            err = PayloadType1001Handler(MSG);
+        break;
 
-    return SYS_ERROR_UNKNOWN;
+        case 1002:
+            err = PayloadType1002Handler(MSG);
+        break;
+    }
+    if (err != SYS_ERROR_HANDLER_NOT_SET)
+        return err;
+
+    if (CustomPayloadTypeHandler)
+        err = CustomPayloadTypeHandler(MSG);
+
+    if (err != SYS_ERROR_HANDLER_NOT_SET)
+        return err;
+
+    return PayloadDefaultTypeHandler(MSG);
+
 }
 
 esp_err_t ServiceDataHandler(data_message_t *MSG)
