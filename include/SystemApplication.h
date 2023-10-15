@@ -107,6 +107,15 @@ typedef struct
     int err_code;
 } data_message_t;
 
+typedef struct
+{
+    char *raw_data_ptr;
+    int data_length;
+}UART_DATA_SEND_STRUCT;
+
+void InitSerialPort(void);
+esp_err_t TransmitSerialPort(char *data, int ln);
+
 esp_err_t GetConfVar(char* name, char* val, rest_var_types *tp);
 esp_err_t SetConfVar(char* name, char* val, rest_var_types *tp);
 

@@ -785,6 +785,81 @@ menu "WebGUIApp"
 	   endif
 	endmenu
 	
+	menu "Serial port configuration"
+	
+	    config UART_TRANSPORT_ENABLE
+	        bool "Enabled serial port"
+	        default n
+	        help
+	            Set enabled uart output data
+	            
+	    if UART_TRANSPORT_ENABLE
+	        config UART_PORT_NUM
+	            int "UART port number"
+	            range 0 2
+	            default 2
+	            help
+	                UART communication port number for the example.
+	                See UART documentation for available port numbers.
+	                
+	        config UART_TO_MQTT_BRIDGE_ENABLED
+	        	bool "Enabled UART<->MQTT bridge"
+	        	default n
+	        		help
+	            		Switch on bridge uart to mqtt, else uart operate same way as rest and mqtt data exchange         
+	        
+	        config UART_BAUD_RATE
+	            int "UART communication speed"
+	            range 1200 115200
+	            default 115200
+	            help
+	                UART communication speed.
+	    
+	        config UART_RXD
+	            int "UART RXD pin number"
+	            range 0 39
+	            default 35 
+	            help
+	                GPIO number for UART RX pin. See UART documentation for more information
+	                about available pin numbers for UART.
+	    
+	        config UART_TXD
+	            int "UART TXD pin number"
+	            range 0 33
+	            default 33 
+	            help
+	                GPIO number for UART TX pin. See UART documentation for more information
+	                about available pin numbers for UART.
+	    
+	    
+	    	config UART_MODE_RS485_ENABLED
+	        	bool "Enabled RS485 mode"
+	        	default n
+	        		help
+	            		Set UART to RS485 mode with hardware driver
+	    
+	    	if UART_MODE_RS485_ENABLED
+		        
+		        config UART_RTS
+		            int "RS485 RE/DE pin number"
+		            range -1 33
+		            default 32
+		            help
+		                GPIO number for UART RTS pin. This pin is connected to
+		                ~RE/DE pin of RS485 transceiver to switch direction.
+	        
+	        endif
+	                
+		    config UART_BUF_SIZE
+		        int "UART RAM buffer size"
+		        range 64 4096
+		        default 1024
+		        help
+		            UART buffer size both for rx and tx.	         
+	           
+	     endif       
+	endmenu
+	
 	menu "Modbus settings"
 		config WEBGUIAPP_MBTCP_ENABLED
 			bool "Enabled modbus TCP"

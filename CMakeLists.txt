@@ -26,6 +26,7 @@ idf_component_register(
     	 "src/SNTP.c"
     	 "src/MQTT.c"
     	 "src/CronTimers.c"
+    	 "src/SerialPort.c"
     	  src/OTA.c
     	  src/RestApiHandler.c
     	  src/SysComm.c
