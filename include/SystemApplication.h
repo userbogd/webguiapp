@@ -37,6 +37,12 @@
 #define VAR_MAX_NAME_LENGTH MAX_DYNVAR_NAME_LENGTH
 #define VAR_MAX_VALUE_LENGTH (2048)
 
+#define    PAYLOAD_ERROR            0
+#define    PAYLOAD_DEFAULT          1
+#define    PAYLOAD_IO_STATE         2
+#define    PAYLOAD_BUTTON_EVENT     3
+
+
 typedef enum
 {
     SYS_OK_DATA = 0,
@@ -95,7 +101,6 @@ typedef struct
         time_t time;
         int msgType;
         int payloadType;
-        char payloadTypeStr[16];
         void *payload;
         unsigned char sha256[32];
     } parsedData;

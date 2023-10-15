@@ -59,19 +59,6 @@ void regCustomSaveConf(void (*custom_saveconf)(void))
     CustomSaveConf = custom_saveconf;
 }
 
-static sys_error_code PayloadType1000Handler(data_message_t *MSG)
-{
-    return SYS_ERROR_HANDLER_NOT_SET;
-}
-static sys_error_code PayloadType1001Handler(data_message_t *MSG)
-{
-    return SYS_ERROR_HANDLER_NOT_SET;
-}
-static sys_error_code PayloadType1002Handler(data_message_t *MSG)
-{
-    return SYS_ERROR_HANDLER_NOT_SET;
-}
-
 static sys_error_code PayloadDefaultTypeHandler(data_message_t *MSG)
 {
     struct jReadElement result;
@@ -292,7 +279,6 @@ static sys_error_code DataHeaderParser(data_message_t *MSG)
     if (result.elements == 1)
     {
         MSG->parsedData.payloadType = atoi((char*) result.pValue);
-        jRead_string(MSG->inputDataBuffer, "{'data'{'payloadtype'", MSG->parsedData.payloadTypeStr, 16, 0);
     }
     else
         return SYS_ERROR_PARSE_PAYLOADTYPE;
@@ -302,18 +288,11 @@ static sys_error_code DataHeaderParser(data_message_t *MSG)
     //ToDo move payload type from integer to string
     switch (MSG->parsedData.payloadType)
     {
-        case 1000:
-            err = PayloadType1000Handler(MSG);
-        break;
-
-        case 1001:
-            err = PayloadType1001Handler(MSG);
-        break;
-
-        case 1002:
-            err = PayloadType1002Handler(MSG);
+        case PAYLOAD_DEFAULT:
+            err = CustomPayloadTypeHandler(MSG);
         break;
     }
+
     if (err != SYS_ERROR_HANDLER_NOT_SET)
         return err;
 
