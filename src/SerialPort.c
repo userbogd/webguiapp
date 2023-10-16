@@ -1,4 +1,4 @@
- /*! Copyright 2023 Bogdan Pilyugin
+/*! Copyright 2023 Bogdan Pilyugin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,15 +42,16 @@
 
 #define UART_TX_QUEUE_SIZE  (5)
 #define UART_RX_QUEUE_SIZE  (5)
-
 #define UART_DEBUG_MODE 0
+
+#ifdef CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
 
 QueueHandle_t UARTtxQueueHandle;
 static StaticQueue_t xStaticUARTtxQueue;
 uint8_t UARTtxQueueStorageArea[UART_TX_QUEUE_SIZE * sizeof(UART_DATA_SEND_STRUCT)];
 
 static QueueHandle_t uart_event_queue;
-static char rxbuf[CONFIG_UART_BUF_SIZE];
+static char rxbuf[CONFIG_WEBGUIAPP_UART_BUF_SIZE];
 
 esp_err_t TransmitSerialPort(char *data, int ln)
 {
@@ -95,8 +96,6 @@ static void ReceiveHandlerAPI()
     }
 }
 
-
-
 void serial_RX_task(void *arg)
 {
     uart_event_t event;
@@ -120,21 +119,22 @@ void serial_RX_task(void *arg)
                     if (event.timeout_flag)
                     {
 
-                        bzero(rxbuf, CONFIG_UART_BUF_SIZE);
-                        uart_get_buffered_data_len(CONFIG_UART_PORT_NUM, (size_t*) &buffered_size);
+                        bzero(rxbuf, CONFIG_WEBGUIAPP_UART_BUF_SIZE);
+                        uart_get_buffered_data_len(CONFIG_WEBGUIAPP_UART_PORT_NUM, (size_t*) &buffered_size);
                         if (buffered_size)
                         {
-                            uart_read_bytes(CONFIG_UART_PORT_NUM, rxbuf, buffered_size, 100);
+                            uart_read_bytes(CONFIG_WEBGUIAPP_UART_PORT_NUM, rxbuf, buffered_size, 100);
 #if UART_DEBUG_MODE == 1
                             ESP_LOGI(TAG, "read of %d bytes: %s", buffered_size, rxbuf);
 #endif
 
-#ifdef CONFIG_UART_TO_MQTT_BRIDGE_ENABLED
-                            ExternalServiceMQTTSend(rxbuf, buffered_size, 0);
-                            ExternalServiceMQTTSend(rxbuf, buffered_size, 1);
-#else
-                            ReceiveHandlerAPI();
-#endif
+                            if (GetSysConf()->serialSettings.Flags.IsBridgeEnabled)
+                            {
+                                ExternalServiceMQTTSend(rxbuf, buffered_size, 0);
+                                ExternalServiceMQTTSend(rxbuf, buffered_size, 1);
+                            }
+                            else
+                                ReceiveHandlerAPI();
 
                         }
                     }
@@ -148,7 +148,7 @@ void serial_RX_task(void *arg)
                     // If fifo overflow happened, you should consider adding flow control for your application.
                     // The ISR has already reset the rx FIFO,
                     // As an example, we directly flush the rx buffer here in order to read more data.
-                    uart_flush_input(CONFIG_UART_PORT_NUM);
+                    uart_flush_input(CONFIG_WEBGUIAPP_UART_PORT_NUM);
                     xQueueReset(uart_event_queue);
                 break;
                     //Event of UART ring buffer full
@@ -156,7 +156,7 @@ void serial_RX_task(void *arg)
                     ESP_LOGE(TAG, "ring buffer full");
                     // If buffer full happened, you should consider encreasing your buffer size
                     // As an example, we directly flush the rx buffer here in order to read more data.
-                    uart_flush_input(CONFIG_UART_PORT_NUM);
+                    uart_flush_input(CONFIG_WEBGUIAPP_UART_PORT_NUM);
                     xQueueReset(uart_event_queue);
                 break;
                     //Event of UART RX break detected
@@ -176,8 +176,8 @@ void serial_RX_task(void *arg)
                     //UART_PATTERN_DET
                 case UART_PATTERN_DET:
 
-                    uart_get_buffered_data_len(CONFIG_UART_PORT_NUM, (size_t*) &buffered_size);
-                    int pos = uart_pattern_pop_pos(CONFIG_UART_PORT_NUM);
+                    uart_get_buffered_data_len(CONFIG_WEBGUIAPP_UART_PORT_NUM, (size_t*) &buffered_size);
+                    int pos = uart_pattern_pop_pos(CONFIG_WEBGUIAPP_UART_PORT_NUM);
 #if UART_DEBUG_MODE == 1
                     ESP_LOGI(TAG, "[UART PATTERN DETECTED] pos: %d, buffered size: %d", (int )pos, (int )buffered_size);
 #endif
@@ -186,14 +186,14 @@ void serial_RX_task(void *arg)
                         // There used to be a UART_PATTERN_DET event, but the pattern position queue is full so that it can not
                         // record the position. We should set a larger queue size.
                         // As an example, we directly flush the rx buffer here.
-                        uart_flush_input(CONFIG_UART_PORT_NUM);
+                        uart_flush_input(CONFIG_WEBGUIAPP_UART_PORT_NUM);
                     }
                     else
                     {
-                        uart_read_bytes(CONFIG_UART_PORT_NUM, rxbuf, pos, 100 / portTICK_PERIOD_MS);
+                        uart_read_bytes(CONFIG_WEBGUIAPP_UART_PORT_NUM, rxbuf, pos, 100 / portTICK_PERIOD_MS);
                         uint8_t pat[PATTERN_CHR_NUM + 1];
                         memset(pat, 0, sizeof(pat));
-                        uart_read_bytes(CONFIG_UART_PORT_NUM, pat, PATTERN_CHR_NUM, 100 / portTICK_PERIOD_MS);
+                        uart_read_bytes(CONFIG_WEBGUIAPP_UART_PORT_NUM, pat, PATTERN_CHR_NUM, 100 / portTICK_PERIOD_MS);
 #if UART_DEBUG_MODE == 1
                         ESP_LOGI(TAG, "read data: %s", rxbuf);
                         ESP_LOGI(TAG, "read pat : %s", pat);
@@ -217,11 +217,11 @@ void static serial_TX_task(void *arg)
     while (1)
     {
         xQueueReceive(UARTtxQueueHandle, &DSS, portMAX_DELAY);
-        if (uart_write_bytes(CONFIG_UART_PORT_NUM, DSS.raw_data_ptr, DSS.data_length)
+        if (uart_write_bytes(CONFIG_WEBGUIAPP_UART_PORT_NUM, DSS.raw_data_ptr, DSS.data_length)
                 != DSS.data_length)
             ESP_LOGE(TAG, "RS485 write data failure");
         free(DSS.raw_data_ptr);
-        if (uart_wait_tx_done(CONFIG_UART_PORT_NUM, pdMS_TO_TICKS(1000)) != ESP_OK)
+        if (uart_wait_tx_done(CONFIG_WEBGUIAPP_UART_PORT_NUM, pdMS_TO_TICKS(1000)) != ESP_OK)
             ESP_LOGE(TAG, "RS485 transmit data failure");
     }
 }
@@ -229,7 +229,7 @@ void static serial_TX_task(void *arg)
 void InitSerialPort(void)
 {
     uart_config_t uart_config = {
-            .baud_rate = CONFIG_UART_BAUD_RATE,
+            .baud_rate = GetSysConf()->serialSettings.BaudRate,
             .data_bits = UART_DATA_8_BITS,
             .parity = UART_PARITY_DISABLE,
             .stop_bits = UART_STOP_BITS_1,
@@ -237,15 +237,21 @@ void InitSerialPort(void)
             .source_clk = UART_SCLK_APB,
     };
 
-    ESP_ERROR_CHECK(uart_driver_install(CONFIG_UART_PORT_NUM, CONFIG_UART_BUF_SIZE * 2, 0, 20, &uart_event_queue, 0));
-    ESP_ERROR_CHECK(uart_param_config(CONFIG_UART_PORT_NUM, &uart_config));
-    ESP_ERROR_CHECK(uart_set_pin(CONFIG_UART_PORT_NUM, CONFIG_UART_TXD, CONFIG_UART_RXD, CONFIG_UART_RTS, -1));
-    ESP_ERROR_CHECK(uart_set_mode(CONFIG_UART_PORT_NUM, UART_MODE_RS485_HALF_DUPLEX));
+    ESP_ERROR_CHECK(
+            uart_driver_install(CONFIG_WEBGUIAPP_UART_PORT_NUM, CONFIG_WEBGUIAPP_UART_BUF_SIZE * 2, 0, 20, &uart_event_queue, 0));
+    ESP_ERROR_CHECK(uart_param_config(CONFIG_WEBGUIAPP_UART_PORT_NUM, &uart_config));
+    ESP_ERROR_CHECK(uart_set_pin(CONFIG_WEBGUIAPP_UART_PORT_NUM,
+                    CONFIG_WEBGUIAPP_UART_TXD, CONFIG_WEBGUIAPP_UART_RXD, CONFIG_WEBGUIAPP_UART_RTS, -1));
 
-    ESP_ERROR_CHECK(uart_enable_rx_intr(CONFIG_UART_PORT_NUM));
-    ESP_ERROR_CHECK(uart_set_rx_timeout(CONFIG_UART_PORT_NUM, UART_READ_TOUT));
+    if (GetSysConf()->serialSettings.Serialmode == 2)
+        ESP_ERROR_CHECK(uart_set_mode(CONFIG_WEBGUIAPP_UART_PORT_NUM, UART_MODE_RS485_HALF_DUPLEX));
+    else
+        ESP_ERROR_CHECK(uart_set_mode(CONFIG_WEBGUIAPP_UART_PORT_NUM, UART_MODE_UART));
+
+    ESP_ERROR_CHECK(uart_enable_rx_intr(CONFIG_WEBGUIAPP_UART_PORT_NUM));
+    ESP_ERROR_CHECK(uart_set_rx_timeout(CONFIG_WEBGUIAPP_UART_PORT_NUM, UART_READ_TOUT));
     //ESP_ERROR_CHECK(uart_enable_pattern_det_baud_intr(CONFIG_UART_PORT_NUM, '+', PATTERN_CHR_NUM, 9, 0, 0));
-    uart_pattern_queue_reset(CONFIG_UART_PORT_NUM, 20);
+    uart_pattern_queue_reset(CONFIG_WEBGUIAPP_UART_PORT_NUM, 20);
 
     UARTtxQueueHandle = NULL;
     UARTtxQueueHandle = xQueueCreateStatic(UART_TX_QUEUE_SIZE,
@@ -253,12 +259,11 @@ void InitSerialPort(void)
                                            UARTtxQueueStorageArea,
                                            &xStaticUARTtxQueue);
 
-    xTaskCreate(serial_TX_task, "RS485txTask", 1024 * 2, (void*) 0, 7, NULL);
-    xTaskCreate(serial_RX_task, "RS485rxTask", 1024 * 4, (void*) 0, 12, NULL);
-    ESP_LOGI(TAG, "Serial port initialized on UART%d with baudrate %d", CONFIG_UART_PORT_NUM,
-             CONFIG_UART_BAUD_RATE);
+    xTaskCreate(serial_TX_task, "serial_tx", 1024 * 2, (void*) 0, 7, NULL);
+    xTaskCreate(serial_RX_task, "serial_rx", 1024 * 4, (void*) 0, 12, NULL);
+    ESP_LOGI(TAG, "Serial port initialized on UART%d with baudrate %d", CONFIG_WEBGUIAPP_UART_PORT_NUM,
+             GetSysConf()->serialSettings.BaudRate);
 }
 
-
-
+#endif
 

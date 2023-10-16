@@ -53,8 +53,6 @@ uint8_t MQTT2MessagesQueueStorageArea[MQTT_MESSAGE_BUFER_LENTH * sizeof(MQTT_DAT
 
 mqtt_client_t mqtt[CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM] = { 0 };
 
-
-
 static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_base_t base, int32_t event_id,
                                       void *event_data);
 
@@ -219,15 +217,17 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
             ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
             ESP_LOGI(TAG, "Subscribe to %s", topic);
 #endif
-#ifdef CONFIG_UART_TO_MQTT_BRIDGE_ENABLED
-            ComposeTopic(topic, idx, EXTERNAL_SERVICE_NAME, DOWNLINK_SUBTOPIC);
-            //Subscribe to the service called "APP"
-            msg_id = esp_mqtt_client_subscribe(client, (const char*) topic, 0);
+
+            if (GetSysConf()->serialSettings.Flags.IsBridgeEnabled)
+            {
+                ComposeTopic(topic, idx, EXTERNAL_SERVICE_NAME, DOWNLINK_SUBTOPIC);
+                //Subscribe to the service called "APP"
+                msg_id = esp_mqtt_client_subscribe(client, (const char*) topic, 0);
 #if MQTT_DEBUG_MODE > 0
-            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
-            ESP_LOGI(TAG, "Subscribe to %s", topic);
+                ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
+                ESP_LOGI(TAG, "Subscribe to %s", topic);
 #endif
-#endif
+            }
 
         break;
         case MQTT_EVENT_DISCONNECTED:
@@ -289,14 +289,15 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
                     ESP_LOGE(TAG, "Out of free RAM for MQTT API handle");
 
             }
-#ifdef CONFIG_UART_TO_MQTT_BRIDGE_ENABLED
-            ComposeTopic(topic, idx, EXTERNAL_SERVICE_NAME, DOWNLINK_SUBTOPIC);
-            if (!memcmp(topic, event->topic, event->topic_len))
-            {
-                TransmitSerialPort(event->data, event->data_len);
-            }
-#endif
 
+            if (GetSysConf()->serialSettings.Flags.IsBridgeEnabled)
+            {
+                ComposeTopic(topic, idx, EXTERNAL_SERVICE_NAME, DOWNLINK_SUBTOPIC);
+                if (!memcmp(topic, event->topic, event->topic_len))
+                {
+                    TransmitSerialPort(event->data, event->data_len);
+                }
+            }
 
         break;
         case MQTT_EVENT_ERROR:
@@ -502,26 +503,26 @@ static void mqtt2_user_event_handler(void *handler_args, esp_event_base_t base, 
 #define MAX_MQTT_LOG_MESSAGE (1024)
 #define SPIRAL_LOG_TAG "SystemExtendedLog"
 char data[MAX_MQTT_LOG_MESSAGE];
-esp_err_t  ExtendedLog(esp_log_level_t level, char *format, ...)
+esp_err_t ExtendedLog(esp_log_level_t level, char *format, ...)
 {
     va_list arg;
     va_start(arg, format);
     va_end(arg);
-    vsnprintf(data, MAX_MQTT_LOG_MESSAGE,  format, arg);
-    switch(level)
+    vsnprintf(data, MAX_MQTT_LOG_MESSAGE, format, arg);
+    switch (level)
     {
         case ESP_LOG_INFO:
             case ESP_LOG_DEBUG:
             case ESP_LOG_VERBOSE:
             case ESP_LOG_NONE:
             ESP_LOGI(SPIRAL_LOG_TAG, "%s", data);
-            break;
+        break;
         case ESP_LOG_WARN:
             ESP_LOGW(SPIRAL_LOG_TAG, "%s", data);
-            break;
+        break;
         case ESP_LOG_ERROR:
             ESP_LOGE(SPIRAL_LOG_TAG, "%s", data);
-            break;
+        break;
     }
 
     for (int idx = 0; idx < 2; idx++)
@@ -548,5 +549,4 @@ esp_err_t  ExtendedLog(esp_log_level_t level, char *format, ...)
     }
     return ESP_OK;
 }
-
 

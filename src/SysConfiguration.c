@@ -169,6 +169,12 @@ esp_err_t WebGuiAppInit(void)
     }
 #endif
 #endif
+
+#if CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
+    InitSerialPort();
+#endif
+
+
     return ESP_OK;
 }
 
@@ -387,6 +393,20 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
     memcpy(Conf->lorawanSettings.AppKey, temp, 16);
     StrToBytes((unsigned char*) CONFIG_LORA_APP_ID, temp);
     memcpy(Conf->lorawanSettings.AppEui, temp, 8);
+#endif
+
+#ifdef CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
+    Conf->serialSettings.Flags.IsSerialEnabled = false;
+    Conf->serialSettings.Flags.IsBridgeEnabled = false;
+#ifdef CONFIG_WEBGUIAPP_UART_ON
+    Conf->serialSettings.Flags.IsSerialEnabled = true;
+#endif
+#ifdef CONFIG_WEBGUIAPP_UART_TO_MQTT_BRIDGE_ENABLED
+    Conf->serialSettings.Flags.IsBridgeEnabled = true;
+#endif
+    Conf->serialSettings.Serialmode = 1;
+    Conf->serialSettings.BaudRate = CONFIG_WEBGUIAPP_UART_BAUD_RATE;
+    Conf->serialSettings.InputBrake = 50;
 #endif
 
 #ifdef CONFIG_WEBGUIAPP_MBTCP_ENABLED

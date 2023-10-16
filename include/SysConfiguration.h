@@ -189,6 +189,22 @@ typedef struct
         } gsmSettings;
 #endif
 
+
+#ifdef  CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
+        struct
+        {
+            int Serialmode;
+            int BaudRate;
+            int InputBrake;
+            struct
+            {
+              bool IsSerialEnabled;
+              bool IsBridgeEnabled;
+            } Flags;
+        } serialSettings;
+#endif
+
+#ifdef CONFIG_WEBGUIAPP_LORAWAN_ENABLE
         struct
           {
               char DevEui[8];
@@ -201,6 +217,7 @@ typedef struct
               } Flags1; // Flag structure
 
           } lorawanSettings;
+#endif
 
           struct
           {

@@ -478,6 +478,18 @@ const rest_var_t SystemVariables[] =
                 { 0, "gsm_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
 #endif
 
+#ifdef CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
+                { 0, "serial_enab", &SysConfig.serialSettings.Flags.IsSerialEnabled, VAR_BOOL, RW, 0, 1 },
+                { 0, "serial_bridge", &SysConfig.serialSettings.Flags.IsSerialEnabled, VAR_BOOL, RW, 0, 1 },
+                { 0, "serial_mode", &SysConfig.serialSettings.Serialmode, VAR_INT, RW, 1, 2 },
+                { 0, "serial_baud", &SysConfig.serialSettings.BaudRate, VAR_INT, RW, 1200, 4096000 },
+                { 0, "serial_break", &SysConfig.serialSettings.InputBrake, VAR_INT, RW, 1, 50 },
+                { 0, "serial_visible", (bool*) (&VAR_TRUE), VAR_BOOL, RW, 0, 1 },
+#else
+                { 0, "serial_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
+#endif
+
+
 #ifdef CONFIG_WEBGUIAPP_LORAWAN_ENABLE
                 { 0, "lora_enab", &SysConfig.lorawanSettings.Flags1.bIsLoRaWANEnabled, VAR_BOOL, RW, 0, 1 },
                 { 0, "lora_visible", (bool*) (&VAR_TRUE), VAR_BOOL, RW, 0, 1 },
@@ -489,6 +501,11 @@ const rest_var_t SystemVariables[] =
 #else
                 { 0, "lora_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
 #endif
+
+
+
+
+
 
 #ifdef CONFIG_WEBGUIAPP_MBTCP_ENABLED
                 { 0, "mbtcp_enab", &SysConfig.modbusSettings.IsModbusTCPEnabled, VAR_BOOL, RW, 0, 1 },
