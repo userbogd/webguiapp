@@ -284,26 +284,21 @@ static sys_error_code DataHeaderParser(data_message_t *MSG)
         return SYS_ERROR_PARSE_PAYLOADTYPE;
 
     sys_error_code err = SYS_ERROR_HANDLER_NOT_SET;
-
-    //ToDo move payload type from integer to string
     switch (MSG->parsedData.payloadType)
     {
         case PAYLOAD_DEFAULT:
-            err = CustomPayloadTypeHandler(MSG);
+            err = PayloadDefaultTypeHandler(MSG);
         break;
     }
-
     if (err != SYS_ERROR_HANDLER_NOT_SET)
         return err;
 
     if (CustomPayloadTypeHandler)
         err = CustomPayloadTypeHandler(MSG);
-
     if (err != SYS_ERROR_HANDLER_NOT_SET)
         return err;
 
     return PayloadDefaultTypeHandler(MSG);
-
 }
 
 esp_err_t ServiceDataHandler(data_message_t *MSG)
@@ -321,7 +316,10 @@ esp_err_t ServiceDataHandler(data_message_t *MSG)
             MSG->err_code = SYS_ERROR_UNKNOWN;
     }
     else
-        MSG->err_code = (int) DataHeaderParser(MSG);
+    {
+        int er = DataHeaderParser(MSG);
+        MSG->err_code = er;
+    }
 
     if (MSG->err_code == SYS_GOT_RESPONSE_MESSAGE)
     {

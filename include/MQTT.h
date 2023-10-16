@@ -76,5 +76,6 @@ void ComposeTopic(char *topic, int idx, char *service_name, char *direct);
 void SystemDataHandler(char *data, uint32_t len, int idx);
 
 mqtt_app_err_t PublicTestMQTT(int idx);
+esp_err_t ExternalServiceMQTTSend(char *data, int len, int idx);
 
 #endif /* MAIN_INCLUDE_MQTT_H_ */

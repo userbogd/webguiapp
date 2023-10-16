@@ -95,6 +95,8 @@ static void ReceiveHandlerAPI()
     }
 }
 
+
+
 void serial_RX_task(void *arg)
 {
     uart_event_t event;
@@ -127,7 +129,7 @@ void serial_RX_task(void *arg)
                             ESP_LOGI(TAG, "read of %d bytes: %s", buffered_size, rxbuf);
 #endif
 
-#ifdef CONFIG_ UART_TO_MQTT_BRIDGE_ENABLED
+#ifdef CONFIG_UART_TO_MQTT_BRIDGE_ENABLED
                             ExternalServiceMQTTSend(rxbuf, buffered_size, 0);
                             ExternalServiceMQTTSend(rxbuf, buffered_size, 1);
 #else
