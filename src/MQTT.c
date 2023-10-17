@@ -217,7 +217,7 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
             ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
             ESP_LOGI(TAG, "Subscribe to %s", topic);
 #endif
-
+#ifdef  CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
             if (GetSysConf()->serialSettings.Flags.IsBridgeEnabled)
             {
                 ComposeTopic(topic, idx, EXTERNAL_SERVICE_NAME, DOWNLINK_SUBTOPIC);
@@ -228,7 +228,7 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
                 ESP_LOGI(TAG, "Subscribe to %s", topic);
 #endif
             }
-
+#endif
         break;
         case MQTT_EVENT_DISCONNECTED:
 
@@ -289,7 +289,7 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
                     ESP_LOGE(TAG, "Out of free RAM for MQTT API handle");
 
             }
-
+#ifdef  CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
             if (GetSysConf()->serialSettings.Flags.IsBridgeEnabled)
             {
                 ComposeTopic(topic, idx, EXTERNAL_SERVICE_NAME, DOWNLINK_SUBTOPIC);
@@ -298,7 +298,7 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
                     TransmitSerialPort(event->data, event->data_len);
                 }
             }
-
+#endif
         break;
         case MQTT_EVENT_ERROR:
             ESP_LOGE(TAG, "MQTT_EVENT_ERROR, client %d", idx);
