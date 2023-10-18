@@ -126,11 +126,12 @@ esp_err_t SysServiceMQTTSend(char *data, int len, int idx)
         ComposeTopic(DSS.topic, idx, SERVICE_NAME, UPLINK_SUBTOPIC);
         DSS.raw_data_ptr = buf;
         DSS.data_length = len;
-        if (xQueueSend(GetMQTTHandlesPool(idx)->mqtt_queue, &DSS, pdMS_TO_TICKS(1000)) == pdPASS)
+        if (xQueueSend(GetMQTTHandlesPool(idx)->mqtt_queue, &DSS, pdMS_TO_TICKS(0)) == pdPASS)
             return ESP_OK;
         else
         {
             free(buf);
+            ESP_LOGW(TAG, "MQTT message queue is full on client %d", idx);
             return ESP_ERR_TIMEOUT;
         }
     }
@@ -149,11 +150,12 @@ esp_err_t ExternalServiceMQTTSend(char *data, int len, int idx)
         ComposeTopic(DSS.topic, idx, EXTERNAL_SERVICE_NAME, UPLINK_SUBTOPIC);
         DSS.raw_data_ptr = buf;
         DSS.data_length = len;
-        if (xQueueSend(GetMQTTHandlesPool(idx)->mqtt_queue, &DSS, pdMS_TO_TICKS(1000)) == pdPASS)
+        if (xQueueSend(GetMQTTHandlesPool(idx)->mqtt_queue, &DSS, pdMS_TO_TICKS(0)) == pdPASS)
             return ESP_OK;
         else
         {
             free(buf);
+            ESP_LOGW(TAG, "MQTT message queue is full on client %d", idx);
             return ESP_ERR_TIMEOUT;
         }
     }
