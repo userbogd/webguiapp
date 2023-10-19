@@ -429,8 +429,8 @@ static httpd_handle_t start_webserver(void)
     config.lru_purge_enable = true;
     config.uri_match_fn = httpd_uri_match_wildcard;
     config.max_open_sockets = 5;
-    config.max_resp_headers = 4;
-    config.max_uri_handlers = 4;
+    config.max_resp_headers = 6;
+    config.max_uri_handlers = 6;
     config.stack_size = (4096 + 2048);
 
 // Start the httpd server
