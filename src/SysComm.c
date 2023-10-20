@@ -21,25 +21,6 @@
  *	\copyright Apache License, Version 2.0
  */
 
-/*
- //Example of SET [msgtype=1] variables [payloadtype=1]
- {
- "data":{
- "msgid":123456789,
- "time":"2023-06-03T12:25:24+00:00",
- "msgtype":1,
- "payloadtype":1,
- "payload":{
- "applytype":1,
- "variables":{
- "wifi_mode":"",
- "wifi_sta_ip":"",
- "wifi_sta_mask":"",
- }
- }},
- "signature":"6a11b872e8f766673eb82e127b6918a0dc96a42c5c9d184604f9787f3d27bcef"}
- */
-
 #include "webguiapp.h"
 #include "SystemApplication.h"
 #include "mbedtls/md.h"
@@ -77,7 +58,7 @@ static sys_error_code PayloadDefaultTypeHandler(data_message_t *MSG)
     GetRFC3339Time(time);
     jwObj_string(&jwc, "time", time);
     jwObj_int(&jwc, "msgtype", DATA_MESSAGE_TYPE_RESPONSE);
-    jwObj_int(&jwc, "payloadtype", 1);
+    jwObj_int(&jwc, "payloadtype", MSG->parsedData.payloadType);
     jwObj_object(&jwc, "payload");
     jwObj_int(&jwc, "applytype", 0);
     jwObj_object(&jwc, "variables");
