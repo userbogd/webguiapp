@@ -28,7 +28,6 @@ extern espfs_fs_t *fs;
 
 const char GZIP_SIGN[] = { 0x1f, 0x8b, 0x08 };
 
-static esp_err_t GETHandler(httpd_req_t *req);
 static esp_err_t GETHandler2(httpd_req_t *req);
 static esp_err_t CheckAuth(httpd_req_t *req);
 
@@ -304,8 +303,16 @@ static esp_err_t GETHandler2(httpd_req_t *req)
 
     set_content_type_from_file(req, filename);
     httpd_resp_set_hdr(req, "Cache-Control", "max-age=600");
-    httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
     httpd_resp_set_hdr(req, "Connection", "close");
+
+    /*Check if content of file is compressed*/
+    char file_header[3];
+    espfs_fread(file, file_header, 3);
+    if(!memcmp(file_header, GZIP_SIGN, 3))
+    {
+        httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
+    }
+    espfs_fseek(file, 0, SEEK_SET); //return to begin of file
 
     /* Retrieve the pointer to scratch buffer for temporary storage */
     char *chunk = ((struct file_server_data*) req->user_ctx)->scratch;
@@ -339,168 +346,6 @@ static esp_err_t GETHandler2(httpd_req_t *req)
 #endif
     httpd_resp_send_chunk(req, NULL, 0);
     return ESP_OK;
-}
-
-static esp_err_t GETHandler(httpd_req_t *req)
-{
-#if HTTP_SERVER_DEBUG_LEVEL > 0
-    ESP_LOGI(TAG, "GET request handle");
-#endif
-
-    //Route to file server GET handler
-    if (memmem(req->uri, strlen(req->uri), "/storage/", sizeof("/storage/") - 1))
-        return download_get_handler(req);
-
-    char filepath[FILE_PATH_MAX];
-    espfs_file_t *file;
-    struct espfs_stat_t stat;
-    uint32_t bufSize;       //size of ram buffer for chunk of data, read from file
-    uint32_t readBytes;     //number of bytes, read from file. used for information only
-
-    const char *filename = get_path_from_uri(filepath,
-                                             ((struct file_server_data*) req->user_ctx)->base_path,
-                                             req->uri,
-                                             sizeof(filepath));
-    if (!filename)
-    {
-        ESP_LOGE(TAG, "Filename is too long");
-        /* Respond with 500 Internal Server Error */
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR,
-                            "Filename too long");
-        return ESP_FAIL;
-    }
-
-    /* Redirect request to /index.html */
-    if (filename[strlen(filename) - 1] == '/')
-    {
-        httpd_resp_set_status(req, "307 Temporary Redirect");
-        httpd_resp_set_hdr(req, "Location", "/index.html");
-        httpd_resp_send(req, NULL, 0);  // Response body can be empty
-#if HTTP_SERVER_DEBUG_LEVEL > 0
-        ESP_LOGI(TAG, "Redirect request to /index.html");
-#endif
-        return ESP_OK;
-    }
-
-//check auth for all files except status.json
-    if (strcmp(filename, "/status.json"))
-    {
-        if (CheckAuth(req) != ESP_OK)
-        {
-            return ESP_FAIL;
-        }
-    }
-
-//open file
-    file = espfs_fopen(fs, filepath);
-    if (!file)
-    {
-        strcat(filepath, ".gz"); //check if requested file in gzip archive
-        file = espfs_fopen(fs, filepath);
-        if (!file)
-        {
-            httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File not found");
-            return ESP_FAIL;
-        }
-    }
-//get file info
-    espfs_stat(fs, filepath, &stat);
-
-#if HTTP_SERVER_DEBUG_LEVEL > 0
-    ESP_LOGI(TAG, "Sending file : %s (%d bytes)...", filename,
-             stat.size);
-#endif
-//OutputDisplay((char*) filepath);
-    set_content_type_from_file(req, filename);
-    /* Retrieve the pointer to scratch buffer for temporary storage */
-    char *chunk = ((struct file_server_data*) req->user_ctx)->scratch;
-
-    bufSize = MIN(stat.size, SCRATCH_BUFSIZE - MAX_DYNVAR_LENGTH);
-    readBytes = 0;
-//allocate buffer for file data
-    if (bufSize == 0)
-        bufSize = 1;
-    char *buf = (char*) malloc(bufSize);
-    if (!buf)
-    {
-        ESP_LOGE(TAG, "Failed to allocate memory");
-        /* Respond with 500 Internal Server Error */
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Out of memory");
-        espfs_fclose(file);
-        return ESP_FAIL;
-    }
-//read first portion of data from file
-    readBytes = espfs_fread(file, buf, bufSize);
-
-//check if file is compressed by GZIP and add correspondent header
-    if (memmem(buf, 3, GZIP_SIGN, 3))
-    {
-        httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
-    }
-
-    httpd_resp_set_hdr(req, "Cache-Control", "max-age=600");
-
-    do
-    {
-        int pt = 0;
-        int preparedBytes = 0;
-        while (pt < bufSize)
-        {
-            chunk[preparedBytes++] = buf[pt++]; //write to chunk ordinary character
-
-            //check if scratch buffer is full and need send chunk
-            if (preparedBytes >= (SCRATCH_BUFSIZE - MAX_DYNVAR_LENGTH))
-            {
-#if HTTP_SERVER_DEBUG_LEVEL > 0
-                ESP_LOGI(TAG, "Call resp_send_chank because of chunk full. Send %d bytes", preparedBytes);
-#endif
-                esp_err_t send_err = httpd_resp_send_chunk(req, chunk, preparedBytes);
-
-                if (send_err != ESP_OK)
-                {
-                    ESP_LOGE(TAG, "%s", esp_err_to_name(send_err));
-                    goto file_send_error;
-                }
-                preparedBytes = 0;
-            }
-        }
-
-        //data in buffer is finished and not void, need send chunk
-        if (preparedBytes)
-        {
-#if HTTP_SERVER_DEBUG_LEVEL > 0
-            ESP_LOGI(TAG, "Call resp_send_chank because of buf empty. Send %d bytes", preparedBytes);
-#endif
-            if (httpd_resp_send_chunk(req, chunk, preparedBytes) != ESP_OK)
-                goto file_send_error;
-        }
-
-        //try to read next part of data from file
-        bufSize = espfs_fread(file, buf, bufSize);
-        readBytes += bufSize;
-    }
-    while (bufSize > 0);
-
-#if HTTP_SERVER_DEBUG_LEVEL > 0
-    ESP_LOGI(TAG, "File sending complete, read from file %d", (int )readBytes);
-#endif
-
-    /* Respond with an empty chunk to signal HTTP response completion */
-    httpd_resp_send_chunk(req, NULL, 0);
-    free(buf);
-    espfs_fclose(file);
-    return ESP_OK;
-
-file_send_error:
-    ESP_LOGE(TAG, "File sending failed!");
-    /* Abort sending file */
-    httpd_resp_sendstr_chunk(req, NULL);
-    /* Respond with 500 Internal Server Error */
-    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR,
-                        "Failed to send file");
-    free(buf);
-    espfs_fclose(file);
-    return ESP_FAIL;
 }
 
 static httpd_handle_t start_webserver(void)

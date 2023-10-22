@@ -42,6 +42,7 @@ HTTP_IO_RESULT HTTPPostSysAPI(httpd_req_t *req, char *PostData)
             M.outputDataLength = EXPECTED_MAX_DATA_SIZE;
             ServiceDataHandler(&M);
             httpd_resp_set_type(req, "application/json");
+            httpd_resp_set_hdr(req, "Connection", "close");
             httpd_resp_sendstr(req, respbuf);
             free(respbuf);
             return HTTP_IO_DONE_API;
