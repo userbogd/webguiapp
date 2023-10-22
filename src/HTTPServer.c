@@ -29,11 +29,14 @@ extern espfs_fs_t *fs;
 const char GZIP_SIGN[] = { 0x1f, 0x8b, 0x08 };
 
 static esp_err_t GETHandler(httpd_req_t *req);
+static esp_err_t GETHandler2(httpd_req_t *req);
 static esp_err_t CheckAuth(httpd_req_t *req);
 
 struct file_server_data *server_data = NULL;
 httpd_handle_t server = NULL;
 static const char *TAG = "HTTPServer";
+
+const char url_api[] = "/api";
 
 //Pointer to external user defined rest api handler
 static int (*HTTPUserRestAPI)(char *url, char *req, int len, char *resp) = NULL;
@@ -221,30 +224,11 @@ static esp_err_t POSTHandler(httpd_req_t *req)
                                          ((struct file_server_data*) req->user_ctx)->base_path,
                                          req->uri,
                                          sizeof(filepath));
+            http_res = HTTP_IO_DONE;
+            if (!memcmp(filename, url_api, sizeof(url_api)))
+                http_res = HTTPPostSysAPI(req, buf);
 
-            http_res = HTTPPostApp(req, filename, buf);
-
-            if (http_res == HTTP_IO_DONE)
-                return GETHandler(req);
-
-            else if (http_res == HTTP_IO_REDIRECT)
-            {
-                httpd_resp_set_status(req, "307 Temporary Redirect");
-                httpd_resp_set_hdr(req, "Location", filename);
-                httpd_resp_send(req, NULL, 0);  // Response body can be empty
-#if HTTP_SERVER_DEBUG_LEVEL > 0
-                ESP_LOGI(TAG, "Redirect request from POST");
-#endif
-                return ESP_OK;
-            }
-
-            else if (http_res == HTTP_IO_DONE_NOREFRESH)
-            {
-                httpd_resp_set_status(req, HTTPD_204);
-                httpd_resp_send(req, NULL, 0);  // Response body can be empty
-                return ESP_OK;
-            }
-            else if (http_res == HTTP_IO_DONE_API)
+            if (http_res == HTTP_IO_DONE_API)
             {
                 httpd_resp_send(req, NULL, 0);  // Response body can be empty
                 return ESP_OK;
@@ -257,6 +241,103 @@ static esp_err_t POSTHandler(httpd_req_t *req)
         remaining -= received;
     }
 
+    return ESP_OK;
+}
+
+static esp_err_t GETHandler2(httpd_req_t *req)
+{
+#if HTTP_SERVER_DEBUG_LEVEL > 0
+    ESP_LOGI(TAG, "GET request handle");
+#endif
+
+    //Route to file server GET handler
+    if (memmem(req->uri, strlen(req->uri), "/storage/", sizeof("/storage/") - 1))
+        return download_get_handler(req);
+
+    char filepath[FILE_PATH_MAX];
+    espfs_file_t *file;
+    struct espfs_stat_t stat;
+    const char *filename = get_path_from_uri(filepath,
+                                             ((struct file_server_data*) req->user_ctx)->base_path,
+                                             req->uri,
+                                             sizeof(filepath));
+    if (!filename)
+    {
+        ESP_LOGE(TAG, "Filename is too long");
+        /* Respond with 500 Internal Server Error */
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR,
+                            "Filename too long");
+        return ESP_FAIL;
+    }
+
+    /* Redirect request to /index.html */
+    if (filename[strlen(filename) - 1] == '/')
+    {
+        httpd_resp_set_status(req, "307 Temporary Redirect");
+        httpd_resp_set_hdr(req, "Location", "/index.html");
+        httpd_resp_send(req, NULL, 0);  // Response body can be empty
+#if HTTP_SERVER_DEBUG_LEVEL > 0
+        ESP_LOGI(TAG, "Redirect request to /index.html");
+#endif
+        return ESP_OK;
+    }
+
+//check auth for all files
+    if (CheckAuth(req) != ESP_OK)
+    {
+        return ESP_FAIL;
+    }
+//open file
+    file = espfs_fopen(fs, filepath);
+    if (!file)
+    {
+        httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "File not found");
+        return ESP_FAIL;
+    }
+//get file info
+    espfs_stat(fs, filepath, &stat);
+
+#if HTTP_SERVER_DEBUG_LEVEL > 0
+    ESP_LOGI(TAG, "Sending file : %s (%d bytes)...", filename,
+             stat.size);
+#endif
+
+    set_content_type_from_file(req, filename);
+    httpd_resp_set_hdr(req, "Cache-Control", "max-age=600");
+    httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
+    httpd_resp_set_hdr(req, "Connection", "close");
+
+    /* Retrieve the pointer to scratch buffer for temporary storage */
+    char *chunk = ((struct file_server_data*) req->user_ctx)->scratch;
+    size_t chunksize;
+    do
+    {
+        /* Read file in chunks into the scratch buffer */
+        chunksize = espfs_fread(file, chunk, SCRATCH_BUFSIZE);
+        if (chunksize > 0)
+        {
+            /* Send the buffer contents as HTTP response chunk */
+            if (httpd_resp_send_chunk(req, chunk, chunksize) != ESP_OK)
+            {
+                espfs_fclose(file);
+                ESP_LOGE(TAG, "File sending failed!");
+                /* Abort sending file */
+                httpd_resp_sendstr_chunk(req, NULL);
+                /* Respond with 500 Internal Server Error */
+                httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to send file");
+                return ESP_FAIL;
+            }
+        }
+        /* Keep looping till the whole file is sent */
+    }
+    while (chunksize != 0);
+    /* Close file after sending complete */
+    espfs_fclose(file);
+    /* Respond with an empty chunk to signal HTTP response completion */
+#ifdef CONFIG_EXAMPLE_HTTPD_CONN_CLOSE_HEADER
+    httpd_resp_set_hdr(req, "Connection", "close");
+#endif
+    httpd_resp_send_chunk(req, NULL, 0);
     return ESP_OK;
 }
 
@@ -442,7 +523,7 @@ static httpd_handle_t start_webserver(void)
         /* URI handler for GET request */
         httpd_uri_t get = { .uri = "/*",
                 .method = HTTP_GET,
-                .handler = GETHandler,
+                .handler = GETHandler2,
                 .user_ctx = server_data // Pass server data as context
                 };
         httpd_register_uri_handler(server, &get);
