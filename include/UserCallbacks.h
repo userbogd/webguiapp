@@ -34,10 +34,10 @@ void regHookBeforeUpdate(void (*before_update)(void));
 void regUserEventHandler(void (*event_handler)(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data), void* user_arg);
 
 //User handler of output '~var~' styled dynamic variables. Calls on give out files in response to GET requests.
-void regHTTPPrintCustom(int (*print_handler)(httpd_req_t *req, char *buf, char *var, int arg));
+//void regHTTPPrintCustom(int (*print_handler)(httpd_req_t *req, char *buf, char *var, int arg));
 
 //User handler of variables 'var1=value1&var2=value2' styled in POST requests.
-void regAfterPostHandlerCustom(HTTP_IO_RESULT (*post_handler)(httpd_req_t *req, const char *filename, char *PostData));
+//void regAfterPostHandlerCustom(HTTP_IO_RESULT (*post_handler)(httpd_req_t *req, const char *filename, char *PostData));
 
 //User handler for various payload types
 void regCustomPayloadTypeHandler(sys_error_code (*payload_handler)(data_message_t *MSG));
