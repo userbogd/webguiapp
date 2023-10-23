@@ -227,12 +227,6 @@ static esp_err_t POSTHandler(httpd_req_t *req)
             if (!memcmp(filename, url_api, sizeof(url_api)))
                 http_res = HTTPPostSysAPI(req, buf);
 
-            if (http_res == HTTP_IO_DONE_API)
-            {
-                httpd_resp_send(req, NULL, 0);  // Response body can be empty
-                return ESP_OK;
-            }
-
         }
 
         /* Keep track of remaining size of
@@ -354,9 +348,6 @@ static httpd_handle_t start_webserver(void)
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.lru_purge_enable = true;
     config.uri_match_fn = httpd_uri_match_wildcard;
-    config.max_open_sockets = 5;
-    config.max_resp_headers = 6;
-    config.max_uri_handlers = 6;
     config.stack_size = (4096 + 2048);
 
 // Start the httpd server
