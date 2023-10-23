@@ -480,11 +480,11 @@ const rest_var_t SystemVariables[] =
 
 #ifdef CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
                 { 0, "serial_enab", &SysConfig.serialSettings.Flags.IsSerialEnabled, VAR_BOOL, RW, 0, 1 },
-                { 0, "serial_bridge", &SysConfig.serialSettings.Flags.IsSerialEnabled, VAR_BOOL, RW, 0, 1 },
+                { 0, "serial_bridge", &SysConfig.serialSettings.Flags.IsBridgeEnabled, VAR_BOOL, RW, 0, 1 },
                 { 0, "serial_mode", &SysConfig.serialSettings.Serialmode, VAR_INT, RW, 1, 2 },
                 { 0, "serial_baud", &SysConfig.serialSettings.BaudRate, VAR_INT, RW, 1200, 4096000 },
                 { 0, "serial_break", &SysConfig.serialSettings.InputBrake, VAR_INT, RW, 1, 50 },
-                { 0, "serial_visible", (bool*) (&VAR_TRUE), VAR_BOOL, RW, 0, 1 },
+                { 0, "serial_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
 #else
                 { 0, "serial_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
 #endif
