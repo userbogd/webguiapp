@@ -188,13 +188,13 @@ static esp_err_t POSTHandler(httpd_req_t *req)
     int received;
     int remaining = req->content_len;
     buf[req->content_len] = 0x00;
-    HTTP_IO_RESULT http_res;
     while (remaining > 0)
     {
 #if HTTP_SERVER_DEBUG_LEVEL > 0
         ESP_LOGI(TAG, "Remaining size : %d", remaining);
 #endif
         /* Receive the file part by part into a buffer */
+
         if ((received = httpd_req_recv(req, buf,
                                        MIN(remaining, SCRATCH_BUFSIZE))) <= 0)
         {
@@ -218,13 +218,24 @@ static esp_err_t POSTHandler(httpd_req_t *req)
             char filepath[FILE_PATH_MAX];
             const char *filename;
 
+            //check auth for all files
+            if (CheckAuth(req) != ESP_OK)
+            {
+                return ESP_FAIL;
+            }
+
             filename = get_path_from_uri(filepath,
                                          ((struct file_server_data*) req->user_ctx)->base_path,
                                          req->uri,
                                          sizeof(filepath));
-            http_res = HTTP_IO_DONE;
+
             if (!memcmp(filename, url_api, sizeof(url_api)))
-                http_res = HTTPPostSysAPI(req, buf);
+                HTTPPostSysAPI(req, buf);
+            else
+            {
+                httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "URL not found");
+                return ESP_FAIL;
+            }
 
         }
 
@@ -301,7 +312,7 @@ static esp_err_t GETHandler2(httpd_req_t *req)
     /*Check if content of file is compressed*/
     char file_header[3];
     espfs_fread(file, file_header, 3);
-    if(!memcmp(file_header, GZIP_SIGN, 3))
+    if (!memcmp(file_header, GZIP_SIGN, 3))
     {
         httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
     }

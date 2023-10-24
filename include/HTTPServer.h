@@ -43,10 +43,6 @@
 #include "mbedtls/base64.h"
 #include "SystemApplication.h"
 
-#define MAX_DYNVAR_NAME_LENGTH 32
-#define MAX_DYNVAR_LENGTH 256
-#define MAX_INCFILE_LENGTH 1024
-
 /* Max length a file path can have on storage */
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
 #define MAX_FILE_SIZE   (200*1024) // 200 KB

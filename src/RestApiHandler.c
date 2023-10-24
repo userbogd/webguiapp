@@ -43,7 +43,7 @@ void SetAppVars(rest_var_t *appvars, int size)
 
 static void PrintInterfaceState(char *argres, int rw, esp_netif_t *netif)
 {
-    snprintf(argres, MAX_DYNVAR_LENGTH,
+    snprintf(argres, VAR_MAX_VALUE_LENGTH,
              (netif != NULL && esp_netif_is_netif_up(netif)) ? "\"CONNECTED\"" : "\"DISCONNECTED\"");
 }
 
@@ -71,11 +71,11 @@ static void funct_gsm_stat(char *argres, int rw)
 
 static void funct_mqtt_1_stat(char *argres, int rw)
 {
-    snprintf(argres, MAX_DYNVAR_LENGTH, (GetMQTT1Connected()) ? "\"CONNECTED\"" : "\"DISCONNECTED\"");
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, (GetMQTT1Connected()) ? "\"CONNECTED\"" : "\"DISCONNECTED\"");
 }
 static void funct_mqtt_2_stat(char *argres, int rw)
 {
-    snprintf(argres, MAX_DYNVAR_LENGTH, (GetMQTT2Connected()) ? "\"CONNECTED\"" : "\"DISCONNECTED\"");
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, (GetMQTT2Connected()) ? "\"CONNECTED\"" : "\"DISCONNECTED\"");
 }
 static void funct_mqtt_1_test(char *argres, int rw)
 {
@@ -102,63 +102,63 @@ static void funct_time(char *argres, int rw)
 {
     time_t now;
     time(&now);
-    snprintf(argres, MAX_DYNVAR_LENGTH, "%d", (int) now);
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "%d", (int) now);
 }
 
 static void funct_uptime(char *argres, int rw)
 {
-    snprintf(argres, MAX_DYNVAR_LENGTH, "%d", (int) GetUpTime());
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "%d", (int) GetUpTime());
 }
 static void funct_wifi_level(char *argres, int rw)
 {
     wifi_ap_record_t wifi;
     if (esp_wifi_sta_get_ap_info(&wifi) == ESP_OK)
-        snprintf(argres, MAX_DYNVAR_LENGTH, "\"%ddBm\"", wifi.rssi);
+        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%ddBm\"", wifi.rssi);
     else
-        snprintf(argres, MAX_DYNVAR_LENGTH, "\"-\"");
+        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"-\"");
 }
 
 static void funct_fram(char *argres, int rw)
 {
-    snprintf(argres, MAX_DYNVAR_LENGTH, "%d", (int) esp_get_free_heap_size());
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "%d", (int) esp_get_free_heap_size());
 }
 static void funct_fram_min(char *argres, int rw)
 {
-    snprintf(argres, MAX_DYNVAR_LENGTH, "%d", (int) esp_get_minimum_free_heap_size());
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "%d", (int) esp_get_minimum_free_heap_size());
 }
 
 static void funct_idf_ver(char *argres, int rw)
 {
     esp_app_desc_t cur_app_info;
     if (esp_ota_get_partition_description(esp_ota_get_running_partition(), &cur_app_info) == ESP_OK)
-        snprintf(argres, MAX_DYNVAR_LENGTH, "\"%s\"", cur_app_info.idf_ver);
+        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", cur_app_info.idf_ver);
     else
-        snprintf(argres, MAX_DYNVAR_LENGTH, "%s", "ESP_ERR_NOT_SUPPORTED");
+        snprintf(argres, VAR_MAX_VALUE_LENGTH, "%s", "ESP_ERR_NOT_SUPPORTED");
 }
 
 static void funct_fw_ver(char *argres, int rw)
 {
     esp_app_desc_t cur_app_info;
     if (esp_ota_get_partition_description(esp_ota_get_running_partition(), &cur_app_info) == ESP_OK)
-        snprintf(argres, MAX_DYNVAR_LENGTH, "\"%s\"", cur_app_info.version);
+        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", cur_app_info.version);
     else
-        snprintf(argres, MAX_DYNVAR_LENGTH, "%s", "ESP_ERR_NOT_SUPPORTED");
+        snprintf(argres, VAR_MAX_VALUE_LENGTH, "%s", "ESP_ERR_NOT_SUPPORTED");
 }
 
 static void funct_build_date(char *argres, int rw)
 {
     esp_app_desc_t cur_app_info;
     if (esp_ota_get_partition_description(esp_ota_get_running_partition(), &cur_app_info) == ESP_OK)
-        snprintf(argres, MAX_DYNVAR_LENGTH, "\"%s %s\"", cur_app_info.date, cur_app_info.time);
+        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s %s\"", cur_app_info.date, cur_app_info.time);
     else
-        snprintf(argres, MAX_DYNVAR_LENGTH, "%s", "ESP_ERR_NOT_SUPPORTED");
+        snprintf(argres, VAR_MAX_VALUE_LENGTH, "%s", "ESP_ERR_NOT_SUPPORTED");
 }
 
 static void PrintMACFromInterface(char *argres, int rw, esp_netif_t *netif)
 {
     uint8_t mac_addr[6] = { 0 };
     esp_netif_get_mac(netif, mac_addr);
-    snprintf(argres, MAX_DYNVAR_LENGTH, "\"%02x-%02x-%02x-%02x-%02x-%02x\"",
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%02x-%02x-%02x-%02x-%02x-%02x\"",
              mac_addr[0],
              mac_addr[1],
              mac_addr[2],
@@ -274,7 +274,7 @@ static void funct_ota_start(char *argres, int rw)
 }
 static void funct_ota_newver(char *argres, int rw)
 {
-    snprintf(argres, MAX_DYNVAR_LENGTH, "\"%s\"", GetAvailVersion());
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", GetAvailVersion());
 }
 
 //CRON implementation BEGIN
@@ -338,7 +338,7 @@ static void funct_exec(char *argres, int rw)
     if (rw)
         ExecCommand(argres);
     else
-        snprintf(argres, MAX_DYNVAR_LENGTH, "\"EXECUTED\"");
+        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"EXECUTED\"");
 }
 
 const int hw_rev = CONFIG_BOARD_HARDWARE_REVISION;
