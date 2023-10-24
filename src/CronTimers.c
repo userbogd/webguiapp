@@ -69,9 +69,6 @@ static void ExecuteLastAction(obj_struct_t *objarr)
         char *obj = objarr[obj_idx].object_name;
         if (*obj == '\0')
             break;
-
-        //ESP_LOGI(TAG, "Check object %s", obj);
-
         for (shdl = 0; shdl < CRON_TIMERS_NUMBER; shdl++)
         {
             memcpy(objname, GetSysConf()->Timers[shdl].exec, CONFIG_WEBGUIAPP_MAX_COMMAND_STRING_LENGTH / 4);
@@ -98,7 +95,7 @@ static void ExecuteLastAction(obj_struct_t *objarr)
 
         if (minimal != -1)
         {
-            ESP_LOGW(TAG, "Run previous CRON \"%s\" with delta %d", GetSysConf()->Timers[minimal].exec, (int )delta);
+            ESP_LOGI(TAG, "Run previous CRON \"%s\" with delta %d", GetSysConf()->Timers[minimal].exec, (int )delta);
             ExecCommand(GetSysConf()->Timers[minimal].exec);
 
         }
@@ -107,7 +104,7 @@ static void ExecuteLastAction(obj_struct_t *objarr)
 
 void TimeObtainHandler(struct timeval *tm)
 {
-    ESP_LOGW(TAG, "Current time received with value %d", (unsigned int )tm->tv_sec);
+    ESP_LOGI(TAG, "Current time updated with value %d", (unsigned int )tm->tv_sec);
     ReloadCronSheduler();
     ExecuteLastAction(GetSystemObjects());
     ExecuteLastAction(GetCustomObjects());

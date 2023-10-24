@@ -176,12 +176,11 @@ static const char* get_path_from_uri(char *dest, const char *base_path,
 static esp_err_t POSTHandler(httpd_req_t *req)
 {
 #if HTTP_SERVER_DEBUG_LEVEL > 0
-    ESP_LOGI(TAG, "POST request handle");
+    ESP_LOGI(TAG, "POST request handle URL: %s", req->uri);
 #endif
 
     if (memmem(req->uri, strlen(req->uri), "/storage/upload/", sizeof("/storage/upload/") - 1))
         return upload_post_handler(req);
-
     if (memmem(req->uri, strlen(req->uri), "/storage/delete/", sizeof("/storage/delete/") - 1))
         return delete_post_handler(req);
 
@@ -240,7 +239,7 @@ static esp_err_t POSTHandler(httpd_req_t *req)
 static esp_err_t GETHandler2(httpd_req_t *req)
 {
 #if HTTP_SERVER_DEBUG_LEVEL > 0
-    ESP_LOGI(TAG, "GET request handle");
+    ESP_LOGI(TAG, "GET request handle URL: %s",req->uri);
 #endif
 
     //Route to file server GET handler
@@ -291,7 +290,7 @@ static esp_err_t GETHandler2(httpd_req_t *req)
     espfs_stat(fs, filepath, &stat);
 
 #if HTTP_SERVER_DEBUG_LEVEL > 0
-    ESP_LOGI(TAG, "Sending file : %s (%d bytes)...", filename,
+    ESP_LOGI(TAG, "BEGIN send file : %s (%d bytes)...", filename,
              stat.size);
 #endif
 
@@ -334,6 +333,10 @@ static esp_err_t GETHandler2(httpd_req_t *req)
     while (chunksize != 0);
     /* Close file after sending complete */
     espfs_fclose(file);
+#if HTTP_SERVER_DEBUG_LEVEL > 0
+    ESP_LOGI(TAG, "END send file : %s (%d bytes)...", filename,
+             stat.size);
+#endif
     /* Respond with an empty chunk to signal HTTP response completion */
 #ifdef CONFIG_EXAMPLE_HTTPD_CONN_CLOSE_HEADER
     httpd_resp_set_hdr(req, "Connection", "close");
@@ -346,7 +349,7 @@ static httpd_handle_t start_webserver(void)
 {
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.lru_purge_enable = true;
+    config.lru_purge_enable = false;
     config.uri_match_fn = httpd_uri_match_wildcard;
     config.stack_size = (4096 + 2048);
 
