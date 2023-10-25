@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "webguiapp.h"
+#include "driver/gpio.h"
 
 #define TAG "serial_port"
 #define UART_READ_TOUT          (100) // 3.5T * 8 = 28 ticks, TOUT=3 -> ~24..33 ticks
@@ -243,10 +244,11 @@ void InitSerialPort(void)
     ESP_ERROR_CHECK(uart_set_pin(CONFIG_WEBGUIAPP_UART_PORT_NUM,
                     CONFIG_WEBGUIAPP_UART_TXD, CONFIG_WEBGUIAPP_UART_RXD, CONFIG_WEBGUIAPP_UART_RTS, -1));
 
-    if (GetSysConf()->serialSettings.Serialmode == 2)
-        ESP_ERROR_CHECK(uart_set_mode(CONFIG_WEBGUIAPP_UART_PORT_NUM, UART_MODE_RS485_HALF_DUPLEX));
-    else
-        ESP_ERROR_CHECK(uart_set_mode(CONFIG_WEBGUIAPP_UART_PORT_NUM, UART_MODE_UART));
+#ifdef CONFIG_WEBGUIAPP_UART_MODE_UART
+    ESP_ERROR_CHECK(uart_set_mode(CONFIG_WEBGUIAPP_UART_PORT_NUM, UART_MODE_UART));
+#elif  CONFIG_WEBGUIAPP_UART_MODE_RS485
+    ESP_ERROR_CHECK(uart_set_mode(CONFIG_WEBGUIAPP_UART_PORT_NUM, UART_MODE_RS485_HALF_DUPLEX));
+#endif
 
     ESP_ERROR_CHECK(uart_enable_rx_intr(CONFIG_WEBGUIAPP_UART_PORT_NUM));
     ESP_ERROR_CHECK(uart_set_rx_timeout(CONFIG_WEBGUIAPP_UART_PORT_NUM, UART_READ_TOUT));

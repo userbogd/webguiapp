@@ -326,6 +326,17 @@ static void funct_cronrecs(char *argres, int rw)
 
 //CRON implementation END
 
+static void funct_serial_mode(char *argres, int rw)
+{
+
+#ifdef CONFIG_WEBGUIAPP_UART_MODE_UART
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"UART\"");
+#elif  CONFIG_WEBGUIAPP_UART_MODE_RS485
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"RS485\"");
+#endif
+
+}
+
 
 static void funct_objsinfo(char *argres, int rw)
 {
@@ -360,6 +371,7 @@ const rest_var_t SystemVariables[] =
 
                 { 0, "model_name", CONFIG_DEVICE_MODEL_NAME, VAR_STRING, R, 1, 64 },
                 { 0, "hw_rev", ((int*) &hw_rev), VAR_INT, R, 1, 1024 },
+                { 0, "hw_opt", CONFIG_BOARD_HARDWARE_OPTION, VAR_STRING, R, 1, 256 },
                 { 0, "build_date", CONFIG_DEVICE_MODEL_NAME, VAR_STRING, R, 1, 64 },
                 { 0, "model_name", CONFIG_DEVICE_MODEL_NAME, VAR_STRING, R, 1, 64 },
 
@@ -481,7 +493,7 @@ const rest_var_t SystemVariables[] =
 #ifdef CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
                 { 0, "serial_enab", &SysConfig.serialSettings.Flags.IsSerialEnabled, VAR_BOOL, RW, 0, 1 },
                 { 0, "serial_bridge", &SysConfig.serialSettings.Flags.IsBridgeEnabled, VAR_BOOL, RW, 0, 1 },
-                { 0, "serial_mode", &SysConfig.serialSettings.Serialmode, VAR_INT, RW, 1, 2 },
+                { 0, "serial_mode", &funct_serial_mode, VAR_FUNCT, R, 1, 2 },
                 { 0, "serial_baud", &SysConfig.serialSettings.BaudRate, VAR_INT, RW, 1200, 4096000 },
                 { 0, "serial_break", &SysConfig.serialSettings.InputBrake, VAR_INT, RW, 1, 50 },
                 { 0, "serial_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },

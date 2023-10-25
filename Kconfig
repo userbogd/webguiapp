@@ -15,7 +15,11 @@ menu "WebGUIApp"
     config BOARD_HARDWARE_REVISION
 		int "Board hardware revision"
     	range 1 5
-    	default 1	
+    	default 1
+    
+    config BOARD_HARDWARE_OPTION
+		string "Board hardware option"
+    	default "Base version"
     	
     config APP_PROJECT_VER
         string "Device firmware version"
@@ -813,6 +817,19 @@ menu "WebGUIApp"
 	        	default n
 	        		help
 	            		Switch on bridge uart to mqtt, else uart operate same way as rest and mqtt data exchange         
+	        
+	   		choice WEBGUIAPP_UART_MODE
+	            prompt "Serial port mode"
+	            default WEBGUIAPP_UART_MODE_UART
+	            help
+	                Select serial port mode.
+	            
+	            config WEBGUIAPP_UART_MODE_UART
+	                bool "UART"
+	            
+	            config WEBGUIAPP_UART_MODE_RS485
+	                bool "RS485"
+            endchoice 
 	        
 	        config WEBGUIAPP_UART_BAUD_RATE
 	            int "UART communication speed"
