@@ -94,7 +94,11 @@ static sys_error_code PayloadDefaultTypeHandler(data_message_t *MSG)
                 if (res == ESP_OK)
                     GetConfVar(VarName, VarValue, &tp);
                 else
+                {
                     strcpy(VarValue, esp_err_to_name(res));
+                    tp = VAR_ERROR;
+                }
+
             }
             else
             { //Read variables
