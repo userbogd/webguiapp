@@ -74,38 +74,6 @@ menu "WebGUIApp"
     		default "#dba617"
     			help
     				Set accent color for user web ui
-		
-		config WEBGUIAPP_SCH1_BACKGROUNG_COLOR
-    		string "Scheme 1 background color"
-    		default "#e0e0dd"
-		config WEBGUIAPP_SCH1_PANEL_COLOR
-    		string "Scheme 1 panel background color"
-    		default "#f0f0ed"
-        config WEBGUIAPP_SCH1_MENU_COLOR
-    		string "Scheme 1 menu background color"
-    		default "#ededea"    		
-		config WEBGUIAPP_SCH1_TEXT_COLOR
-    		string "Scheme 1 font color"
-    		default "#404040"    		
-		config WEBGUIAPP_SCH1_BORDER_COLOR
-    		string "Scheme 1 border color"
-    		default "#00000066"  
-		
-		config WEBGUIAPP_SCH2_BACKGROUNG_COLOR
-    		string "Scheme 2 background color"
-    		default "#1D2327"
-		config WEBGUIAPP_SCH2_PANEL_COLOR
-    		string "Scheme 2 panel background color"
-    		default "#2c3338"
-        config WEBGUIAPP_SCH2_MENU_COLOR
-    		string "Scheme 2 menu background color"
-    		default "#3c434a"    		
-		config WEBGUIAPP_SCH2_TEXT_COLOR
-    		string "Scheme 2 font color"
-    		default "#F0F0F0"    		
-		config WEBGUIAPP_SCH2_BORDER_COLOR
-    		string "Scheme 2 border color"
-    		default "#ffffff66" 
 
     endmenu
         		
