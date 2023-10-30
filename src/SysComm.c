@@ -91,12 +91,15 @@ static sys_error_code PayloadDefaultTypeHandler(data_message_t *MSG)
             if (MSG->parsedData.msgType == DATA_MESSAGE_TYPE_COMMAND)
             { //Write variables
                 res = SetConfVar(VarName, VarValue, &tp);
-                if (res == ESP_OK)
-                    GetConfVar(VarName, VarValue, &tp);
-                else
+                if (tp != VAR_FUNCT)
                 {
-                    strcpy(VarValue, esp_err_to_name(res));
-                    tp = VAR_ERROR;
+                    if (res == ESP_OK)
+                        GetConfVar(VarName, VarValue, &tp);
+                    else
+                    {
+                        strcpy(VarValue, esp_err_to_name(res));
+                        tp = VAR_ERROR;
+                    }
                 }
 
             }
