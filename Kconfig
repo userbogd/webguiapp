@@ -88,7 +88,7 @@ menu "WebGUIApp"
 			
 		config WEBGUIAPP_OTA_HOST
             string "URL of firmware for OTA update"
-            default "https://iotronic.cloud/firmware/firmware.bin"
+            default "https://openergy.ru/firmware/firmware.bin"
 	            help
 	                URL of firmware file for OTA update
         		

@@ -45,8 +45,8 @@
 
 /* Max length a file path can have on storage */
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
-#define MAX_FILE_SIZE   (200*1024) // 200 KB
-#define MAX_FILE_SIZE_STR "200KB"
+#define MAX_FILE_SIZE   (1000*1024) // 200 KB
+#define MAX_FILE_SIZE_STR "1MB"
 
 /* Scratch buffer size */
 #define SCRATCH_BUFSIZE  EXPECTED_MAX_DATA_SIZE
