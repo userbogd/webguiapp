@@ -214,7 +214,7 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED client %d", idx);
 #endif
             ComposeTopic(topic, idx, SERVICE_NAME, DOWNLINK_SUBTOPIC);
-            msg_id = esp_mqtt_client_subscribe(client, (const char*) topic, 0);
+            msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
 #if MQTT_DEBUG_MODE > 0
             ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
             ESP_LOGI(TAG, "Subscribe to %s", topic);
@@ -224,7 +224,7 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
             {
                 ComposeTopic(topic, idx, EXTERNAL_SERVICE_NAME, DOWNLINK_SUBTOPIC);
                 //Subscribe to the service called "APP"
-                msg_id = esp_mqtt_client_subscribe(client, (const char*) topic, 0);
+                msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
 #if MQTT_DEBUG_MODE > 0
                 ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
                 ESP_LOGI(TAG, "Subscribe to %s", topic);
