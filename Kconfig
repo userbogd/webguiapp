@@ -570,7 +570,7 @@ menu "WebGUIApp"
 	        config MODEM_DEVICE_POWER_CONTROL_PIN
 	            int "Power control GPIO"
 	            default -1
-	            range -1 33
+	            range -1 GPIO_RANGE_MAX
 	                help
 	                    Pin number of power control.	
 	        	
@@ -645,28 +645,28 @@ menu "WebGUIApp"
 	            config MODEM_UART_TX_PIN
 	                int "TXD Pin Number"
 	                default 17
-	                range 0 33
+	                range 0 GPIO_RANGE_MAX
 	                help
 	                    Pin number of UART TX.
 	    
 	            config MODEM_UART_RX_PIN
 	                int "RXD Pin Number"
 	                default 16
-	                range 0 39
+	                range 0 GPIO_RANGE_MAX
 	                help
 	                    Pin number of UART RX.
 	    
 	            config MODEM_UART_RTS_PIN
 	                int "RTS Pin Number"
 	                default 0
-	                range 0 31
+	                range 0 GPIO_RANGE_MAX
 	                help
 	                    Pin number of UART RTS.
 	    
 	            config MODEM_UART_CTS_PIN
 	                int "CTS Pin Number"
 	                default 0
-	                range 0 31
+	                range 0 GPIO_RANGE_MAX
 	                help
 	                    Pin number of UART CTS.
 	    
