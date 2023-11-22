@@ -34,7 +34,7 @@
 
 #define MQTT_DEBUG_MODE  CONFIG_WEBGUIAPP_MQTT_DEBUG_LEVEL
 
-#define MQTT_MESSAGE_BUFER_LENTH 5  //size of mqtt queue
+#define MQTT_MESSAGE_BUFER_LENTH 10  //size of mqtt queue
 #define MQTT_RECONNECT_CHANGE_ADAPTER  3
 
 #define MQTT_RECONNECT_TIMEOUT 20
@@ -543,7 +543,7 @@ esp_err_t ExtendedLog(esp_log_level_t level, char *format, ...)
             ComposeTopic(DSS.topic, idx, "LOG", "UPLINK");
             DSS.raw_data_ptr = buf;
             DSS.data_length = strlen(buf);
-            if (xQueueSend(GetMQTTHandlesPool(idx)->mqtt_queue, &DSS, pdMS_TO_TICKS(1000)) != pdPASS)
+            if (xQueueSend(GetMQTTHandlesPool(idx)->mqtt_queue, &DSS, pdMS_TO_TICKS(0)) != pdPASS)
                 free(buf);
             continue;
         }
