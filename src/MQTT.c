@@ -380,10 +380,8 @@ void MQTTTaskTransmit(void *pvParameter)
         vTaskDelay(pdMS_TO_TICKS(300)); //wait for MQTT queue ready
     while (1)
     {
-        while (!mqtt[idx].is_connected)
-            vTaskDelay(pdMS_TO_TICKS(1000));
         xQueueReceive(mqtt[idx].mqtt_queue, &DSS, portMAX_DELAY);
-        if (mqtt[idx].mqtt)
+        if (mqtt[idx].mqtt && mqtt[idx].is_connected)
         {
 #if MQTT_DEBUG_MODE > 1
             ESP_LOGI(TAG, "MQTT client %d data send:%.*s", idx, DSS.data_length, DSS.raw_data_ptr);
@@ -394,8 +392,8 @@ void MQTTTaskTransmit(void *pvParameter)
                                     DSS.data_length,
                                     0, 0);
         }
-        else
-            ESP_LOGE(TAG, "MQTT client not initialized");
+        //else
+        //    ESP_LOGW(TAG, "MQTT client not initialized or disconnected");
         free(DSS.raw_data_ptr);
     }
 }
