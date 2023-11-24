@@ -700,14 +700,14 @@ menu "WebGUIApp"
 	    
 	            config MODEM_UART_TX_BUFFER_SIZE
 	                int "UART TX Buffer Size"
-	                range 256 2048
+	                range 256 8192
 	                default 512
 	                help
 	                    Buffer size of UART TX buffer.
 	    
 	            config MODEM_UART_RX_BUFFER_SIZE
 	                int "UART RX Buffer Size"
-	                range 256 2048
+	                range 256 8192
 	                default 1024
 	                help
 	                    Buffer size of UART RX buffer.
