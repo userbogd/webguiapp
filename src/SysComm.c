@@ -210,6 +210,7 @@ static sys_error_code DataHeaderParser(data_message_t *MSG)
         return SYS_ERROR_PARSE_DATA;
     }
 
+
     jRead(MSG->inputDataBuffer, "{'signature'", &result);
     if (result.elements == 1)
     {
@@ -221,6 +222,8 @@ static sys_error_code DataHeaderParser(data_message_t *MSG)
     }
     else
         return SYS_ERROR_PARSE_SIGNATURE;
+
+
 
     //Extract 'messidx' or throw exception
     jRead(MSG->inputDataBuffer, "{'data'{'msgid'", &result);
@@ -313,7 +316,7 @@ esp_err_t ServiceDataHandler(data_message_t *MSG)
     {
         //ToDo Here handler of received data
 #if REAST_API_DEBUG_MODE
-        ESP_LOGI(TAG, "Got response message with msgid=%d", MSG->parsedData.msgID);
+        ESP_LOGI(TAG, "Got response message with msgid=%d", (int)MSG->parsedData.msgID);
 #endif
         MSG->outputDataBuffer[0] = 0x00;
         MSG->outputDataLength = 0;

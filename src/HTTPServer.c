@@ -28,7 +28,7 @@ extern espfs_fs_t *fs;
 
 const char GZIP_SIGN[] = { 0x1f, 0x8b, 0x08 };
 
-static esp_err_t GETHandler2(httpd_req_t *req);
+static esp_err_t GETHandler(httpd_req_t *req);
 static esp_err_t CheckAuth(httpd_req_t *req);
 
 struct file_server_data *server_data = NULL;
@@ -186,6 +186,7 @@ static esp_err_t POSTHandler(httpd_req_t *req)
 
     char *buf = ((struct file_server_data*) req->user_ctx)->scratch;
     int received;
+    int offset = 0;
     int remaining = req->content_len;
     buf[req->content_len] = 0x00;
     while (remaining > 0)
@@ -195,7 +196,7 @@ static esp_err_t POSTHandler(httpd_req_t *req)
 #endif
         /* Receive the file part by part into a buffer */
 
-        if ((received = httpd_req_recv(req, buf,
+        if ((received = httpd_req_recv(req, buf + offset,
                                        MIN(remaining, SCRATCH_BUFSIZE))) <= 0)
         {
             if (received == HTTPD_SOCK_ERR_TIMEOUT)
@@ -214,29 +215,11 @@ static esp_err_t POSTHandler(httpd_req_t *req)
 
         /* Write buffer content to file on storage */
         if (received)
+            offset += received;
         {
-            char filepath[FILE_PATH_MAX];
-            const char *filename;
-
-            //check auth for all files
-            if (CheckAuth(req) != ESP_OK)
-            {
-                return ESP_FAIL;
-            }
-
-            filename = get_path_from_uri(filepath,
-                                         ((struct file_server_data*) req->user_ctx)->base_path,
-                                         req->uri,
-                                         sizeof(filepath));
-
-            if (!memcmp(filename, url_api, sizeof(url_api)))
-                HTTPPostSysAPI(req, buf);
-            else
-            {
-                httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "URL not found");
-                return ESP_FAIL;
-            }
-
+#if HTTP_SERVER_DEBUG_LEVEL > 0
+        ESP_LOGI(TAG, "Received : %d", received);
+#endif
         }
 
         /* Keep track of remaining size of
@@ -244,13 +227,32 @@ static esp_err_t POSTHandler(httpd_req_t *req)
         remaining -= received;
     }
 
+    char filepath[FILE_PATH_MAX];
+    const char *filename;
+
+    if (CheckAuth(req) != ESP_OK)
+        return ESP_FAIL;
+
+    filename = get_path_from_uri(filepath,
+                                 ((struct file_server_data*) req->user_ctx)->base_path,
+                                 req->uri,
+                                 sizeof(filepath));
+
+    if (!memcmp(filename, url_api, sizeof(url_api)))
+        HTTPPostSysAPI(req, buf);
+    else
+    {
+        httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "URL not found");
+        return ESP_FAIL;
+    }
+
     return ESP_OK;
 }
 
-static esp_err_t GETHandler2(httpd_req_t *req)
+static esp_err_t GETHandler(httpd_req_t *req)
 {
 #if HTTP_SERVER_DEBUG_LEVEL > 0
-    ESP_LOGI(TAG, "GET request handle URL: %s",req->uri);
+    ESP_LOGI(TAG, "GET request handle URL: %s", req->uri);
 #endif
 
     //Route to file server GET handler
@@ -373,7 +375,7 @@ static httpd_handle_t start_webserver(void)
         /* URI handler for GET request */
         httpd_uri_t get = { .uri = "/*",
                 .method = HTTP_GET,
-                .handler = GETHandler2,
+                .handler = GETHandler,
                 .user_ctx = server_data // Pass server data as context
                 };
         httpd_register_uri_handler(server, &get);
