@@ -176,7 +176,7 @@ static void GSMInitTask(void *pvParameter)
     /* Configure the DTE */
     esp_modem_dte_config_t dte_config = ESP_MODEM_DTE_DEFAULT_CONFIG();
     /* setup UART specific configuration based on kconfig options */
-    //dte_config.uart_config.port_num = CONFIG_MODEM_UART_PORT_NUM;
+    dte_config.uart_config.port_num = CONFIG_MODEM_UART_PORT_NUM;
     dte_config.uart_config.tx_io_num = CONFIG_MODEM_UART_TX_PIN;
     dte_config.uart_config.rx_io_num = CONFIG_MODEM_UART_RX_PIN;
     dte_config.uart_config.rts_io_num = CONFIG_MODEM_UART_RTS_PIN;
