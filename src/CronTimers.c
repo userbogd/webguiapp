@@ -108,7 +108,7 @@ void TimeObtainHandler(struct timeval *tm)
     ReloadCronSheduler();
     ExecuteLastAction(GetSystemObjects());
     ExecuteLastAction(GetCustomObjects());
-    LogFile("cron.log", "Cron service started");
+
 }
 
 void DebugTimer()

@@ -329,13 +329,7 @@ esp_err_t upload_post_handler(httpd_req_t *req)
         return ESP_FAIL;
     }
 
-    if (stat(filepath, &file_stat) == 0)
-    {
-        ESP_LOGE(TAG, "File already exists : %s", filepath);
-        /* Respond with 400 Bad Request */
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "File already exists");
-        return ESP_FAIL;
-    }
+
 
     /* File cannot be larger than a limit */
     if (req->content_len > MAX_FILE_SIZE)
@@ -349,6 +343,19 @@ esp_err_t upload_post_handler(httpd_req_t *req)
          * incoming file content will keep the socket busy */
         return ESP_FAIL;
     }
+
+        if (stat(filepath, &file_stat) == 0)
+    {
+
+
+        ESP_LOGW(TAG, "File already exists : %s", filepath);
+        /* Respond with 400 Bad Request */
+        //httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "File already exists");
+        //return ESP_FAIL;
+        unlink(filepath);
+
+    }
+
 
     fd = fopen(filepath, "w");
     if (!fd)
