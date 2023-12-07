@@ -213,9 +213,11 @@ esp_err_t download_get_handler(httpd_req_t *req)
     const char *filename = get_path_from_uri(filepath, ((struct file_server_data*) req->user_ctx)->base_path2,
                                              req->uri,
                                              sizeof(filepath));
+#if FILE_SERVER_DEBUG_LEVEL > 0
     ESP_LOGW(TAG, "FILE_GET_URI %s", req->uri);
     ESP_LOGW(TAG, "FILE_GET_FILEPATH %s", filepath);
     ESP_LOGW(TAG, "FILE_GET_FILENAME %s", filename);
+#endif
 
     if (!filename)
     {
@@ -288,8 +290,9 @@ esp_err_t download_get_handler(httpd_req_t *req)
 
     /* Close file after sending complete */
     fclose(fd);
+#if HTTP_SERVER_DEBUG_LEVEL > 0
     ESP_LOGI(TAG, "File sending complete");
-
+#endif
     /* Respond with an empty chunk to signal HTTP response completion */
 #ifdef CONFIG_EXAMPLE_HTTPD_CONN_CLOSE_HEADER
     httpd_resp_set_hdr(req, "Connection", "close");
@@ -310,10 +313,11 @@ esp_err_t upload_post_handler(httpd_req_t *req)
     const char *filename = get_path_from_uri(filepath, ((struct file_server_data*) req->user_ctx)->base_path2,
                                              req->uri + sizeof("/upload") - 1,
                                              sizeof(filepath));
+#if HTTP_SERVER_DEBUG_LEVEL > 0
     ESP_LOGW(TAG, "FILE_POST_URI %s", req->uri);
     ESP_LOGW(TAG, "FILE_POST_FILEPATH %s", filepath);
     ESP_LOGW(TAG, "FILE_POST_FILENAME %s", filename);
-
+#endif
     if (!filename)
     {
         /* Respond with 500 Internal Server Error */
@@ -347,13 +351,10 @@ esp_err_t upload_post_handler(httpd_req_t *req)
         if (stat(filepath, &file_stat) == 0)
     {
 
-
+#if HTTP_SERVER_DEBUG_LEVEL > 0
         ESP_LOGW(TAG, "File already exists : %s", filepath);
-        /* Respond with 400 Bad Request */
-        //httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "File already exists");
-        //return ESP_FAIL;
+#endif
         unlink(filepath);
-
     }
 
 
@@ -366,8 +367,9 @@ esp_err_t upload_post_handler(httpd_req_t *req)
         return ESP_FAIL;
     }
 
+#if HTTP_SERVER_DEBUG_LEVEL > 0
     ESP_LOGI(TAG, "Receiving file : %s...", filename);
-
+#endif
     /* Retrieve the pointer to scratch buffer for temporary storage */
     char *buf = ((struct file_server_data*) req->user_ctx)->scratch;
     int received;
@@ -378,8 +380,9 @@ esp_err_t upload_post_handler(httpd_req_t *req)
 
     while (remaining > 0)
     {
-
+#if HTTP_SERVER_DEBUG_LEVEL > 0
         ESP_LOGI(TAG, "Remaining size : %d", remaining);
+#endif
         /* Receive the file part by part into a buffer */
         if ((received = httpd_req_recv(req, buf, MIN(remaining, SCRATCH_BUFSIZE))) <= 0)
         {
@@ -421,8 +424,9 @@ esp_err_t upload_post_handler(httpd_req_t *req)
 
     /* Close file upon upload completion */
     fclose(fd);
+#if HTTP_SERVER_DEBUG_LEVEL > 0
     ESP_LOGI(TAG, "File reception complete");
-
+#endif
     /* Redirect onto root to see the updated file list */
     httpd_resp_set_status(req, "303 See Other");
     httpd_resp_set_hdr(req, "Location", "/storage/");
@@ -466,8 +470,9 @@ esp_err_t delete_post_handler(httpd_req_t *req)
         httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "File does not exist");
         return ESP_FAIL;
     }
-
+#if HTTP_SERVER_DEBUG_LEVEL > 0
     ESP_LOGI(TAG, "Deleting file : %s", filename);
+#endif
     /* Delete file */
     unlink(filepath);
 

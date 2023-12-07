@@ -53,6 +53,7 @@
 #define AUTH_DATA_MAX_LENGTH 16
 
 #define HTTP_SERVER_DEBUG_LEVEL 0
+#define FILE_SERVER_DEBUG_LEVEL 0
 
 typedef enum
 {
