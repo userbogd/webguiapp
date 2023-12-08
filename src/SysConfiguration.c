@@ -334,6 +334,10 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
 
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
 Conf->gsmSettings.Flags1.bIsGSMEnabled = true;
+memcpy(Conf->gsmSettings.APN, CONFIG_MODEM_PPP_APN,sizeof(CONFIG_MODEM_PPP_APN));
+memcpy(Conf->gsmSettings.login, CONFIG_MODEM_PPP_APN,sizeof(CONFIG_MODEM_PPP_APN));
+memcpy(Conf->gsmSettings.password, CONFIG_MODEM_PPP_APN,sizeof(CONFIG_MODEM_PPP_APN));
+
 esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS1_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &Conf->gsmSettings.DNSAddr1);
 esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS2_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &Conf->gsmSettings.DNSAddr2);
 esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &Conf->gsmSettings.DNSAddr3);

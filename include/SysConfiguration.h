@@ -186,6 +186,10 @@ typedef struct
                 bool bIsGSMEnabled;
             } Flags1; // Flag structure
 
+            char APN[32];
+            char login[32];
+            char password[32];
+
         } gsmSettings;
 #endif
 

@@ -474,6 +474,9 @@ const rest_var_t SystemVariables[] =
 
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
                 { 0, "gsm_enab", &SysConfig.gsmSettings.Flags1.bIsGSMEnabled, VAR_BOOL, RW, 0, 1 },
+                { 0, "gsm_apn", &SysConfig.gsmSettings.APN, VAR_STRING, RW, 3, 31 },
+                { 0, "gsm_apn_login", &SysConfig.gsmSettings.login, VAR_STRING, RW, 3, 31 },
+                { 0, "gsm_apn_password", &SysConfig.gsmSettings.password, VAR_STRING, RW, 3, 31 },
                 { 0, "gsm_module", &funct_gsm_module, VAR_FUNCT, R, 0, 0 },
                 { 0, "gsm_operator", &funct_gsm_operator, VAR_FUNCT, R, 0, 0 },
                 { 0, "gsm_imei", &funct_gsm_imei, VAR_FUNCT, R, 0, 0 },

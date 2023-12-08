@@ -188,7 +188,7 @@ static void GSMInitTask(void *pvParameter)
     dte_config.task_priority = CONFIG_MODEM_UART_EVENT_TASK_PRIORITY;
     dte_config.dte_buffer_size = CONFIG_MODEM_UART_RX_BUFFER_SIZE / 2;
     /* Configure the DCE */
-    esp_modem_dce_config_t dce_config = ESP_MODEM_DCE_DEFAULT_CONFIG(CONFIG_MODEM_PPP_APN);
+    esp_modem_dce_config_t dce_config = ESP_MODEM_DCE_DEFAULT_CONFIG(GetSysConf()->gsmSettings.APN);
     /* Configure the PPP netif */
     esp_netif_inherent_config_t esp_netif_conf = ESP_NETIF_INHERENT_DEFAULT_PPP();
 
@@ -196,6 +196,7 @@ static void GSMInitTask(void *pvParameter)
     esp_netif_config_t netif_ppp_config = ESP_NETIF_DEFAULT_PPP();
 
     netif_ppp_config.base = &esp_netif_conf;
+
     /* Init netif object */
     ppp_netif = esp_netif_new(&netif_ppp_config);
     assert(ppp_netif);
