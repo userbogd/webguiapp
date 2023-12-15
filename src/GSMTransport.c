@@ -98,6 +98,12 @@ static void on_ip_event(void *arg, esp_event_base_t event_base,
         ip_event_got_ip_t *event = (ip_event_got_ip_t*) event_data;
         esp_netif_t *netif = event->esp_netif;
 
+#if CONFIG_WEBGUIAPP_GPRS_ENABLE
+    memcpy(&GetSysConf()->gsmSettings.IPAddr, &event->ip_info.ip, sizeof(event->ip_info.ip));
+    memcpy(&GetSysConf()->gsmSettings.Mask, &event->ip_info.netmask, sizeof(event->ip_info.netmask));
+    memcpy(&GetSysConf()->gsmSettings.Gateway, &event->ip_info.gw, sizeof(event->ip_info.gw));
+#endif
+
         ESP_LOGI(TAG, "Modem Connect to PPP Server");
         ESP_LOGI(TAG, "~~~~~~~~~~~~~~");
         ESP_LOGI(TAG, "IP          : " IPSTR, IP2STR(&event->ip_info.ip));
