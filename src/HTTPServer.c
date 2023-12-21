@@ -36,12 +36,25 @@ httpd_handle_t server = NULL;
 static const char *TAG = "HTTPServer";
 
 const char url_api[] = "/api";
-
 //Pointer to external user defined rest api handler
 static int (*HTTPUserRestAPI)(char *url, char *req, int len, char *resp) = NULL;
 void regHTTPUserRestAPI(int (*api_handler)(char *url, char *req, int len, char *resp))
 {
     HTTPUserRestAPI = api_handler;
+}
+
+char *userappurl = NULL;
+static esp_err_t (*HTTPUserAppGETHandler)(httpd_req_t *req) = NULL;
+static esp_err_t (*HTTPUserAppPOSTHandler)(httpd_req_t *req) = NULL;
+
+void regHTTPUserAppHandlers(char *url,
+                            esp_err_t (*get)(httpd_req_t *req),
+                            esp_err_t (*post)(httpd_req_t *req))
+{
+    userappurl = url;
+    HTTPUserAppGETHandler = get;
+    HTTPUserAppPOSTHandler = post;
+
 }
 
 static esp_err_t CheckAuth(httpd_req_t *req)
@@ -179,6 +192,12 @@ static esp_err_t POSTHandler(httpd_req_t *req)
     ESP_LOGI(TAG, "POST request handle URL: %s", req->uri);
 #endif
 
+    if(userappurl && HTTPUserAppPOSTHandler)
+    {
+        if (memmem(req->uri, strlen(req->uri), userappurl, strlen(userappurl)))
+            return HTTPUserAppPOSTHandler(req);
+    }
+
     if (memmem(req->uri, strlen(req->uri), "/storage/upload/", sizeof("/storage/upload/") - 1))
         return upload_post_handler(req);
     if (memmem(req->uri, strlen(req->uri), "/storage/delete/", sizeof("/storage/delete/") - 1))
@@ -254,6 +273,12 @@ static esp_err_t GETHandler(httpd_req_t *req)
 #if HTTP_SERVER_DEBUG_LEVEL > 0
     ESP_LOGI(TAG, "GET request handle URL: %s", req->uri);
 #endif
+
+    if(userappurl && HTTPUserAppGETHandler)
+    {
+        if (memmem(req->uri, strlen(req->uri), userappurl, strlen(userappurl)))
+            return HTTPUserAppGETHandler(req);
+    }
 
     //Route to file server GET handler
     if (memmem(req->uri, strlen(req->uri), "/storage/", sizeof("/storage/") - 1))
