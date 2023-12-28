@@ -50,7 +50,7 @@ static bool isWiFiRunning = false;
 static bool isWiFiConnected = false;
 static bool isWiFiGotIp = false;
 static bool isWiFiFail = false;
-static int TempAPCounter = WIFI_AP_ONBOOT_TIME;
+static int TempAPCounter = 0;
 
 #define DEFAULT_SCAN_LIST_SIZE 20
 static wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
@@ -508,6 +508,7 @@ static void WiFiControlTask(void *arg)
     }
     isWiFiRunning = true;
     //WiFi in work service
+    TempAPCounter = GetSysConf()->wifiSettings.AP_disab_time * 60;
     while (isWiFiRunning)
     {
         vTaskDelay(pdMS_TO_TICKS(1000));
@@ -538,7 +539,7 @@ static void WiFiControlTask(void *arg)
             if (--TempAPCounter <= 0)
             {
                 if (GetAPClientsNumber() > 0)
-                    TempAPCounter = WIFI_AP_ONBOOT_TIME;
+                    TempAPCounter = GetSysConf()->wifiSettings.AP_disab_time * 60;
                 else
                 {
                     WiFiStopAP();

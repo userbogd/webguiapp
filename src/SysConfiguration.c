@@ -310,6 +310,7 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
     esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT,
                          (esp_ip4_addr_t*) &Conf->wifiSettings.DNSAddr3);
     Conf->wifiSettings.MaxPower = 80;
+    Conf->wifiSettings.AP_disab_time = 10;
 #endif
 
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE

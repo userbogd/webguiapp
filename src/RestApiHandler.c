@@ -464,12 +464,14 @@ const rest_var_t SystemVariables[] =
                 { 0, "wifi_enab", &SysConfig.wifiSettings.Flags1.bIsWiFiEnabled, VAR_BOOL, RW, 0, 1 },
                 { 0, "wifi_isdhcp", &SysConfig.wifiSettings.Flags1.bIsDHCPEnabled, VAR_BOOL, RW, 0, 1 },
                 { 0, "wifi_power", &SysConfig.wifiSettings.MaxPower, VAR_INT, RW, 0, 80 },
+                { 0, "wifi_disab_time", &SysConfig.wifiSettings.AP_disab_time, VAR_INT, RW, 0, 60 },
                 { 0, "wifi_sta_mac", &funct_wifi_sta_mac, VAR_FUNCT, R, 0, 0 },
                 { 0, "wifi_ap_mac", &funct_wifi_ap_mac, VAR_FUNCT, R, 0, 0 },
                 { 0, "wifi_stat", &funct_wifi_stat, VAR_FUNCT, R, 0, 0 },
                 { 0, "wifi_scan", &funct_wifiscan, VAR_FUNCT, R, 0, 0 },
                 { 0, "wifi_scan_res", &funct_wifiscanres, VAR_FUNCT, R, 0, 0 },
                 { 0, "wifi_level", &funct_wifi_level, VAR_FUNCT, R, 0, 0 },
+
                 #endif
 
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE

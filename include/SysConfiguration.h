@@ -167,7 +167,8 @@ typedef struct
                 bool bIsDHCPEnabled;
                 bool bIsWiFiEnabled;
             } Flags1; // Flag structure
-            uint8_t MaxPower;
+            int MaxPower;
+            int AP_disab_time;
         } wifiSettings;
 
 #endif
