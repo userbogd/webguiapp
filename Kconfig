@@ -19,11 +19,11 @@ menu "WebGUIApp"
     
     config BOARD_HARDWARE_OPTION
 		string "Board hardware option"
-    	default "Base version"
+    	default "DEFAULT"
     	
     config APP_PROJECT_VER
         string "Device firmware version"
-        default "0.0.0.0000"
+        default "0.0.0.0"
         help
             Project version code
             

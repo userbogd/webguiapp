@@ -371,9 +371,8 @@ const rest_var_t SystemVariables[] =
 
                 { 0, "model_name", CONFIG_DEVICE_MODEL_NAME, VAR_STRING, R, 1, 64 },
                 { 0, "hw_rev", ((int*) &hw_rev), VAR_INT, R, 1, 1024 },
-                { 0, "hw_opt", CONFIG_BOARD_HARDWARE_OPTION, VAR_STRING, R, 1, 256 },
-                { 0, "build_date", CONFIG_DEVICE_MODEL_NAME, VAR_STRING, R, 1, 64 },
-                { 0, "model_name", CONFIG_DEVICE_MODEL_NAME, VAR_STRING, R, 1, 64 },
+                //{ 0, "hw_opt", CONFIG_BOARD_HARDWARE_OPTION, VAR_STRING, R, 1, 256 },
+
 
                 { 0, "net_bios_name", &SysConfig.NetBIOSName, VAR_STRING, RW, 3, 31 },
                 { 0, "sys_name", &SysConfig.SysName, VAR_STRING, RW, 3, 31 },
