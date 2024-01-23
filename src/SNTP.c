@@ -113,6 +113,21 @@ void GetRFC3339Time(char *t)
             timeinfo.tm_sec);
 }
 
+void GetISO8601Time(char *t)
+{
+    struct tm timeinfo;
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    localtime_r(&tp.tv_sec, &timeinfo);
+    sprintf(t, "%04d-%02d-%02dT%02d:%02d:%02d.%luZ",
+            (timeinfo.tm_year) + YEAR_BASE,
+            (timeinfo.tm_mon) + 1,
+            timeinfo.tm_mday,
+            timeinfo.tm_hour,
+            timeinfo.tm_min,
+            timeinfo.tm_sec, (unsigned long)tp.tv_usec);
+}
+
 void StartSystemTimer(void)
 {
     ESP_ERROR_CHECK(esp_timer_create(&system_seconds_timer_args, &system_seconds_timer));
