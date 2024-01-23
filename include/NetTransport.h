@@ -113,6 +113,7 @@ void PrintNetifs(void);
 void GotEthIF(void);
 
 void GetRFC3339Time(char *t);
+void GetISO8601Time(char *t);
 void StartTimeGet(void);
 
 esp_err_t StartOTA(bool isManual);
