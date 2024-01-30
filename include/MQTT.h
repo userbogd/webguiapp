@@ -52,6 +52,7 @@ typedef struct
     char topic[CONFIG_WEBGUIAPP_MQTT_MAX_TOPIC_LENGTH];
     char *raw_data_ptr;
     int data_length;
+    bool keep_memory_onfinish;
 }MQTT_DATA_SEND_STRUCT;
 
 /**

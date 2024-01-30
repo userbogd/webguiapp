@@ -122,7 +122,7 @@ esp_err_t SysServiceMQTTSend(char *data, int len, int idx)
     if (buf)
     {
         memcpy(buf, data, len);
-        MQTT_DATA_SEND_STRUCT DSS;
+        MQTT_DATA_SEND_STRUCT DSS = {0};
         ComposeTopic(DSS.topic, idx, SERVICE_NAME, UPLINK_SUBTOPIC);
         DSS.raw_data_ptr = buf;
         DSS.data_length = len;
@@ -146,7 +146,7 @@ esp_err_t ExternalServiceMQTTSend(char *data, int len, int idx)
     if (buf)
     {
         memcpy(buf, data, len);
-        MQTT_DATA_SEND_STRUCT DSS;
+        MQTT_DATA_SEND_STRUCT DSS = {0};
         ComposeTopic(DSS.topic, idx, EXTERNAL_SERVICE_NAME, UPLINK_SUBTOPIC);
         DSS.raw_data_ptr = buf;
         DSS.data_length = len;
@@ -214,9 +214,9 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED client %d", idx);
 #endif
             ComposeTopic(topic, idx, SERVICE_NAME, DOWNLINK_SUBTOPIC);
-            msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
+msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
 #if MQTT_DEBUG_MODE > 0
-            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
+                                    ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
             ESP_LOGI(TAG, "Subscribe to %s", topic);
 #endif
 #ifdef  CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
@@ -394,7 +394,8 @@ void MQTTTaskTransmit(void *pvParameter)
         }
         //else
         //    ESP_LOGW(TAG, "MQTT client not initialized or disconnected");
-        free(DSS.raw_data_ptr);
+        if (!DSS.keep_memory_onfinish)
+            free(DSS.raw_data_ptr);
     }
 }
 
