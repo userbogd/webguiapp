@@ -122,7 +122,7 @@ esp_err_t SysServiceMQTTSend(char *data, int len, int idx)
     if (buf)
     {
         memcpy(buf, data, len);
-        MQTT_DATA_SEND_STRUCT DSS = {0};
+        MQTT_DATA_SEND_STRUCT DSS = { 0 };
         ComposeTopic(DSS.topic, idx, SERVICE_NAME, UPLINK_SUBTOPIC);
         DSS.raw_data_ptr = buf;
         DSS.data_length = len;
@@ -146,7 +146,7 @@ esp_err_t ExternalServiceMQTTSend(char *data, int len, int idx)
     if (buf)
     {
         memcpy(buf, data, len);
-        MQTT_DATA_SEND_STRUCT DSS = {0};
+        MQTT_DATA_SEND_STRUCT DSS = { 0 };
         ComposeTopic(DSS.topic, idx, EXTERNAL_SERVICE_NAME, UPLINK_SUBTOPIC);
         DSS.raw_data_ptr = buf;
         DSS.data_length = len;
@@ -216,7 +216,7 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
             ComposeTopic(topic, idx, SERVICE_NAME, DOWNLINK_SUBTOPIC);
 msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
 #if MQTT_DEBUG_MODE > 0
-                                    ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
+                                                            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
             ESP_LOGI(TAG, "Subscribe to %s", topic);
 #endif
 #ifdef  CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
@@ -266,6 +266,8 @@ msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
 #if MQTT_DEBUG_MODE > 1
             ESP_LOGI(TAG, "MQTT_EVENT_DATA, client %d", idx);
 #endif
+            if (event->data_len == 0 || event->current_data_offset > 0) //possible fragments of long data
+                goto end_of_system_handler;
             //Check if topic is SYSTEM and pass data to handler
             ComposeTopic(topic, idx, SERVICE_NAME, DOWNLINK_SUBTOPIC);
             if (!memcmp(topic, event->topic, event->topic_len))
@@ -301,6 +303,7 @@ msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
                 }
             }
 #endif
+
         break;
         case MQTT_EVENT_ERROR:
             ESP_LOGE(TAG, "MQTT_EVENT_ERROR, client %d", idx);
@@ -319,6 +322,7 @@ msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
 #endif
         break;
     }
+end_of_system_handler:
     xSemaphoreGive(xSemaphoreMQTTHandle);
 }
 
