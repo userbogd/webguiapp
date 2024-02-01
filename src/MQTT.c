@@ -29,6 +29,7 @@
 #define TAG "MQTT"
 #define SERVICE_NAME "SYSTEM"          // Dedicated service name
 #define EXTERNAL_SERVICE_NAME "RS485"
+#define MODEM_AT_SERVICE_NAME "ATMODEM"
 #define UPLINK_SUBTOPIC "UPLINK"        // Device publish to this topic
 #define DOWNLINK_SUBTOPIC "DWLINK"      // Device listen from this topic
 
@@ -138,7 +139,7 @@ esp_err_t SysServiceMQTTSend(char *data, int len, int idx)
     return ESP_ERR_NO_MEM;
 }
 
-esp_err_t ExternalServiceMQTTSend(char *data, int len, int idx)
+esp_err_t ExternalServiceMQTTSend(char *servname, char *data, int len, int idx)
 {
     if (GetMQTTHandlesPool(idx)->mqtt_queue == NULL)
         return ESP_ERR_NOT_FOUND;
@@ -147,7 +148,7 @@ esp_err_t ExternalServiceMQTTSend(char *data, int len, int idx)
     {
         memcpy(buf, data, len);
         MQTT_DATA_SEND_STRUCT DSS = { 0 };
-        ComposeTopic(DSS.topic, idx, EXTERNAL_SERVICE_NAME, UPLINK_SUBTOPIC);
+        ComposeTopic(DSS.topic, idx, servname, UPLINK_SUBTOPIC);
         DSS.raw_data_ptr = buf;
         DSS.data_length = len;
         if (xQueueSend(GetMQTTHandlesPool(idx)->mqtt_queue, &DSS, pdMS_TO_TICKS(0)) == pdPASS)
@@ -161,6 +162,8 @@ esp_err_t ExternalServiceMQTTSend(char *data, int len, int idx)
     }
     return ESP_ERR_NO_MEM;
 }
+
+
 
 #define MAX_ERROR_JSON  256
 mqtt_app_err_t PublicTestMQTT(int idx)
@@ -216,7 +219,7 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
             ComposeTopic(topic, idx, SERVICE_NAME, DOWNLINK_SUBTOPIC);
 msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
 #if MQTT_DEBUG_MODE > 0
-                                                            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
+                                                                                                ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
             ESP_LOGI(TAG, "Subscribe to %s", topic);
 #endif
 #ifdef  CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
@@ -227,6 +230,17 @@ msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
                 msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
 #if MQTT_DEBUG_MODE > 0
                 ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
+                ESP_LOGI(TAG, "Subscribe to %s", topic);
+#endif
+            }
+#endif
+
+#ifdef CONFIG_WEBGUIAPP_MQTT_AT_BRIDGE
+            {
+                ComposeTopic(topic, idx, MODEM_AT_SERVICE_NAME, DOWNLINK_SUBTOPIC);
+msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
+#if MQTT_DEBUG_MODE > 0
+                                ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
                 ESP_LOGI(TAG, "Subscribe to %s", topic);
 #endif
             }
@@ -301,6 +315,14 @@ msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
                 {
                     TransmitSerialPort(event->data, event->data_len);
                 }
+            }
+#endif
+
+#ifdef CONFIG_WEBGUIAPP_MQTT_AT_BRIDGE
+            ComposeTopic(topic, idx, MODEM_AT_SERVICE_NAME, DOWNLINK_SUBTOPIC);
+            if (!memcmp(topic, event->topic, event->topic_len))
+            {
+
             }
 #endif
 
