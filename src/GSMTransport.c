@@ -42,7 +42,7 @@ static bool isPPPinitializing = false;
 #endif
 
 static bool isPPPConn = false;
-static int attimeout = 300;
+static int attimeout = 1000;
 TaskHandle_t initTaskhandle;
 
 #define PPP_MODEM_TIMEOUT 40
@@ -78,7 +78,7 @@ static void on_ppp_changed(void *arg, esp_event_base_t event_base,
                            int32_t event_id,
                            void *event_data)
 {
-    ESP_LOGI(TAG, "PPP state changed event %u", (unsigned int)event_id);
+    ESP_LOGI(TAG, "PPP state changed event %u", (unsigned int )event_id);
     if (event_id == NETIF_PPP_ERRORUSER)
     {
         /* User interrupted event from esp-netif */
@@ -91,7 +91,7 @@ static void on_ip_event(void *arg, esp_event_base_t event_base,
                         int32_t event_id,
                         void *event_data)
 {
-    ESP_LOGD(TAG, "IP event! %u", (unsigned int)event_id);
+    ESP_LOGD(TAG, "IP event! %u", (unsigned int )event_id);
     if (event_id == IP_EVENT_PPP_GOT_IP)
     {
         esp_netif_dns_info_t dns_info;
@@ -100,9 +100,9 @@ static void on_ip_event(void *arg, esp_event_base_t event_base,
         esp_netif_t *netif = event->esp_netif;
 
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
-    memcpy(&GetSysConf()->gsmSettings.IPAddr, &event->ip_info.ip, sizeof(event->ip_info.ip));
-    memcpy(&GetSysConf()->gsmSettings.Mask, &event->ip_info.netmask, sizeof(event->ip_info.netmask));
-    memcpy(&GetSysConf()->gsmSettings.Gateway, &event->ip_info.gw, sizeof(event->ip_info.gw));
+        memcpy(&GetSysConf()->gsmSettings.IPAddr, &event->ip_info.ip, sizeof(event->ip_info.ip));
+        memcpy(&GetSysConf()->gsmSettings.Mask, &event->ip_info.netmask, sizeof(event->ip_info.netmask));
+        memcpy(&GetSysConf()->gsmSettings.Gateway, &event->ip_info.gw, sizeof(event->ip_info.gw));
 #endif
 
         ESP_LOGI(TAG, "Modem Connect to PPP Server");
@@ -157,10 +157,10 @@ static void GSMInitTask(void *pvParameter)
     if (starttype == 0)
     {
 #if CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN >= 0
-    gpio_set_level(CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN, 0);
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    gpio_set_level(CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN, 1);
-    vTaskDelay(pdMS_TO_TICKS(5000));
+        gpio_set_level(CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN, 0);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        gpio_set_level(CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN, 1);
+        vTaskDelay(pdMS_TO_TICKS(5000));
 #else
         if (gsm_reset)
         {
@@ -313,9 +313,22 @@ void ModemSetATTimeout(int timeout)
 
 void ModemSendAT(char *cmd, char *resp, int timeout)
 {
-    esp_modem_at(dce, cmd, resp, attimeout);
     ESP_LOGI(TAG, "Command:%s", cmd);
-    ESP_LOGW(TAG, "%s", resp);
+   int res = esp_modem_at(dce, cmd, resp, attimeout);
+    switch(res)
+    {
+        case 0:
+            ESP_LOGI(TAG, "OK");
+            break;
+        case 1:
+            ESP_LOGE(TAG, "FAIL");
+            break;
+        case 2:
+            ESP_LOGE(TAG, "TIMEOUT");
+            break;
+    }
+
+    ESP_LOGI(TAG, "Response:%s", resp);
 }
 
 void ModemSendSMS(void)

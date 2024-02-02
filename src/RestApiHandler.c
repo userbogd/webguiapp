@@ -235,7 +235,11 @@ void funct_gsm_imsi(char *argres, int rw)
 #ifdef CONFIG_WEBGUIAPP_MODEM_AT_ACCESS
 void funct_gsm_at(char *argres, int rw)
 {
-    ModemSendAT(argres, argres, 0);
+    char resp[1024];
+    resp[0] = 0x00;
+    ModemSendAT(argres, resp, 1000);
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "%s", resp);
+
 }
 void funct_gsm_at_timeout(char *argres, int rw)
 {
