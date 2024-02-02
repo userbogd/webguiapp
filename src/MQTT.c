@@ -29,7 +29,6 @@
 #define TAG "MQTT"
 #define SERVICE_NAME "SYSTEM"          // Dedicated service name
 #define EXTERNAL_SERVICE_NAME "RS485"
-#define MODEM_AT_SERVICE_NAME "ATMODEM"
 #define UPLINK_SUBTOPIC "UPLINK"        // Device publish to this topic
 #define DOWNLINK_SUBTOPIC "DWLINK"      // Device listen from this topic
 
@@ -234,17 +233,6 @@ msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
 #endif
             }
 #endif
-
-#ifdef CONFIG_WEBGUIAPP_MQTT_AT_BRIDGE
-            {
-                ComposeTopic(topic, idx, MODEM_AT_SERVICE_NAME, DOWNLINK_SUBTOPIC);
-msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
-#if MQTT_DEBUG_MODE > 0
-                                ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
-                ESP_LOGI(TAG, "Subscribe to %s", topic);
-#endif
-            }
-#endif
         break;
         case MQTT_EVENT_DISCONNECTED:
 
@@ -317,15 +305,6 @@ msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
                 }
             }
 #endif
-
-#ifdef CONFIG_WEBGUIAPP_MQTT_AT_BRIDGE
-            ComposeTopic(topic, idx, MODEM_AT_SERVICE_NAME, DOWNLINK_SUBTOPIC);
-            if (!memcmp(topic, event->topic, event->topic_len))
-            {
-
-            }
-#endif
-
         break;
         case MQTT_EVENT_ERROR:
             ESP_LOGE(TAG, "MQTT_EVENT_ERROR, client %d", idx);

@@ -563,8 +563,8 @@ menu "WebGUIApp"
 	        				            
 	   	if WEBGUIAPP_GPRS_ENABLE
 	   	
-	   		config WEBGUIAPP_MQTT_AT_BRIDGE
-				bool "Enable modem to MQTT AT commantd bridge"
+	   		config WEBGUIAPP_MODEM_AT_ACCESS
+				bool "Enable modem AT commands access"
 	        	default n
 	        
 	        config WEBGUIAPP_GPRS_ON

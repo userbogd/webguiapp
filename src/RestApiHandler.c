@@ -232,6 +232,21 @@ void funct_gsm_imsi(char *argres, int rw)
 {
     snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", GetPPPModemInfo()->imsi);
 }
+#ifdef CONFIG_WEBGUIAPP_MODEM_AT_ACCESS
+void funct_gsm_at(char *argres, int rw)
+{
+    ModemSendAT(argres, argres, 0);
+}
+void funct_gsm_at_timeout(char *argres, int rw)
+{
+    ModemSetATTimeout(atoi(argres));
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"DONE\"");
+}
+#endif
+void funct_gsm_rssi(char *argres, int rw)
+{
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "%d", PPPModemGetRSSI());
+}
 #endif
 
 
@@ -489,6 +504,11 @@ const rest_var_t SystemVariables[] =
                 { 0, "gsm_dns2", &SysConfig.gsmSettings.DNSAddr2, VAR_IPADDR, RW, 0, 0 },
                 { 0, "gsm_dns3", &SysConfig.gsmSettings.DNSAddr3, VAR_IPADDR, RW, 0, 0 },
                 { 0, "gsm_stat", &funct_gsm_stat, VAR_FUNCT, R, 0, 0 },
+#ifdef CONFIG_WEBGUIAPP_MODEM_AT_ACCESS
+                { 0, "gsm_at_timeout", &funct_gsm_at_timeout, VAR_FUNCT, R, 0, 0 },
+                { 0, "gsm_at", &funct_gsm_at, VAR_FUNCT, R, 0, 0 },
+#endif
+                { 0, "gsm_rssi", &funct_gsm_rssi, VAR_FUNCT, R, 0, 0 },
                 { 0, "gsm_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
                 #else
                 { 0, "gsm_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },

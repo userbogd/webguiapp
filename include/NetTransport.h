@@ -80,6 +80,7 @@ void PPPModemStart(void);
 int PPPModemGetRSSI(void);
 void ModemSendSMS(void);
 void ModemSendAT(char *cmd, char *resp, int timeout);
+void ModemSetATTimeout(int timeout);
 
 void MQTTRun(void);
 

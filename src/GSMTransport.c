@@ -42,6 +42,7 @@ static bool isPPPinitializing = false;
 #endif
 
 static bool isPPPConn = false;
+static int attimeout = 300;
 TaskHandle_t initTaskhandle;
 
 #define PPP_MODEM_TIMEOUT 40
@@ -302,13 +303,17 @@ int PPPModemGetRSSI(void)
 {
     int rssi = -1, ber;
     esp_modem_get_signal_quality(dce, &rssi, &ber);
-    //ESP_LOGW(TAG, "Signal %d, ber %d", rssi, ber);
     return rssi;
+}
+
+void ModemSetATTimeout(int timeout)
+{
+    attimeout = timeout;
 }
 
 void ModemSendAT(char *cmd, char *resp, int timeout)
 {
-    esp_modem_at(dce, cmd, resp, timeout);
+    esp_modem_at(dce, cmd, resp, attimeout);
     ESP_LOGI(TAG, "Command:%s", cmd);
     ESP_LOGW(TAG, "%s", resp);
 }
