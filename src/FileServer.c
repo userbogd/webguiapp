@@ -137,7 +137,7 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath)
     }
 
     /* Send HTML file header */
-    httpd_resp_sendstr_chunk(req, "<!DOCTYPE html><html><body>");
+    httpd_resp_sendstr_chunk(req, "<!DOCTYPE html><html><body style=\"font-family: monospace;\"");
 
     /* Get handle to embedded file upload script */
     extern const unsigned char upload_script_start[] asm("_binary_upload_script_html_start");
@@ -150,7 +150,7 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath)
     /* Send file-list table definition and column labels */
     httpd_resp_sendstr_chunk(
             req,
-            "<table class=\"fixed\" border=\"0\">"
+            "<table border=\"0\">"
             "<col width=\"600px\" /><col width=\"200px\" /><col width=\"200px\" /><col width=\"100px\" />"
             "<thead><tr><th>Name</th><th>Type</th><th>Size (Bytes)</th><th>Delete</th></tr></thead>"
             "<tbody>");
