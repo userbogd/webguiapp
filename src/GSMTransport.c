@@ -331,9 +331,15 @@ void ModemSendAT(char *cmd, char *resp, int timeout)
     ESP_LOGI(TAG, "Response:%s", resp);
 }
 
+esp_err_t cmd_cb(uint8_t* data, int len)
+{
+    ESP_LOGI(TAG, "Response:%*s", len, data);
+    return ESP_OK;
+}
+
 void ModemSendSMS(void)
 {
-
+esp_modem_command(dce, "atd", &cmd_cb, 3000);
 }
 
 #endif

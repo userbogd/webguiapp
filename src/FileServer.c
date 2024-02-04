@@ -70,6 +70,10 @@ static esp_err_t set_content_type_from_file(httpd_req_t *req,
     {
         return httpd_resp_set_type(req, "font/woff2");
     }
+    else if (IS_FILE_EXT(filename, ".json"))
+    {
+        return httpd_resp_set_type(req, "application/json");
+    }
     /* This is a limited set only */
     /* For any other type always set as plain text */
     return httpd_resp_set_type(req, "text/plain");
