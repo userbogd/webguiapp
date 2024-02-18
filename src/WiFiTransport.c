@@ -374,12 +374,13 @@ static void wifi_init_apsta(void *pvParameter)
             ;
 
     ESP_ERROR_CHECK(esp_wifi_init(&ap_cfg));
+    /*
     ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
                     ESP_EVENT_ANY_ID,
                     &event_handler,
                     NULL,
                     NULL));
-
+    */
     wifi_config_t ap_wifi_config = {
             .ap = {
 
