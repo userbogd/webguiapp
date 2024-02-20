@@ -55,7 +55,6 @@ static int TempAPCounter = 0;
 #define DEFAULT_SCAN_LIST_SIZE 20
 static wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
 static bool isScanExecuting = false;
-static bool isStaConnecting = false;
 
 wifi_ap_record_t* GetWiFiAPRecord(uint8_t n)
 {
@@ -94,11 +93,8 @@ static void event_handler(void *arg, esp_event_base_t event_base,
 {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
     {
-        if (GetSysConf()->wifiSettings.WiFiMode == WIFI_MODE_STA)
-        {
-            ESP_LOGI(TAG, "WiFi STA started, connecting to AP...");
-            esp_wifi_connect();
-        }
+        ESP_LOGI(TAG, "WiFi STA started, connecting to AP...");
+        esp_wifi_connect();
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_STOP)
     {
@@ -205,10 +201,10 @@ static void wifi_init_softap(void *pvParameter)
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
     ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
-                    ESP_EVENT_ANY_ID,
-                    &event_handler,
-                    NULL,
-                    NULL));
+    ESP_EVENT_ANY_ID,
+                                                        &event_handler,
+                                                        NULL,
+                                                        NULL));
 
     wifi_config_t wifi_config = {
             .ap = {
@@ -284,15 +280,15 @@ static void wifi_init_sta(void *pvParameter)
     esp_event_handler_instance_t instance_any_id;
     esp_event_handler_instance_t instance_got_ip;
     ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
-                    ESP_EVENT_ANY_ID,
-                    &event_handler,
-                    NULL,
-                    &instance_any_id));
+    ESP_EVENT_ANY_ID,
+                                                        &event_handler,
+                                                        NULL,
+                                                        &instance_any_id));
     ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT,
-                    IP_EVENT_STA_GOT_IP,
-                    &event_handler,
-                    NULL,
-                    &instance_got_ip));
+                                                        IP_EVENT_STA_GOT_IP,
+                                                        &event_handler,
+                                                        NULL,
+                                                        &instance_got_ip));
 
     wifi_config_t wifi_config = {
             .sta = {
@@ -432,15 +428,15 @@ static void wifi_init_apsta(void *pvParameter)
     esp_event_handler_instance_t instance_any_id;
     esp_event_handler_instance_t instance_got_ip;
     ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
-                    ESP_EVENT_ANY_ID,
-                    &event_handler,
-                    NULL,
-                    &instance_any_id));
+    ESP_EVENT_ANY_ID,
+                                                        &event_handler,
+                                                        NULL,
+                                                        &instance_any_id));
     ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT,
-                    IP_EVENT_STA_GOT_IP,
-                    &event_handler,
-                    NULL,
-                    &instance_got_ip));
+                                                        IP_EVENT_STA_GOT_IP,
+                                                        &event_handler,
+                                                        NULL,
+                                                        &instance_got_ip));
 
     wifi_config_t sta_wifi_config = {
             .sta = {
@@ -492,8 +488,8 @@ void WiFiConnect(void)
     esp_wifi_connect();
 }
 
-#define RECONNECT_INTERVAL_AP 200
-#define RECONNECT_INTERVAL_STA 20
+#define RECONNECT_INTERVAL_AP 60
+#define RECONNECT_INTERVAL_STA 30
 #define WAITIP_INTERVAL 10
 
 static void WiFiControlTask(void *arg)
@@ -543,8 +539,7 @@ static void WiFiControlTask(void *arg)
                 esp_wifi_connect();
                 reconnect_counter =
                         (GetSysConf()->wifiSettings.WiFiMode == WIFI_MODE_STA) ?
-                        RECONNECT_INTERVAL_STA :
-                                                                                 RECONNECT_INTERVAL_AP;
+                                RECONNECT_INTERVAL_STA : RECONNECT_INTERVAL_AP;
             }
         }
         if (TempAPCounter > 0)
@@ -611,11 +606,11 @@ static void wifi_scan(void *arg)
 {
     uint16_t number = DEFAULT_SCAN_LIST_SIZE;
     uint16_t ap_count = 0;
-    vTaskDelay(pdMS_TO_TICKS(2000)); //delay for command result get before network break
+    vTaskDelay(pdMS_TO_TICKS(1000)); //delay for command result get before network break
     memset(ap_info, 0, sizeof(ap_info));
     while (esp_wifi_scan_start(NULL, true) == ESP_ERR_WIFI_STATE)
     {
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 
     ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&number, ap_info));
