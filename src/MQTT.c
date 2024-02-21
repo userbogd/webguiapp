@@ -162,8 +162,6 @@ esp_err_t ExternalServiceMQTTSend(char *servname, char *data, int len, int idx)
     return ESP_ERR_NO_MEM;
 }
 
-
-
 #define MAX_ERROR_JSON  256
 mqtt_app_err_t PublicTestMQTT(int idx)
 {
@@ -218,7 +216,7 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
             ComposeTopic(topic, idx, SERVICE_NAME, DOWNLINK_SUBTOPIC);
 msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
 #if MQTT_DEBUG_MODE > 0
-                                                                                                ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
+                                                                                                            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
             ESP_LOGI(TAG, "Subscribe to %s", topic);
 #endif
 #ifdef  CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
@@ -508,13 +506,19 @@ static void mqtt2_user_event_handler(void *handler_args, esp_event_base_t base, 
 
 #define MAX_MQTT_LOG_MESSAGE (1024)
 #define SPIRAL_LOG_TAG "SystemExtendedLog"
-char data[MAX_MQTT_LOG_MESSAGE];
+//char data[MAX_MQTT_LOG_MESSAGE];
 esp_err_t ExtendedLog(esp_log_level_t level, char *format, ...)
 {
     va_list arg;
     va_start(arg, format);
     va_end(arg);
+    char *data = (char*) malloc(MAX_MQTT_LOG_MESSAGE);
+    if (data == NULL)
+        return ESP_ERR_NO_MEM;
     vsnprintf(data, MAX_MQTT_LOG_MESSAGE, format, arg);
+    if(strlen(data) == MAX_MQTT_LOG_MESSAGE - 1)
+        for(int i = 0; i < 3; i++)
+            *(data + MAX_MQTT_LOG_MESSAGE - 2 - i) = '.';
     switch (level)
     {
         case ESP_LOG_INFO:
@@ -551,8 +555,10 @@ esp_err_t ExtendedLog(esp_log_level_t level, char *format, ...)
                 free(buf);
             continue;
         }
+        free(data);
         return ESP_ERR_NO_MEM;
     }
+    free(data);
     return ESP_OK;
 }
 
