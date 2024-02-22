@@ -113,7 +113,7 @@ static void funct_wifi_level(char *argres, int rw)
 {
     wifi_ap_record_t wifi;
     if (esp_wifi_sta_get_ap_info(&wifi) == ESP_OK)
-        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%ddBm\"", wifi.rssi);
+        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%d dBm\"", wifi.rssi);
     else
         snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"-\"");
 }

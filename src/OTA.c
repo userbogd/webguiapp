@@ -233,9 +233,8 @@ esp_err_t my_esp_https_ota(const esp_http_client_config_t *config)
         strcpy(FwUpdStatus, "<span class='clok'>Updated ok. Restart...</span>");
         if (GetSysConf()->Flags1.bIsResetOTAEnabled)
         {
+            ESP_LOGW(TAG, "Erasing NVS partition...");
             ESP_ERROR_CHECK(nvs_flash_erase());
-            ESP_ERROR_CHECK(nvs_flash_init());
-            ESP_ERROR_CHECK(ResetInitSysConfig());
         }
         ESP_LOGI(TAG, "Firmware now restarting...");
         vTaskDelay(pdMS_TO_TICKS(3000));
