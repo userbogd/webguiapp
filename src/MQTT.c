@@ -214,9 +214,9 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED client %d", idx);
 #endif
             ComposeTopic(topic, idx, SERVICE_NAME, DOWNLINK_SUBTOPIC);
-msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
+            msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
 #if MQTT_DEBUG_MODE > 0
-                                                                                                            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
+            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
             ESP_LOGI(TAG, "Subscribe to %s", topic);
 #endif
 #ifdef  CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
@@ -395,10 +395,10 @@ void MQTTTaskTransmit(void *pvParameter)
                                     DSS.data_length,
                                     0, 0);
         }
-        //else
-        //    ESP_LOGW(TAG, "MQTT client not initialized or disconnected");
         if (!DSS.keep_memory_onfinish)
+        {
             free(DSS.raw_data_ptr);
+        }
     }
 }
 
@@ -516,8 +516,8 @@ esp_err_t ExtendedLog(esp_log_level_t level, char *format, ...)
     if (data == NULL)
         return ESP_ERR_NO_MEM;
     vsnprintf(data, MAX_MQTT_LOG_MESSAGE, format, arg);
-    if(strlen(data) == MAX_MQTT_LOG_MESSAGE - 1)
-        for(int i = 0; i < 3; i++)
+    if (strlen(data) == MAX_MQTT_LOG_MESSAGE - 1)
+        for (int i = 0; i < 3; i++)
             *(data + MAX_MQTT_LOG_MESSAGE - 2 - i) = '.';
     switch (level)
     {
@@ -547,10 +547,11 @@ esp_err_t ExtendedLog(esp_log_level_t level, char *format, ...)
             strcpy(buf, time);
             strcat(buf, "  ");
             strcat(buf, data);
-            MQTT_DATA_SEND_STRUCT DSS;
+            MQTT_DATA_SEND_STRUCT DSS = {0};
             ComposeTopic(DSS.topic, idx, "LOG", "UPLINK");
             DSS.raw_data_ptr = buf;
             DSS.data_length = strlen(buf);
+            DSS.keep_memory_onfinish = false;
             if (xQueueSend(GetMQTTHandlesPool(idx)->mqtt_queue, &DSS, pdMS_TO_TICKS(0)) != pdPASS)
                 free(buf);
             continue;
