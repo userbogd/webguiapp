@@ -383,9 +383,12 @@ void MQTTTaskTransmit(void *pvParameter)
         vTaskDelay(pdMS_TO_TICKS(300)); //wait for MQTT queue ready
     while (1)
     {
+        while (!mqtt[idx].is_connected)
+            vTaskDelay(pdMS_TO_TICKS(300));
         xQueueReceive(mqtt[idx].mqtt_queue, &DSS, portMAX_DELAY);
         if (mqtt[idx].mqtt && mqtt[idx].is_connected)
         {
+
 #if MQTT_DEBUG_MODE > 1
             ESP_LOGI(TAG, "MQTT client %d data send:%.*s", idx, DSS.data_length, DSS.raw_data_ptr);
 #endif
@@ -547,7 +550,7 @@ esp_err_t ExtendedLog(esp_log_level_t level, char *format, ...)
             strcpy(buf, time);
             strcat(buf, "  ");
             strcat(buf, data);
-            MQTT_DATA_SEND_STRUCT DSS = {0};
+            MQTT_DATA_SEND_STRUCT DSS = { 0 };
             ComposeTopic(DSS.topic, idx, "LOG", "UPLINK");
             DSS.raw_data_ptr = buf;
             DSS.data_length = strlen(buf);
