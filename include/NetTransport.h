@@ -46,6 +46,7 @@ typedef struct
 #define AP_PRIO 10
 
 #define RFC3339_TIMESTAMP_LENGTH (26)
+#define ISO8601_TIMESTAMP_LENGTH (32)
 
 //#define DEFAULT_FALLBACK_DNS  "8.8.8.8"
 

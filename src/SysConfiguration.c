@@ -578,7 +578,7 @@ void SetUserAppNeedReset(bool res)
 void LogFile(char *fname, char *format, ...)
 {
     char filename[32];
-    char tstamp[16];
+    char tstamp[ISO8601_TIMESTAMP_LENGTH + 2];
     strcpy(filename, "/data/");
     strcat(filename, fname);
     FILE *f = fopen(filename, "a");
@@ -591,9 +591,11 @@ void LogFile(char *fname, char *format, ...)
     va_start(arg, format);
     va_end(arg);
     strcpy(tstamp, "\r\n");
-    strcat(tstamp, esp_log_system_timestamp());
+    char ts[ISO8601_TIMESTAMP_LENGTH];
+    GetISO8601Time(ts);
+    strcat(tstamp, ts);
     strcat(tstamp, " ");
-    fwrite(tstamp, 1, 15, f);
+    fwrite(tstamp, 1, strlen(tstamp), f);
     vfprintf(f, format, arg);
     fclose(f);
     ESP_LOGI(TAG, "File written to %s", filename);
