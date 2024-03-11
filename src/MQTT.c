@@ -28,6 +28,7 @@
 
 #define TAG "MQTT"
 #define SERVICE_NAME "SYSTEM"          // Dedicated service name
+#define FILE_SERVICE_NAME "FILE"
 #define EXTERNAL_SERVICE_NAME "RS485"
 #define UPLINK_SUBTOPIC "UPLINK"        // Device publish to this topic
 #define DOWNLINK_SUBTOPIC "DWLINK"      // Device listen from this topic
@@ -219,6 +220,14 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
             ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
             ESP_LOGI(TAG, "Subscribe to %s", topic);
 #endif
+
+            ComposeTopic(topic, idx, FILE_SERVICE_NAME, DOWNLINK_SUBTOPIC);
+            msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
+#if MQTT_DEBUG_MODE > 0
+            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
+            ESP_LOGI(TAG, "Subscribe to %s", topic);
+#endif
+
 #ifdef  CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
             if (GetSysConf()->serialSettings.Flags.IsBridgeEnabled)
             {
@@ -291,8 +300,15 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
                 }
                 else
                     ESP_LOGE(TAG, "Out of free RAM for MQTT API handle");
-
             }
+
+            ComposeTopic(topic, idx, FILE_SERVICE_NAME, DOWNLINK_SUBTOPIC);
+            if (!memcmp(topic, event->topic, event->topic_len))
+            {
+                ESP_LOGI(TAG, "Got data for FILE_SYSTEM_SERVICE:%s", event->data);
+                //Here handler of file system operations
+            }
+
 #ifdef  CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
             if (GetSysConf()->serialSettings.Flags.IsBridgeEnabled)
             {

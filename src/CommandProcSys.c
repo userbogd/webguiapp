@@ -144,7 +144,7 @@ int ExecCommand(char *cmd)
 static int ExecCommandParse(char *cmd)
 {
     char *obj = NULL, *com = NULL, *arg = NULL;
-    int err = 0;
+    //int err = 0;
     int commlen = strlen(cmd);
     if (commlen > CONFIG_WEBGUIAPP_MAX_COMMAND_STRING_LENGTH)
         return 1;

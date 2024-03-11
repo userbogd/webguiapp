@@ -30,6 +30,7 @@
 #include "romfs.h"
 #include "esp_idf_version.h"
 #include "NetTransport.h"
+#include "esp_vfs.h"
 
 extern SYS_CONFIG SysConfig;
 
@@ -371,6 +372,87 @@ static void funct_exec(char *argres, int rw)
         snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"EXECUTED\"");
 }
 
+static const char *dirpath = "/data/";
+
+static void funct_file_list(char *argres, int rw)
+{
+
+    char entrypath[FILE_PATH_MAX];
+    char entrysize[16];
+    const char *entrytype = "file";
+    struct dirent *entry;
+    struct stat entry_stat;
+    DIR *dir = opendir(dirpath);
+    const size_t dirpath_len = strlen(dirpath);
+    strlcpy(entrypath, dirpath, sizeof(entrypath));
+
+    if (!dir)
+    {
+        ESP_LOGE("FILE_API", "Failed to stat dir : %s", dirpath);
+        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:DIR_NOT_FOUND\"");
+        return;
+    }
+
+    struct jWriteControl jwc;
+    jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_ARRAY, JW_COMPACT);
+    while ((entry = readdir(dir)) != NULL)
+    {
+        strlcpy(entrypath + dirpath_len, entry->d_name, sizeof(entrypath) - dirpath_len);
+        entrytype = (entry->d_type == DT_DIR ? "directory" : "file");
+        if (stat(entrypath, &entry_stat) == -1)
+        {
+            ESP_LOGE("FILE_API", "Failed to stat %s : %s", entrytype, entry->d_name);
+            continue;
+        }
+
+        jwArr_object(&jwc);
+        jwObj_string(&jwc, "name", (char*) entry->d_name);
+        jwObj_string(&jwc, "type", entrytype);
+        jwObj_int(&jwc, "size", entry_stat.st_size);
+        jwEnd(&jwc);
+    }
+    jwClose(&jwc);
+
+
+}
+
+static void funct_file_delete(char *argres, int rw)
+{
+    char filepath[FILE_PATH_MAX];
+    struct stat file_stat;
+
+    const char *filename = argres;
+    if (!filename)
+    {
+        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:DIR_NOT_FOUND\"");
+        return;
+    }
+
+    if (filename[strlen(filename) - 1] == '/')
+    {
+        ESP_LOGE("FILE_API", "Invalid filename : %s", filename);
+        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:DIR_NOT_FOUND\"");
+        return;
+    }
+
+    strcpy(filepath, dirpath);
+    strcat(filepath, filename);
+
+    ESP_LOGI("FILE_API", " filepath to delete : %s", filepath);
+
+    if (stat(filepath, &file_stat) == -1)
+    {
+        ESP_LOGE("FILE_API", "File does not exist : %s", filename);
+        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:DIR_NOT_FOUND\"");
+        /* Respond with 400 Bad Request */
+        return;
+    }
+    unlink(filepath);
+
+}
+
+
+
 const int hw_rev = CONFIG_BOARD_HARDWARE_REVISION;
 const bool VAR_TRUE = true;
 const bool VAR_FALSE = false;
@@ -556,6 +638,9 @@ const rest_var_t SystemVariables[] =
 #endif
                 { 0, "cronrecs", &funct_cronrecs, VAR_FUNCT, RW, 0, 0 },
                 { 0, "objsinfo", &funct_objsinfo, VAR_FUNCT, R, 0, 0 },
+
+                { 0, "file_list", &funct_file_list, VAR_FUNCT, R, 0, 0 },
+                { 0, "file_delete", &funct_file_delete, VAR_FUNCT, R, 0, 0 },
 
         };
 
