@@ -24,6 +24,7 @@
 #include <SysConfiguration.h>
 #include <webguiapp.h>
 #include "esp_vfs.h"
+#include "mbedtls/base64.h"
 
 #define TAG "RAW_MEM_API"
 
