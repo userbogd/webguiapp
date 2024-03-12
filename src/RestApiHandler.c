@@ -31,6 +31,7 @@
 #include "esp_idf_version.h"
 #include "NetTransport.h"
 #include "esp_vfs.h"
+#include "FilesAPI.h"
 
 extern SYS_CONFIG SysConfig;
 
@@ -490,7 +491,12 @@ static void funct_file_put(char *argres, int rw)
 
 }
 
+static void funct_file_operation(char *argres, int rw)
+{
 
+
+
+}
 
 const int hw_rev = CONFIG_BOARD_HARDWARE_REVISION;
 const bool VAR_TRUE = true;
@@ -682,6 +688,7 @@ const rest_var_t SystemVariables[] =
                 { 0, "file_delete", &funct_file_delete, VAR_FUNCT, R, 0, 0 },
                 { 0, "file_get", &funct_file_get, VAR_FUNCT, R, 0, 0 },
                 { 0, "file_put", &funct_file_put, VAR_FUNCT, R, 0, 0 },
+                { 0, "file_operation", &funct_file_operation, VAR_FUNCT, R, 0, 0 },
 
         };
 
