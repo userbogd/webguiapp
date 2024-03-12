@@ -12,17 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *   File name: MQTTFiles.h
+ *   File name: RawMemAPI.h
  *     Project: WebguiappTemplate
  *  Created on: 2024-03-11
  *      Author: bogd
  * Description:	
  */
 
-#ifndef COMPONENTS_WEBGUIAPP_INCLUDE_FILESAPI_H_
-#define COMPONENTS_WEBGUIAPP_INCLUDE_FILESAPI_H_
-
-
+#ifndef COMPONENTS_WEBGUIAPP_INCLUDE_RAWMEMAPI_H_
+#define COMPONENTS_WEBGUIAPP_INCLUDE_RAWMEMAPI_H_
+#include "webguiapp.h"
 
 typedef struct
 {
@@ -30,14 +29,8 @@ typedef struct
   int operType;
   int dataLengthTotal;
   int dataLengthReady;
-
-
 } mqtt_files_cb;
 
+void RawDataHandler(char *argres, int rw);
 
-
-
-
-
-
-#endif /* COMPONENTS_WEBGUIAPP_INCLUDE_FILESAPI_H_ */
+#endif /* COMPONENTS_WEBGUIAPP_INCLUDE_RAWMEMAPI_H_ */
