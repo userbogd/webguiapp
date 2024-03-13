@@ -38,6 +38,11 @@
  }
  */
 
+#define READ_ORERATION 1
+#define DELETE_ORERATION 2
+#define APPEND_ORERATION 3
+#define REPLACE_ORERATION 4
+
 static const char *dirpath = "/data/";
 #define MEM_OBLECT_MAX_LENGTH 32
 
@@ -115,8 +120,7 @@ void RawDataHandler(char *argres, int rw)
         snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:key 'size' not found\"");
         return;
     }
-
-    ESP_LOGI(TAG, "Got memory object %s, with offest %d and size %d", mem_object, offset, size);
+    //ESP_LOGI(TAG, "Got memory object %s, with offest %d and size %d", mem_object, offset, size);
 
     strcpy(filepath, dirpath);
     strcat(filepath, mem_object);
@@ -128,11 +132,83 @@ void RawDataHandler(char *argres, int rw)
         return;
     }
 
-    FILE *f = fopen(filepath, "r");
-    if (f == NULL)
+    if (operation == DELETE_ORERATION)
     {
-        ESP_LOGE(TAG, "Failed to open file %s for writing", mem_object);
+        unlink(filepath);
+        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"DELETED OK\"");
         return;
+    }
+    else if (operation == READ_ORERATION)
+    {
+        FILE *f = fopen(filepath, "r");
+        if (f == NULL)
+        {
+            ESP_LOGE(TAG, "Failed to open file %s for writing", mem_object);
+            return;
+        }
+        char *dat = (char*) malloc(size + 1);
+        if (dat == NULL)
+        {
+            snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR: no memory to handle request\"");
+            return;
+        }
+        fseek(f, offset, SEEK_SET);
+        int read = fread(dat, 1, size, f);
+        dat[read] = 0x00;
+        fclose(f);
+
+        struct jWriteControl jwc;
+        jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_OBJECT, JW_COMPACT);
+        jwObj_int(&jwc, "operation", operation);
+        jwObj_string(&jwc, "mem_object", mem_object);
+        jwObj_int(&jwc, "offset", offset);
+        jwObj_int(&jwc, "size", read);
+        jwObj_string(&jwc, "dat", dat);
+        jwClose(&jwc);
+        free(dat);
+    }
+    else if (operation == APPEND_ORERATION || operation == REPLACE_ORERATION)
+    {
+        jRead(argres, "{'dat'", &result);
+        if (result.elements == 1)
+        {
+            if (result.bytelen > 0 && result.bytelen <= size)
+            {
+                //memcpy(mem_object, (char*) result.pValue, result.bytelen);
+                //mem_object[result.bytelen] = 0x00;
+                if (operation == REPLACE_ORERATION)
+                    FILE *f = fopen(filepath, "w");
+                else if (operation == APPEND_ORERATION)
+                    FILE *f = fopen(filepath, "a");
+
+                if (f == NULL)
+                {
+                    ESP_LOGE(TAG, "Failed to open file %s for writing", mem_object);
+                    return;
+                }
+                fseek(f, offset, SEEK_SET);
+                int write = fwrite((char*) result.pValue, result.bytelen, 1, f);
+                struct jWriteControl jwc;
+                jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_OBJECT, JW_COMPACT);
+                jwObj_int(&jwc, "operation", operation);
+                jwObj_string(&jwc, "mem_object", mem_object);
+                jwObj_int(&jwc, "offset", offset);
+                jwObj_int(&jwc, "size", write);
+                jwClose(&jwc);
+
+            }
+            else
+            {
+                snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:'dat' length out of range\"");
+                return;
+            }
+        }
+        else
+        {
+            snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:key 'dat' not found\"");
+            return;
+        }
+
     }
 
 }
