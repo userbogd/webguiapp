@@ -67,9 +67,9 @@ void RawDataHandler(char *argres, int rw)
     if (result.elements == 1)
     {
         operation = atoi((char*) result.pValue);
-        if (operation < 1 || operation > 2)
+        if (operation < 1 || operation > 4)
         {
-            snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:'operation' value not in [1...2]\"");
+            snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:'operation' value not in [1...4]\"");
             return;
         }
     }
@@ -125,11 +125,14 @@ void RawDataHandler(char *argres, int rw)
     strcpy(filepath, dirpath);
     strcat(filepath, mem_object);
 
-    if (stat(filepath, &file_stat) == -1)
+    if (operation == READ_ORERATION || operation == DELETE_ORERATION)
     {
-        ESP_LOGE("FILE_API", "File does not exist : %s", mem_object);
-        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:DIR_NOT_FOUND\"");
-        return;
+        if (stat(filepath, &file_stat) == -1)
+        {
+            ESP_LOGE("FILE_API", "File does not exist : %s", mem_object);
+            snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:DIR_NOT_FOUND\"");
+            return;
+        }
     }
 
     if (operation == DELETE_ORERATION)
@@ -141,21 +144,29 @@ void RawDataHandler(char *argres, int rw)
     else if (operation == READ_ORERATION)
     {
         FILE *f = fopen(filepath, "r");
+        unsigned char *scr, *dst;
+        size_t dlen, olen, slen;
         if (f == NULL)
         {
             ESP_LOGE(TAG, "Failed to open file %s for writing", mem_object);
             return;
         }
-        char *dat = (char*) malloc(size + 1);
-        if (dat == NULL)
+        scr = (unsigned char*) malloc(size + 1);
+        if (scr == NULL)
         {
             snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR: no memory to handle request\"");
             return;
         }
         fseek(f, offset, SEEK_SET);
-        int read = fread(dat, 1, size, f);
-        dat[read] = 0x00;
+        int read = fread(scr, 1, size, f);
+        scr[read] = 0x00;
+        slen = read;
         fclose(f);
+        dlen = 0;
+        mbedtls_base64_encode(NULL, dlen, &olen, scr, slen);
+        dst = (unsigned char*) malloc(olen);
+        dlen = olen;
+        mbedtls_base64_encode(dst, dlen, &olen, scr, slen);
 
         struct jWriteControl jwc;
         jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_OBJECT, JW_COMPACT);
@@ -163,9 +174,10 @@ void RawDataHandler(char *argres, int rw)
         jwObj_string(&jwc, "mem_object", mem_object);
         jwObj_int(&jwc, "offset", offset);
         jwObj_int(&jwc, "size", read);
-        jwObj_string(&jwc, "dat", dat);
+        jwObj_string(&jwc, "dat", (char*) dst);
         jwClose(&jwc);
-        free(dat);
+        free(scr);
+        free(dst);
     }
     else if (operation == APPEND_ORERATION || operation == REPLACE_ORERATION)
     {
@@ -174,12 +186,13 @@ void RawDataHandler(char *argres, int rw)
         {
             if (result.bytelen > 0 && result.bytelen <= size)
             {
-                //memcpy(mem_object, (char*) result.pValue, result.bytelen);
-                //mem_object[result.bytelen] = 0x00;
+                unsigned char *dst;
+                size_t dlen, olen;
+                FILE *f;
                 if (operation == REPLACE_ORERATION)
-                    FILE *f = fopen(filepath, "w");
-                else if (operation == APPEND_ORERATION)
-                    FILE *f = fopen(filepath, "a");
+                    f = fopen(filepath, "w");
+                else
+                    f = fopen(filepath, "a");
 
                 if (f == NULL)
                 {
@@ -187,7 +200,14 @@ void RawDataHandler(char *argres, int rw)
                     return;
                 }
                 fseek(f, offset, SEEK_SET);
-                int write = fwrite((char*) result.pValue, result.bytelen, 1, f);
+                dlen = 0;
+                mbedtls_base64_decode(NULL, dlen, &olen, (unsigned char*) result.pValue, (size_t) result.bytelen);
+                dst = (unsigned char*) malloc(olen);
+                dlen = olen;
+                mbedtls_base64_decode(dst, dlen, &olen, (unsigned char*) result.pValue, (size_t) result.bytelen);
+                int write = fwrite((char*) dst, olen, 1, f);
+                fclose(f);
+                free(dst);
                 struct jWriteControl jwc;
                 jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_OBJECT, JW_COMPACT);
                 jwObj_int(&jwc, "operation", operation);
@@ -195,7 +215,6 @@ void RawDataHandler(char *argres, int rw)
                 jwObj_int(&jwc, "offset", offset);
                 jwObj_int(&jwc, "size", write);
                 jwClose(&jwc);
-
             }
             else
             {
