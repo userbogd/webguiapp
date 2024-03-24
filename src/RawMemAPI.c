@@ -40,21 +40,30 @@
 
 #define READ_ORERATION 1
 #define DELETE_ORERATION 2
-#define APPEND_ORERATION 3
-#define REPLACE_ORERATION 4
+#define WRITE_ORERATION 3
 
 static const char *dirpath = "/data/";
 #define MEM_OBLECT_MAX_LENGTH 32
 
-void RawDataHandler(char *argres, int rw)
+typedef struct
 {
-    int operation = 0;
-    int offset;
+    int opertype;
+    int operphase;
+    //int offset;
     int size;
     char mem_object[MEM_OBLECT_MAX_LENGTH];
     char filepath[FILE_PATH_MAX];
     struct stat file_stat;
+    FILE *f;
+    int open_file_timeout;
+} file_transaction_t;
 
+static file_transaction_t FileTransaction = {
+        .opertype = 0
+};
+
+void RawDataHandler(char *argres, int rw)
+{
     struct jReadElement result;
     jRead(argres, "", &result);
     if (result.dataType != JREAD_OBJECT)
@@ -63,13 +72,13 @@ void RawDataHandler(char *argres, int rw)
         return;
     }
 
-    jRead(argres, "{'operation'", &result);
+    jRead(argres, "{'opertype'", &result);
     if (result.elements == 1)
     {
-        operation = atoi((char*) result.pValue);
-        if (operation < 1 || operation > 4)
+        FileTransaction.opertype = atoi((char*) result.pValue);
+        if (FileTransaction.opertype < 1 || FileTransaction.opertype > 3)
         {
-            snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:'operation' value not in [1...4]\"");
+            snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:'operation' value not in [1...3]\"");
             return;
         }
     }
@@ -79,13 +88,29 @@ void RawDataHandler(char *argres, int rw)
         return;
     }
 
+    jRead(argres, "{'operphase'", &result);
+    if (result.elements == 1)
+    {
+        FileTransaction.operphase = atoi((char*) result.pValue);
+        if (FileTransaction.operphase < 0 || FileTransaction.operphase > 3)
+        {
+            snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:'file_operation' value not in [0...3]\"");
+            return;
+        }
+    }
+    else
+    {
+        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:key 'file_operation' not found\"");
+        return;
+    }
+
     jRead(argres, "{'mem_object'", &result);
     if (result.elements == 1)
     {
         if (result.bytelen > 0 && result.bytelen < MEM_OBLECT_MAX_LENGTH)
         {
-            memcpy(mem_object, (char*) result.pValue, result.bytelen);
-            mem_object[result.bytelen] = 0x00;
+            memcpy(FileTransaction.mem_object, (char*) result.pValue, result.bytelen);
+            FileTransaction.mem_object[result.bytelen] = 0x00;
         }
         else
         {
@@ -99,21 +124,10 @@ void RawDataHandler(char *argres, int rw)
         return;
     }
 
-    jRead(argres, "{'offset'", &result);
-    if (result.elements == 1)
-    {
-        offset = atoi((char*) result.pValue);
-    }
-    else
-    {
-        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:key 'offset' not found\"");
-        return;
-    }
-
     jRead(argres, "{'size'", &result);
     if (result.elements == 1)
     {
-        size = atoi((char*) result.pValue);
+        FileTransaction.size = atoi((char*) result.pValue);
     }
     else
     {
@@ -122,46 +136,58 @@ void RawDataHandler(char *argres, int rw)
     }
     //ESP_LOGI(TAG, "Got memory object %s, with offest %d and size %d", mem_object, offset, size);
 
-    strcpy(filepath, dirpath);
-    strcat(filepath, mem_object);
+    strcpy(FileTransaction.filepath, dirpath);
+    strcat(FileTransaction.filepath, FileTransaction.mem_object);
 
-    if (operation == READ_ORERATION || operation == DELETE_ORERATION)
+    if (FileTransaction.operphase == 1 || FileTransaction.operphase == 3)
     {
-        if (stat(filepath, &file_stat) == -1)
+        if (FileTransaction.opertype == READ_ORERATION || FileTransaction.opertype == DELETE_ORERATION)
         {
-            ESP_LOGE("FILE_API", "File does not exist : %s", mem_object);
-            snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:DIR_NOT_FOUND\"");
-            return;
+            if (stat(FileTransaction.filepath, &FileTransaction.file_stat) == -1)
+            {
+                ESP_LOGE("FILE_API", "File does not exist : %s", FileTransaction.mem_object);
+                snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:DIR_NOT_FOUND\"");
+                return;
+            }
         }
     }
 
-    if (operation == DELETE_ORERATION)
+    if (FileTransaction.opertype == DELETE_ORERATION)
     {
-        unlink(filepath);
+        unlink(FileTransaction.filepath);
         snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"DELETED OK\"");
         return;
     }
-    else if (operation == READ_ORERATION)
+    else if (FileTransaction.opertype == READ_ORERATION)
     {
-        FILE *f = fopen(filepath, "r");
+        if (FileTransaction.operphase == 1 || FileTransaction.operphase == 3)
+        {
+            FileTransaction.f = fopen(FileTransaction.filepath, "r");
+            ESP_LOGI("FILE_API", "Open file for read : %s", FileTransaction.mem_object);
+        }
+
         unsigned char *scr, *dst;
         size_t dlen, olen, slen;
-        if (f == NULL)
+        if (FileTransaction.f == NULL)
         {
-            ESP_LOGE(TAG, "Failed to open file %s for writing", mem_object);
+            ESP_LOGE(TAG, "Failed to open file %s for writing", FileTransaction.mem_object);
             return;
         }
-        scr = (unsigned char*) malloc(size + 1);
+        scr = (unsigned char*) malloc(FileTransaction.size + 1);
         if (scr == NULL)
         {
             snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR: no memory to handle request\"");
             return;
         }
-        fseek(f, offset, SEEK_SET);
-        int read = fread(scr, 1, size, f);
+
+        int read = fread(scr, 1, FileTransaction.size, FileTransaction.f);
         scr[read] = 0x00;
         slen = read;
-        fclose(f);
+        if (FileTransaction.operphase == 2 || FileTransaction.operphase == 3)
+        {
+            fclose(FileTransaction.f);
+            ESP_LOGI("FILE_API", "Close file for read : %s", FileTransaction.mem_object);
+        }
         dlen = 0;
         mbedtls_base64_encode(NULL, dlen, &olen, scr, slen);
         dst = (unsigned char*) malloc(olen);
@@ -170,49 +196,52 @@ void RawDataHandler(char *argres, int rw)
 
         struct jWriteControl jwc;
         jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_OBJECT, JW_COMPACT);
-        jwObj_int(&jwc, "operation", operation);
-        jwObj_string(&jwc, "mem_object", mem_object);
-        jwObj_int(&jwc, "offset", offset);
+        jwObj_int(&jwc, "operation", FileTransaction.opertype);
+        jwObj_string(&jwc, "mem_object", FileTransaction.mem_object);
         jwObj_int(&jwc, "size", read);
         jwObj_string(&jwc, "dat", (char*) dst);
         jwClose(&jwc);
         free(scr);
         free(dst);
     }
-    else if (operation == APPEND_ORERATION || operation == REPLACE_ORERATION)
+    else if (FileTransaction.opertype == WRITE_ORERATION)
     {
         jRead(argres, "{'dat'", &result);
         if (result.elements == 1)
         {
-            if (result.bytelen > 0 && result.bytelen <= size)
+            if (result.bytelen > 0 && result.bytelen <= FileTransaction.size)
             {
                 unsigned char *dst;
                 size_t dlen, olen;
-                FILE *f;
-                if (operation == REPLACE_ORERATION)
-                    f = fopen(filepath, "w");
-                else
-                    f = fopen(filepath, "a");
-
-                if (f == NULL)
+                if (FileTransaction.operphase == 1 || FileTransaction.operphase == 3)
                 {
-                    ESP_LOGE(TAG, "Failed to open file %s for writing", mem_object);
+                    FileTransaction.f = fopen(FileTransaction.filepath, "a");
+                    ESP_LOGI("FILE_API", "Open file for write : %s", FileTransaction.mem_object);
+                }
+                if (FileTransaction.f == NULL)
+                {
+                    ESP_LOGE(TAG, "Failed to open file %s for writing", FileTransaction.mem_object);
                     return;
                 }
-                fseek(f, offset, SEEK_SET);
                 dlen = 0;
                 mbedtls_base64_decode(NULL, dlen, &olen, (unsigned char*) result.pValue, (size_t) result.bytelen);
                 dst = (unsigned char*) malloc(olen);
                 dlen = olen;
                 mbedtls_base64_decode(dst, dlen, &olen, (unsigned char*) result.pValue, (size_t) result.bytelen);
-                int write = fwrite((char*) dst, olen, 1, f);
-                fclose(f);
+                //ESP_LOGI("FILE_API", "File write operation BEGIN");
+                int write = fwrite((char*) dst, olen, 1, FileTransaction.f);
+                //ESP_LOGI("FILE_API", "File write operation END");
+                if (FileTransaction.operphase == 2 || FileTransaction.operphase == 3)
+                {
+                    fclose(FileTransaction.f);
+                    ESP_LOGI("FILE_API", "Close file for write : %s", FileTransaction.mem_object);
+                }
+
                 free(dst);
                 struct jWriteControl jwc;
                 jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_OBJECT, JW_COMPACT);
-                jwObj_int(&jwc, "operation", operation);
-                jwObj_string(&jwc, "mem_object", mem_object);
-                jwObj_int(&jwc, "offset", offset);
+                jwObj_int(&jwc, "operation", FileTransaction.opertype);
+                jwObj_string(&jwc, "mem_object", FileTransaction.mem_object);
                 jwObj_int(&jwc, "size", write);
                 jwClose(&jwc);
             }

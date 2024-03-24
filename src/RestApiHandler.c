@@ -407,84 +407,12 @@ static void funct_file_list(char *argres, int rw)
         }
 
         jwArr_object(&jwc);
+        jwObj_raw(&jwc, "sel", "false");
         jwObj_string(&jwc, "name", (char*) entry->d_name);
-        jwObj_string(&jwc, "type", entrytype);
         jwObj_int(&jwc, "size", entry_stat.st_size);
         jwEnd(&jwc);
     }
     jwClose(&jwc);
-
-
-}
-
-static void funct_file_delete(char *argres, int rw)
-{
-    char filepath[FILE_PATH_MAX];
-    struct stat file_stat;
-    const char *filename = argres;
-    if (!filename)
-    {
-        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:DIR_NOT_FOUND\"");
-        return;
-    }
-
-    if (filename[strlen(filename) - 1] == '/')
-    {
-        ESP_LOGE("FILE_API", "Invalid filename : %s", filename);
-        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:DIR_NOT_FOUND\"");
-        return;
-    }
-
-    strcpy(filepath, dirpath);
-    strcat(filepath, filename);
-
-    ESP_LOGI("FILE_API", " filepath to delete : %s", filepath);
-
-    if (stat(filepath, &file_stat) == -1)
-    {
-        ESP_LOGE("FILE_API", "File does not exist : %s", filename);
-        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:DIR_NOT_FOUND\"");
-        /* Respond with 400 Bad Request */
-        return;
-    }
-    unlink(filepath);
-
-}
-
-static void funct_file_get(char *argres, int rw)
-{
-    char filepath[FILE_PATH_MAX];
-    struct stat file_stat;
-    const char *filename = argres;
-    if (!filename)
-    {
-        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:DIR_NOT_FOUND\"");
-        return;
-    }
-
-    if (filename[strlen(filename) - 1] == '/')
-    {
-        ESP_LOGE("FILE_API", "Invalid filename : %s", filename);
-        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:DIR_NOT_FOUND\"");
-        return;
-    }
-
-    strcpy(filepath, dirpath);
-    strcat(filepath, filename);
-
-    ESP_LOGI("FILE_API", " filepath to delete : %s", filepath);
-
-    if (stat(filepath, &file_stat) == -1)
-    {
-        ESP_LOGE("FILE_API", "File does not exist : %s", filename);
-        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:DIR_NOT_FOUND\"");
-        /* Respond with 400 Bad Request */
-        return;
-    }
-}
-
-static void funct_file_put(char *argres, int rw)
-{
 
 }
 
@@ -680,10 +608,6 @@ const rest_var_t SystemVariables[] =
                 { 0, "objsinfo", &funct_objsinfo, VAR_FUNCT, R, 0, 0 },
 
                 { 0, "file_list", &funct_file_list, VAR_FUNCT, R, 0, 0 },
-                { 0, "file_delete", &funct_file_delete, VAR_FUNCT, R, 0, 0 },
-                { 0, "file_get", &funct_file_get, VAR_FUNCT, R, 0, 0 },
-                { 0, "file_put", &funct_file_put, VAR_FUNCT, R, 0, 0 },
-
                 { 0, "raw_data", &funct_raw_data, VAR_FUNCT, R, 0, 0 },
 
         };
