@@ -30,11 +30,11 @@
 
 /*
  {
- "operation" : 1,
- "mem_object": "testfile.txt",
- "offset" : 2000,
- "size : 4096,
- "data" : "" ,
+ "opertype" : 1,                [1-READ, 2-DELETE, 3-WRITE]
+ "operphase" : 1,               [0- DO NOTHING, 1-OPEN, 2-CLOSE, 3-OPEN and CLOSE]
+ "mem_object": "testfile.txt",  [Resource name string]
+ "size : 4096,                  [Data block size in bytes]
+ "dat" : "" ,                   [Data block BASE64 encoded]
  }
  */
 
@@ -49,7 +49,6 @@ typedef struct
 {
     int opertype;
     int operphase;
-    //int offset;
     int size;
     char mem_object[MEM_OBLECT_MAX_LENGTH];
     char filepath[FILE_PATH_MAX];
@@ -141,6 +140,7 @@ void RawDataHandler(char *argres, int rw)
 
     if (FileTransaction.operphase == 1 || FileTransaction.operphase == 3)
     {
+
         if (FileTransaction.opertype == READ_ORERATION || FileTransaction.opertype == DELETE_ORERATION)
         {
             if (stat(FileTransaction.filepath, &FileTransaction.file_stat) == -1)
