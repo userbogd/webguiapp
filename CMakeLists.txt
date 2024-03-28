@@ -16,8 +16,6 @@ idf_component_register(
     	 "src/HTTPServer.c"
     	 "src/FileServer.c"
     	 "src/HTTPAPISystem.c"
-    	# "src/HTTPPrintSystem.c"
-    	# "src/HTTPPostSystem.c"
     	 "src/CommandProcSys.c"
     	 "src/Helpers.c"
     	 "src/NetTransport.c"
@@ -27,7 +25,7 @@ idf_component_register(
     	 "src/MQTT.c"
     	 "src/CronTimers.c"
     	 "src/SerialPort.c"
-    	  src/RawMemAPI.c
+    	  src/FileBlockHandler.c
     	  src/OTA.c
     	  src/RestApiHandler.c
     	  src/SysComm.c

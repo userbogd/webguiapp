@@ -12,14 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- *   File name: RawMemAPI.c
+ *   File name: FileBlockHandler.c
  *     Project: WebguiappTemplate
  *  Created on: 2024-03-11
  *      Author: bogd
  * Description:	
  */
 
-#include "RawMemAPI.h"
 #include "SystemApplication.h"
 #include <SysConfiguration.h>
 #include <webguiapp.h>
@@ -31,7 +30,6 @@
 /*
  {
  "opertype" : 1,                [1-READ, 2-DELETE, 3-WRITE]
- "operphase" : 1,               [0- DO NOTHING, 1-OPEN, 2-CLOSE, 3-OPEN and CLOSE]
  "part": 0,                     []
  "parts": 3,                    []
  "mem_object": "testfile.txt",  [Resource name string]
@@ -157,7 +155,7 @@ static esp_err_t parse_raw_data_object(char *argres, file_transaction_t *ft)
 
 }
 
-void RawDataHandler(char *argres, int rw)
+void FileBlockHandler(char *argres, int rw)
 {
 
     if (parse_raw_data_object(argres, &FileTransaction) != ESP_OK)

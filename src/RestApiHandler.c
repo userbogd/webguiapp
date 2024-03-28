@@ -21,6 +21,7 @@
  *	\copyright Apache License, Version 2.0
  */
 
+
 #include "SystemApplication.h"
 #include <SysConfiguration.h>
 #include <webguiapp.h>
@@ -31,7 +32,6 @@
 #include "esp_idf_version.h"
 #include "NetTransport.h"
 #include "esp_vfs.h"
-#include "RawMemAPI.h"
 
 extern SYS_CONFIG SysConfig;
 
@@ -416,9 +416,9 @@ static void funct_file_list(char *argres, int rw)
 
 }
 
-static void funct_raw_data(char *argres, int rw)
+static void funct_file_block(char *argres, int rw)
 {
-RawDataHandler(argres, rw);
+FileBlockHandler(argres, rw);
 }
 
 const int hw_rev = CONFIG_BOARD_HARDWARE_REVISION;
@@ -608,7 +608,7 @@ const rest_var_t SystemVariables[] =
                 { 0, "objsinfo", &funct_objsinfo, VAR_FUNCT, R, 0, 0 },
 
                 { 0, "file_list", &funct_file_list, VAR_FUNCT, R, 0, 0 },
-                { 0, "raw_data", &funct_raw_data, VAR_FUNCT, R, 0, 0 },
+                { 0, "file_block", &funct_file_block, VAR_FUNCT, R, 0, 0 },
 
         };
 
