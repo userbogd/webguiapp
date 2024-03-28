@@ -32,6 +32,8 @@
  {
  "opertype" : 1,                [1-READ, 2-DELETE, 3-WRITE]
  "operphase" : 1,               [0- DO NOTHING, 1-OPEN, 2-CLOSE, 3-OPEN and CLOSE]
+ "part": 0,                     []
+ "parts": 3,                    []
  "mem_object": "testfile.txt",  [Resource name string]
  "size : 4096,                  [Data block size in bytes]
  "dat" : "" ,                   [Data block BASE64 encoded]
@@ -49,6 +51,8 @@ typedef struct
 {
     int opertype;
     int operphase;
+    int part;
+    int parts;
     int size;
     char mem_object[MEM_OBLECT_MAX_LENGTH];
     char filepath[FILE_PATH_MAX];
@@ -61,46 +65,62 @@ static file_transaction_t FileTransaction = {
         .opertype = 0
 };
 
-void RawDataHandler(char *argres, int rw)
+static esp_err_t parse_raw_data_object(char *argres, file_transaction_t *ft)
 {
     struct jReadElement result;
     jRead(argres, "", &result);
     if (result.dataType != JREAD_OBJECT)
     {
         snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:not an object\"");
-        return;
+        return ESP_ERR_INVALID_ARG;
     }
 
     jRead(argres, "{'opertype'", &result);
     if (result.elements == 1)
     {
-        FileTransaction.opertype = atoi((char*) result.pValue);
-        if (FileTransaction.opertype < 1 || FileTransaction.opertype > 3)
+        ft->opertype = atoi((char*) result.pValue);
+        if (ft->opertype < 1 || ft->opertype > 3)
         {
             snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:'operation' value not in [1...3]\"");
-            return;
+            return ESP_ERR_INVALID_ARG;
         }
     }
     else
     {
         snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:key 'operation' not found\"");
-        return;
+        return ESP_ERR_INVALID_ARG;
     }
 
-    jRead(argres, "{'operphase'", &result);
+    jRead(argres, "{'parts'", &result);
     if (result.elements == 1)
     {
-        FileTransaction.operphase = atoi((char*) result.pValue);
-        if (FileTransaction.operphase < 0 || FileTransaction.operphase > 3)
+        ft->parts = atoi((char*) result.pValue);
+        if (ft->parts < 0 || ft->parts > 500)
         {
-            snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:'file_operation' value not in [0...3]\"");
-            return;
+            snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:'parts' value not in [0...500]\"");
+            return ESP_ERR_INVALID_ARG;
         }
     }
     else
     {
-        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:key 'file_operation' not found\"");
-        return;
+        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:key 'parts' not found\"");
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    jRead(argres, "{'part'", &result);
+    if (result.elements == 1)
+    {
+        ft->part = atoi((char*) result.pValue);
+        if (ft->parts < 0 || ft->part > ft->parts - 1)
+        {
+            snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:'part' value not in [0...(parts-1)]\"");
+            return ESP_ERR_INVALID_ARG;
+        }
+    }
+    else
+    {
+        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:key 'part' not found\"");
+        return ESP_ERR_INVALID_ARG;
     }
 
     jRead(argres, "{'mem_object'", &result);
@@ -108,32 +128,49 @@ void RawDataHandler(char *argres, int rw)
     {
         if (result.bytelen > 0 && result.bytelen < MEM_OBLECT_MAX_LENGTH)
         {
-            memcpy(FileTransaction.mem_object, (char*) result.pValue, result.bytelen);
-            FileTransaction.mem_object[result.bytelen] = 0x00;
+            memcpy(ft->mem_object, (char*) result.pValue, result.bytelen);
+            ft->mem_object[result.bytelen] = 0x00;
         }
         else
         {
             snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:'mem_object' length out of range\"");
-            return;
+            return ESP_ERR_INVALID_ARG;
         }
     }
     else
     {
         snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:key 'mem_object' not found\"");
-        return;
+        return ESP_ERR_INVALID_ARG;
     }
 
     jRead(argres, "{'size'", &result);
     if (result.elements == 1)
     {
-        FileTransaction.size = atoi((char*) result.pValue);
+        ft->size = atoi((char*) result.pValue);
     }
     else
     {
         snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:key 'size' not found\"");
-        return;
+        return ESP_ERR_INVALID_ARG;
     }
-    //ESP_LOGI(TAG, "Got memory object %s, with offest %d and size %d", mem_object, offset, size);
+    return ESP_OK;
+
+}
+
+void RawDataHandler(char *argres, int rw)
+{
+
+    if (parse_raw_data_object(argres, &FileTransaction) != ESP_OK)
+        return;
+
+    //Phase of file operation calculate
+    FileTransaction.operphase = 0;           //Simple read or write
+    if (FileTransaction.parts == 1)
+        FileTransaction.operphase = 3;      //Only one block handle (open and close in one iteration)
+    else if (FileTransaction.part == 0)
+        FileTransaction.operphase = 1;      //First block of multipart data (open file)
+    else if (FileTransaction.part == (FileTransaction.parts - 1))
+        FileTransaction.operphase = 2;      //Last block of multipart data (close file)
 
     strcpy(FileTransaction.filepath, dirpath);
     strcat(FileTransaction.filepath, FileTransaction.mem_object);
@@ -148,6 +185,17 @@ void RawDataHandler(char *argres, int rw)
                 ESP_LOGE("FILE_API", "File does not exist : %s", FileTransaction.mem_object);
                 snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:DIR_NOT_FOUND\"");
                 return;
+            }
+        }
+        else if (FileTransaction.opertype == WRITE_ORERATION)
+        {
+            if (stat(FileTransaction.filepath, &FileTransaction.file_stat) == 0)
+            {
+                if (unlink(FileTransaction.filepath) != 0)
+                {
+                    ESP_LOGE("FILE_API", "Delete file ERROR : %s", FileTransaction.mem_object);
+                    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:File is already exists and can't be deleted\"");
+                }
             }
         }
     }
@@ -196,7 +244,10 @@ void RawDataHandler(char *argres, int rw)
 
         struct jWriteControl jwc;
         jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_OBJECT, JW_COMPACT);
-        jwObj_int(&jwc, "operation", FileTransaction.opertype);
+        jwObj_int(&jwc, "opertype", FileTransaction.opertype);
+        jwObj_int(&jwc, "parts", FileTransaction.parts);
+        jwObj_int(&jwc, "part", FileTransaction.part);
+
         jwObj_string(&jwc, "mem_object", FileTransaction.mem_object);
         jwObj_int(&jwc, "size", read);
         jwObj_string(&jwc, "dat", (char*) dst);
@@ -206,6 +257,7 @@ void RawDataHandler(char *argres, int rw)
     }
     else if (FileTransaction.opertype == WRITE_ORERATION)
     {
+        struct jReadElement result;
         jRead(argres, "{'dat'", &result);
         if (result.elements == 1)
         {
@@ -240,7 +292,9 @@ void RawDataHandler(char *argres, int rw)
                 free(dst);
                 struct jWriteControl jwc;
                 jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_OBJECT, JW_COMPACT);
-                jwObj_int(&jwc, "operation", FileTransaction.opertype);
+                jwObj_int(&jwc, "opertype", FileTransaction.opertype);
+                jwObj_int(&jwc, "parts", FileTransaction.parts);
+                jwObj_int(&jwc, "part", FileTransaction.part);
                 jwObj_string(&jwc, "mem_object", FileTransaction.mem_object);
                 jwObj_int(&jwc, "size", write);
                 jwClose(&jwc);
