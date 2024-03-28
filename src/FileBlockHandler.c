@@ -43,27 +43,12 @@
 #define WRITE_ORERATION 3
 
 static const char *dirpath = "/data/";
-#define MEM_OBLECT_MAX_LENGTH 32
 
-typedef struct
-{
-    int opertype;
-    int operphase;
-    int part;
-    int parts;
-    int size;
-    char mem_object[MEM_OBLECT_MAX_LENGTH];
-    char filepath[FILE_PATH_MAX];
-    struct stat file_stat;
-    FILE *f;
-    int open_file_timeout;
-} file_transaction_t;
-
-static file_transaction_t FileTransaction = {
+static blockdata_transaction_t FileTransaction = {
         .opertype = 0
 };
 
-static esp_err_t parse_raw_data_object(char *argres, file_transaction_t *ft)
+esp_err_t ParseBlockDataObject(char *argres, blockdata_transaction_t *ft)
 {
     struct jReadElement result;
     jRead(argres, "", &result);
@@ -158,7 +143,7 @@ static esp_err_t parse_raw_data_object(char *argres, file_transaction_t *ft)
 void FileBlockHandler(char *argres, int rw)
 {
 
-    if (parse_raw_data_object(argres, &FileTransaction) != ESP_OK)
+    if (ParseBlockDataObject(argres, &FileTransaction) != ESP_OK)
         return;
 
     //Phase of file operation calculate

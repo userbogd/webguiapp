@@ -84,6 +84,21 @@ typedef struct
     void (*HandlerRoutine)(char *VarData, void *arg);
 } dyn_var_handler_t;
 
+#define MEM_OBLECT_MAX_LENGTH 32
+typedef struct
+{
+    int opertype;
+    int operphase;
+    int part;
+    int parts;
+    int size;
+    char mem_object[MEM_OBLECT_MAX_LENGTH];
+    char filepath[FILE_PATH_MAX];
+    struct stat file_stat;
+    FILE *f;
+    int open_file_timeout;
+} blockdata_transaction_t;
+
 esp_err_t start_file_server(void);
 HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostData);
 int HTTPPrint(httpd_req_t *req, char* buf, char* var);
@@ -93,5 +108,7 @@ esp_err_t download_get_handler(httpd_req_t *req);
 esp_err_t upload_post_handler(httpd_req_t *req);
 esp_err_t delete_post_handler(httpd_req_t *req);
 
+esp_err_t ParseBlockDataObject(char *argres, blockdata_transaction_t *ft);
+void FileBlockHandler(char *argres, int rw);
 
 #endif /* COMPONENTS_WEB_GUI_APPLICATION_INCLUDE_HTTPSERVER_H_ */
