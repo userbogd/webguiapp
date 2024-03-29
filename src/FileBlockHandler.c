@@ -244,7 +244,7 @@ void FileBlockHandler(char *argres, int rw)
         jRead(argres, "{'dat'", &result);
         if (result.elements == 1)
         {
-            if (result.bytelen > 0 && result.bytelen <= FileTransaction.size)
+            if (result.bytelen > 0)
             {
                 unsigned char *dst;
                 size_t dlen, olen;
