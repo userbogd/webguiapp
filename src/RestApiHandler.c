@@ -582,7 +582,7 @@ const rest_var_t SystemVariables[] =
 
 #ifdef CONFIG_WEBGUIAPP_LORAWAN_ENABLE
                 { 0, "lora_enab", &SysConfig.lorawanSettings.Flags1.bIsLoRaWANEnabled, VAR_BOOL, RW, 0, 1 },
-                { 0, "lora_visible", (bool*) (&VAR_TRUE), VAR_BOOL, RW, 0, 1 },
+                { 0, "lora_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
                 { 0, "lora_devid", &funct_lora_devid, VAR_FUNCT, RW, 0, 0 },
                 { 0, "lora_appid", &funct_lora_appid, VAR_FUNCT, RW, 0, 0 },
                 { 0, "lora_appkey", &funct_lora_appkey, VAR_FUNCT, R, 0, 0 },

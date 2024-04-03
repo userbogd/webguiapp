@@ -28,7 +28,7 @@
 
 #define TAG "MQTT"
 #define SERVICE_NAME "SYSTEM"          // Dedicated service name
-#define FILE_SERVICE_NAME "FILE"
+
 #define EXTERNAL_SERVICE_NAME "RS485"
 #define UPLINK_SUBTOPIC "UPLINK"        // Device publish to this topic
 #define DOWNLINK_SUBTOPIC "DWLINK"      // Device listen from this topic
@@ -38,7 +38,7 @@
 #define MQTT_MESSAGE_BUFER_LENTH 10  //size of mqtt queue
 #define MQTT_RECONNECT_CHANGE_ADAPTER  3
 
-#define MQTT_RECONNECT_TIMEOUT 20
+#define MQTT_RECONNECT_TIMEOUT 10
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
 
@@ -127,6 +127,7 @@ esp_err_t SysServiceMQTTSend(char *data, int len, int idx)
         ComposeTopic(DSS.topic, idx, SERVICE_NAME, UPLINK_SUBTOPIC);
         DSS.raw_data_ptr = buf;
         DSS.data_length = len;
+        DSS.keep_memory_onfinish = false;
         if (xQueueSend(GetMQTTHandlesPool(idx)->mqtt_queue, &DSS, pdMS_TO_TICKS(0)) == pdPASS)
             return ESP_OK;
         else
@@ -221,13 +222,6 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
             ESP_LOGI(TAG, "Subscribe to %s", topic);
 #endif
 
-            ComposeTopic(topic, idx, FILE_SERVICE_NAME, DOWNLINK_SUBTOPIC);
-            msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
-#if MQTT_DEBUG_MODE > 0
-            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
-            ESP_LOGI(TAG, "Subscribe to %s", topic);
-#endif
-
 #ifdef  CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
             if (GetSysConf()->serialSettings.Flags.IsBridgeEnabled)
             {
@@ -300,13 +294,6 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
                 }
                 else
                     ESP_LOGE(TAG, "Out of free RAM for MQTT API handle");
-            }
-
-            ComposeTopic(topic, idx, FILE_SERVICE_NAME, DOWNLINK_SUBTOPIC);
-            if (!memcmp(topic, event->topic, event->topic_len))
-            {
-                ESP_LOGI(TAG, "Got data for FILE_SYSTEM_SERVICE:%s", event->data);
-                //Here handler of file system operations
             }
 
 #ifdef  CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
@@ -454,6 +441,7 @@ static void start_mqtt()
 #if ESP_IDF_VERSION_MAJOR >= 5
             mqtt_cfg.credentials.client_id = tmp;
             mqtt_cfg.network.reconnect_timeout_ms = MQTT_RECONNECT_TIMEOUT * 1000;
+            mqtt_cfg.network.timeout_ms = 30000;
 #else
             mqtt_cfg.client_id = tmp;
             mqtt_cfg.reconnect_timeout_ms = MQTT_RECONNECT_TIMEOUT * 1000;
@@ -467,7 +455,7 @@ static void start_mqtt()
             esp_mqtt_client_register_event(mqtt[i].mqtt, ESP_EVENT_ANY_ID, mqtt[i].user_event_handler, &mqtt[i]);
             esp_event_handler_register(IP_EVENT, ESP_EVENT_ANY_ID, &reconnect_MQTT_handler, &mqtt[i].mqtt);
             esp_mqtt_client_start(mqtt[i].mqtt);
-            xTaskCreate(MQTTTaskTransmit, "MQTTTaskTransmit", 1024 * 2, (void*) &mqtt[i].mqtt_index, 3, NULL);
+            xTaskCreate(MQTTTaskTransmit, "MQTTTaskTransmit", 1024 * 4, (void*) &mqtt[i].mqtt_index, 3, NULL);
         }
     }
 }
