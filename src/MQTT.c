@@ -267,7 +267,9 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
         case MQTT_EVENT_DATA:
 
 #if MQTT_DEBUG_MODE > 1
-            ESP_LOGI(TAG, "MQTT_EVENT_DATA, client %d", idx);
+            ESP_LOGI(TAG, "MQTT_EVENT_DATA, client:%d, data-length:%d, offset:%d ", idx, event->data_len, event->current_data_offset);
+
+            ESP_LOGI(TAG, "MQTT client %d data received:%.*s", idx, event->data_len, event->data);
 #endif
             if (event->data_len == 0 || event->current_data_offset > 0) //possible fragments of long data
                 goto end_of_system_handler;
@@ -393,7 +395,7 @@ void MQTTTaskTransmit(void *pvParameter)
         {
 
 #if MQTT_DEBUG_MODE > 1
-            ESP_LOGI(TAG, "MQTT client %d data send:%.*s", idx, DSS.data_length, DSS.raw_data_ptr);
+            ESP_LOGW(TAG, "MQTT client %d data send:%.*s", idx, DSS.data_length, DSS.raw_data_ptr);
 #endif
             esp_mqtt_client_publish(mqtt[idx].mqtt,
                                     (const char*) DSS.topic,
@@ -441,7 +443,6 @@ static void start_mqtt()
 #if ESP_IDF_VERSION_MAJOR >= 5
             mqtt_cfg.credentials.client_id = tmp;
             mqtt_cfg.network.reconnect_timeout_ms = MQTT_RECONNECT_TIMEOUT * 1000;
-            mqtt_cfg.network.timeout_ms = 30000;
 #else
             mqtt_cfg.client_id = tmp;
             mqtt_cfg.reconnect_timeout_ms = MQTT_RECONNECT_TIMEOUT * 1000;
