@@ -54,8 +54,8 @@ static sys_error_code PayloadDefaultTypeHandler(data_message_t *MSG)
     jwObj_int(&jwc, "msgid", MSG->parsedData.msgID);
     jwObj_string(&jwc, "srcid", GetSysConf()->ID);
     jwObj_string(&jwc, "dstid", MSG->parsedData.srcID);
-    char time[RFC3339_TIMESTAMP_LENGTH];
-    GetRFC3339Time(time);
+    char time[ISO8601_TIMESTAMP_LENGTH];
+    GetISO8601Time(time);
     jwObj_string(&jwc, "time", time);
     jwObj_int(&jwc, "msgtype", DATA_MESSAGE_TYPE_RESPONSE);
     jwObj_int(&jwc, "payloadtype", MSG->parsedData.payloadType);
@@ -330,8 +330,8 @@ esp_err_t ServiceDataHandler(data_message_t *MSG)
         jwObj_int(&jwc, "msgid", MSG->parsedData.msgID);
         jwObj_string(&jwc, "srcid", GetSysConf()->ID);
         jwObj_string(&jwc, "dstid", MSG->parsedData.srcID);
-        char time[RFC3339_TIMESTAMP_LENGTH];
-        GetRFC3339Time(time);
+        char time[ISO8601_TIMESTAMP_LENGTH];
+        GetISO8601Time(time);
         jwObj_string(&jwc, "time", time);
         jwObj_int(&jwc, "messtype", DATA_MESSAGE_TYPE_RESPONSE);
         const char *err_br;
