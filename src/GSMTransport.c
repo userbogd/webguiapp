@@ -167,6 +167,7 @@ static void GSMInitTask(void *pvParameter)
             gsm_reset(0);
             vTaskDelay(pdMS_TO_TICKS(1000));
             gsm_reset(1);
+            vTaskDelay(pdMS_TO_TICKS(5000));
         }
         else
         {
