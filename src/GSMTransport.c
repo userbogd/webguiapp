@@ -41,11 +41,13 @@ static int ResetType = 0;
 static bool isPPPinitializing = false;
 #endif
 
+#define MAX_COMMAND_REPEATE_NUMBER  5
+#define WATCHDOG_INTERVAL 30
+
 static bool isPPPConn = false;
 static int attimeout = 1000;
 TaskHandle_t initTaskhandle;
 
-#define PPP_MODEM_TIMEOUT 40
 
 MODEM_INFO mod_info = { "-", "-", "-", "-" };
 esp_netif_t *ppp_netif;
@@ -156,22 +158,23 @@ static void GSMInitTask(void *pvParameter)
 
     if (starttype == 0)
     {
+        ESP_LOGE(TAG, "GSM module power down and up reset");
 #if CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN >= 0
         gpio_set_level(CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN, 0);
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(5000));
         gpio_set_level(CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN, 1);
         vTaskDelay(pdMS_TO_TICKS(5000));
 #else
         if (gsm_reset)
         {
             gsm_reset(0);
-            vTaskDelay(pdMS_TO_TICKS(1000));
+            vTaskDelay(pdMS_TO_TICKS(5000));
             gsm_reset(1);
             vTaskDelay(pdMS_TO_TICKS(5000));
         }
         else
         {
-            ESP_LOGE(TAG, "ethernet chip reset pin not defined");
+            ESP_LOGE(TAG, "GSM module reset procedure not defined");
             ESP_ERROR_CHECK(1);
         }
 #endif
@@ -212,52 +215,82 @@ static void GSMInitTask(void *pvParameter)
     assert(dce);
 
     mod_info.model[0] = 0x00;
-    int GSMConnectTimeout = 0;
+
+    int OperationRepeate = 0;
+    //MODULE NAME
     while (esp_modem_get_module_name(dce, mod_info.model) != ESP_OK)
     {
-        if (++GSMConnectTimeout >= PPP_MODEM_TIMEOUT)
+        if (OperationRepeate++ >= MAX_COMMAND_REPEATE_NUMBER)
+        {
+            ESP_LOGE(TAG, "Error get module name");
             goto modem_init_fail;
+        }
+        ESP_LOGW(TAG, "Retry get module name");
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
     ESP_LOGI(TAG, "Module type:%s", mod_info.model);
 
+    //IMSI
+    OperationRepeate = 0;
     mod_info.imsi[0] = 0x00;
     while (esp_modem_get_imsi(dce, mod_info.imsi) != ESP_OK)
     {
-        if (++GSMConnectTimeout >= PPP_MODEM_TIMEOUT)
+        if (OperationRepeate++ >= MAX_COMMAND_REPEATE_NUMBER)
+        {
+            ESP_LOGE(TAG, "Error get IMSI");
             goto modem_init_fail;
+        }
+        ESP_LOGW(TAG, "Retry get IMSI");
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
     ESP_LOGI(TAG, "IMSI:%s", mod_info.imsi);
 
+    //OPERATOR NAME
+    OperationRepeate = 0;
     mod_info.oper[0] = 0x00;
     int tech = 0;
+    vTaskDelay(pdMS_TO_TICKS(10000));
     while (esp_modem_get_operator_name(dce, mod_info.oper, &tech) != ESP_OK)
     {
-        if (++GSMConnectTimeout >= PPP_MODEM_TIMEOUT)
+        if (OperationRepeate++ >= MAX_COMMAND_REPEATE_NUMBER)
+        {
+            ESP_LOGE(TAG, "Error get operator name");
             goto modem_init_fail;
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+        ESP_LOGW(TAG, "Retry get operator name");
+        vTaskDelay(pdMS_TO_TICKS(10000));
     }
     ESP_LOGI(TAG, "Operator:%s", mod_info.oper);
 
+    //IMEI
     mod_info.imei[0] = 0x00;
+    OperationRepeate = 0;
     while (esp_modem_get_imei(dce, mod_info.imei) != ESP_OK)
     {
-        if (++GSMConnectTimeout >= PPP_MODEM_TIMEOUT)
+        if (OperationRepeate++ >= MAX_COMMAND_REPEATE_NUMBER)
+        {
+            ESP_LOGE(TAG, "Error get IMEI");
             goto modem_init_fail;
+        }
+        ESP_LOGW(TAG, "Retry get IMEI");
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
     ESP_LOGI(TAG, "IMEI:%s", mod_info.imei);
 
+    //SWITCH TO CMUX
+    OperationRepeate = 0;
     while (esp_modem_set_mode(dce, ESP_MODEM_MODE_CMUX) != ESP_OK)
     {
-        if (++GSMConnectTimeout >= PPP_MODEM_TIMEOUT)
+        if (OperationRepeate++ >= MAX_COMMAND_REPEATE_NUMBER)
+        {
+            ESP_LOGE(TAG, "Error switch module to CMUX");
             goto modem_init_fail;
+        }
+        ESP_LOGW(TAG, "Retry switch module to CMUX");
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 
     ESP_LOGI(TAG, "PPP data mode OK");
-
     xEventGroupWaitBits(event_group, CONNECT_BIT, pdTRUE, pdTRUE, portMAX_DELAY);
 
     isPPPinitializing = false;
@@ -265,7 +298,7 @@ static void GSMInitTask(void *pvParameter)
 
     return;
 modem_init_fail:
-    ESP_LOGE(TAG, "PPP modem init error");
+    ESP_LOGE(TAG, "PPP modem initialization fail");
     isPPPinitializing = false;
     vTaskDelete(NULL);
 }
@@ -274,12 +307,14 @@ void PPPModemColdStart(void)
 {
     ResetType = 0;
     xTaskCreate(GSMInitTask, "GSMInitTask", 1024 * 6, &ResetType, 3, &initTaskhandle);
+    ESP_LOGI(TAG, "Start GSM cold initialization task");
 }
 
 void PPPModemSoftRestart(void)
 {
     ResetType = 1;
     xTaskCreate(GSMInitTask, "GSMInitTask", 1024 * 6, &ResetType, 3, &initTaskhandle);
+    ESP_LOGI(TAG, "Start GSM soft initialization task");
 }
 
 static void GSMRunTask(void *pvParameter)
@@ -288,10 +323,10 @@ static void GSMRunTask(void *pvParameter)
     {
         if (!isPPPConn && !isPPPinitializing)
         { //try to reconnect modem
-            ESP_LOGI(TAG, "PPP modem restart");
+            ESP_LOGW(TAG, "Module restart by watchdog");
             PPPModemColdStart();
         }
-        vTaskDelay(pdMS_TO_TICKS(30000));
+        vTaskDelay(pdMS_TO_TICKS(WATCHDOG_INTERVAL*1000));
     }
 }
 
@@ -315,24 +350,24 @@ void ModemSetATTimeout(int timeout)
 void ModemSendAT(char *cmd, char *resp, int timeout)
 {
     ESP_LOGI(TAG, "Command:%s", cmd);
-   int res = esp_modem_at(dce, cmd, resp, attimeout);
-    switch(res)
+    int res = esp_modem_at(dce, cmd, resp, attimeout);
+    switch (res)
     {
         case 0:
             ESP_LOGI(TAG, "OK");
-            break;
+        break;
         case 1:
             ESP_LOGE(TAG, "FAIL");
-            break;
+        break;
         case 2:
             ESP_LOGE(TAG, "TIMEOUT");
-            break;
+        break;
     }
 
     ESP_LOGI(TAG, "Response:%s", resp);
 }
 
-esp_err_t cmd_cb(uint8_t* data, int len)
+esp_err_t cmd_cb(uint8_t *data, int len)
 {
     ESP_LOGI(TAG, "Response:%*s", len, data);
     return ESP_OK;
@@ -340,7 +375,7 @@ esp_err_t cmd_cb(uint8_t* data, int len)
 
 void ModemSendSMS(void)
 {
-esp_modem_command(dce, "atd", &cmd_cb, 3000);
+    esp_modem_command(dce, "atd", &cmd_cb, 3000);
 }
 
 #endif
