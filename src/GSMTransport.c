@@ -41,13 +41,14 @@ static int ResetType = 0;
 static bool isPPPinitializing = false;
 #endif
 
+#define CUSTOM_MODEM_BAUDRATE  230400
+
 #define MAX_COMMAND_REPEATE_NUMBER  5
 #define WATCHDOG_INTERVAL 30
 
 static bool isPPPConn = false;
 static int attimeout = 1000;
 TaskHandle_t initTaskhandle;
-
 
 MODEM_INFO mod_info = { "-", "-", "-", "-" };
 esp_netif_t *ppp_netif;
@@ -214,6 +215,9 @@ static void GSMInitTask(void *pvParameter)
     dce = esp_modem_new_dev(ESP_MODEM_DCE_SIM800, &dte_config, &dce_config, ppp_netif);
     assert(dce);
 
+    if (esp_modem_set_baud(dce, CUSTOM_MODEM_BAUDRATE) == ESP_OK)
+        uart_set_baudrate(0, CUSTOM_MODEM_BAUDRATE);
+
     mod_info.model[0] = 0x00;
 
     int OperationRepeate = 0;
@@ -326,7 +330,7 @@ static void GSMRunTask(void *pvParameter)
             ESP_LOGW(TAG, "Module restart by watchdog");
             PPPModemColdStart();
         }
-        vTaskDelay(pdMS_TO_TICKS(WATCHDOG_INTERVAL*1000));
+        vTaskDelay(pdMS_TO_TICKS(WATCHDOG_INTERVAL * 1000));
     }
 }
 
