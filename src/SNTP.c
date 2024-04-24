@@ -134,6 +134,14 @@ void StartSystemTimer(void)
     ESP_ERROR_CHECK(esp_timer_start_periodic(system_seconds_timer, 1000000));
 }
 
+void SetSystemTime(struct tm *time, const char* source)
+{
+    time_t t = mktime(time);
+    ESP_LOGI("SNTP","Setting time: %s from thq source %s", asctime(time), source);
+    struct timeval now = { .tv_sec = t };
+    settimeofday(&now, NULL);
+}
+
 void SecondTickSystem(void *param)
 {
     ++UpTime;

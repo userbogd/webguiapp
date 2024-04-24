@@ -117,6 +117,7 @@ void GotEthIF(void);
 void GetRFC3339Time(char *t);
 void GetISO8601Time(char *t);
 void StartTimeGet(void);
+void SetSystemTime(struct tm *time, const char* source);
 
 esp_err_t StartOTA(bool isManual);
 char* GetAvailVersion();
