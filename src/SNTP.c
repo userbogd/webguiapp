@@ -137,9 +137,10 @@ void StartSystemTimer(void)
 void SetSystemTime(struct tm *time, const char* source)
 {
     time_t t = mktime(time);
-    ESP_LOGI("SNTP","Setting time: %s from thq source %s", asctime(time), source);
+    ESP_LOGI("SNTP","Setting time: %s from the source %s", asctime(time), source);
     struct timeval now = { .tv_sec = t };
     settimeofday(&now, NULL);
+    TimeObtainHandler(&now);
 }
 
 void SecondTickSystem(void *param)
