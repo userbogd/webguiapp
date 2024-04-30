@@ -361,8 +361,14 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
            sizeof(CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME));
     memcpy(Conf->mqttStation[0].GroupName, CONFIG_WEBGUIAPP_MQTT_GROUP_NAME,
            sizeof(CONFIG_WEBGUIAPP_MQTT_GROUP_NAME));
-    memcpy(Conf->mqttStation[0].ClientID, CONFIG_WEBGUIAPP_MQTT_CLIENT_ID_1,
-           sizeof(CONFIG_WEBGUIAPP_MQTT_CLIENT_ID_1));
+
+    Conf->mqttStation[0].ClientID[0] = 0x00;
+    strcat(Conf->mqttStation[0].ClientID, CONFIG_WEBGUIAPP_MQTT_CLIENT_ID_1);
+    strcat(Conf->mqttStation[0].ClientID, "-");
+    strcat(Conf->mqttStation[0].ClientID, Conf->ID);
+
+
+
     memcpy(Conf->mqttStation[0].UserName, CONFIG_WEBGUIAPP_MQTT_USERNAME,
            sizeof(CONFIG_WEBGUIAPP_MQTT_USERNAME));
     memcpy(Conf->mqttStation[0].UserPass, CONFIG_WEBGUIAPP_MQTT_PASSWORD,
@@ -377,7 +383,13 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
     memcpy(Conf->mqttStation[1].SystemName, CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME,
            sizeof(CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME));
     memcpy(Conf->mqttStation[1].GroupName, CONFIG_WEBGUIAPP_MQTT_GROUP_NAME, sizeof(CONFIG_WEBGUIAPP_MQTT_GROUP_NAME));
-    memcpy(Conf->mqttStation[1].ClientID, CONFIG_WEBGUIAPP_MQTT_CLIENT_ID_2, sizeof(CONFIG_WEBGUIAPP_MQTT_CLIENT_ID_2));
+
+    Conf->mqttStation[1].ClientID[0] = 0x00;
+    strcat(Conf->mqttStation[1].ClientID, CONFIG_WEBGUIAPP_MQTT_CLIENT_ID_2);
+    strcat(Conf->mqttStation[1].ClientID, "-");
+    strcat(Conf->mqttStation[1].ClientID, Conf->ID);
+
+
     memcpy(Conf->mqttStation[1].UserName, CONFIG_WEBGUIAPP_MQTT_USERNAME, sizeof(CONFIG_WEBGUIAPP_MQTT_USERNAME));
     memcpy(Conf->mqttStation[1].UserPass, CONFIG_WEBGUIAPP_MQTT_PASSWORD, sizeof(CONFIG_WEBGUIAPP_MQTT_PASSWORD));
 #endif

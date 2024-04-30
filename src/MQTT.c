@@ -107,8 +107,8 @@ void ComposeTopic(char *topic, int idx, char *service_name, char *direct)
     strcat((char*) topic, GetSysConf()->mqttStation[idx].GroupName);                // Global system name
     strcat((char*) topic, "/");
     strcat((char*) topic, GetSysConf()->mqttStation[idx].ClientID);     // Device client name  (for multiclient devices)
-    strcat((char*) topic, "-");
-    strcat((char*) topic, GetSysConf()->ID);                 //
+    //strcat((char*) topic, "-");
+    //strcat((char*) topic, GetSysConf()->ID);                 //
     strcat((char*) topic, "/");
     strcat((char*) topic, (const char*) service_name);  // Device service name
     strcat((char*) topic, "/");
