@@ -460,7 +460,11 @@ esp_err_t start_file_server(void)
         return ESP_ERR_NO_MEM;
     }
     strlcpy(server_data->base_path, "/", sizeof("/"));
+#if CONFIG_SDCARD_ENABLE
+    strlcpy(server_data->base_path2, "/sdcard", sizeof("/sdcard"));
+#else
     strlcpy(server_data->base_path2, "/data", sizeof("/data"));
+#endif
     server = start_webserver();
     return ESP_OK;
 }

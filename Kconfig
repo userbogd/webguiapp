@@ -260,6 +260,57 @@ menu "WebGUIApp"
 		endif
 	endmenu
 
+
+		menu "SDCARD settings"
+		config SDCARD_ENABLE
+		bool "Enabled SDCARD interface"
+        default n
+             help
+        		Set enabled SDCARD 
+        
+        if SDCARD_ENABLE	
+		        			
+			config SDCARD_SPI_HOST
+	            int "SPI Host Number"
+	            range 0 2
+	            default 2
+	            help
+	                Set the SPI host used.
+	        
+	        config SDCARD_SPI_CS_GPIO
+	            int "SDCARD SPI CS GPIO number"
+	            range GPIO_RANGE_MIN GPIO_RANGE_MAX
+	            default 0 if IDF_TARGET_ESP32
+	            default 0 if IDF_TARGET_ESP32S3
+	            help
+	                Set the GPIO number used by SPI SCLK.        
+	
+	        config SDCARD_SPI_SCLK_GPIO
+	            int "SDCARD SPI SCLK GPIO number"
+	            range GPIO_RANGE_MIN GPIO_RANGE_MAX
+	            default 9 if IDF_TARGET_ESP32
+	            default 9 if IDF_TARGET_ESP32S3
+	            help
+	                Set the GPIO number used by SPI SCLK.
+	
+	        config SDCARD_SPI_MOSI_GPIO
+	            int "SDCARD SPI MOSI GPIO number"
+	            range GPIO_RANGE_MIN GPIO_RANGE_MAX
+	            default 34 if IDF_TARGET_ESP32
+	            default 44 if IDF_TARGET_ESP32S3
+	            help
+	                Set the GPIO number used by SPI MOSI.
+	
+	        config SDCARD_SPI_MISO_GPIO
+	            int "SDCARD SPI MISO GPIO number"
+	            range GPIO_RANGE_MIN GPIO_RANGE_MAX
+	            default 33 if IDF_TARGET_ESP32
+	            default 43 if IDF_TARGET_ESP32S3
+	            help
+	                Set the GPIO number used by SPI MISO.
+	                
+		endif
+	endmenu
  
 
     menu "WiFi settings"

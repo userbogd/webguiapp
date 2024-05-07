@@ -21,7 +21,6 @@
  *	\copyright Apache License, Version 2.0
  */
 
-
 #include "SystemApplication.h"
 #include <SysConfiguration.h>
 #include <webguiapp.h>
@@ -216,7 +215,6 @@ static void funct_wifiscanres(char *argres, int rw)
         strcpy(argres, "\"SYS_ERROR_UNKNOWN\"");
 }
 
-
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
 void funct_gsm_module(char *argres, int rw)
 {
@@ -255,7 +253,6 @@ void funct_gsm_rssi(char *argres, int rw)
 }
 #endif
 
-
 #ifdef CONFIG_WEBGUIAPP_LORAWAN_ENABLE
 void funct_lora_stat(char *argres, int rw)
 {
@@ -282,7 +279,6 @@ void funct_lora_appkey(char *argres, int rw)
     snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", temp);
 }
 #endif
-
 
 static void funct_ota_state(char *argres, int rw)
 {
@@ -358,12 +354,10 @@ static void funct_serial_mode(char *argres, int rw)
 
 }
 
-
 static void funct_objsinfo(char *argres, int rw)
 {
     GetObjectsInfo(argres);
 }
-
 
 static void funct_exec(char *argres, int rw)
 {
@@ -373,53 +367,27 @@ static void funct_exec(char *argres, int rw)
         snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"EXECUTED\"");
 }
 
-static const char *dirpath = "/data/";
-
 static void funct_file_list(char *argres, int rw)
 {
-
-    char entrypath[FILE_PATH_MAX];
-    char entrysize[16];
-    const char *entrytype = "file";
-    struct dirent *entry;
-    struct stat entry_stat;
-    DIR *dir = opendir(dirpath);
-    const size_t dirpath_len = strlen(dirpath);
-    strlcpy(entrypath, dirpath, sizeof(entrypath));
-
-    if (!dir)
-    {
-        ESP_LOGE("FILE_API", "Failed to stat dir : %s", dirpath);
-        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:DIR_NOT_FOUND\"");
-        return;
-    }
-
-    struct jWriteControl jwc;
-    jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_ARRAY, JW_COMPACT);
-    while ((entry = readdir(dir)) != NULL)
-    {
-        strlcpy(entrypath + dirpath_len, entry->d_name, sizeof(entrypath) - dirpath_len);
-        entrytype = (entry->d_type == DT_DIR ? "directory" : "file");
-        if (stat(entrypath, &entry_stat) == -1)
-        {
-            ESP_LOGE("FILE_API", "Failed to stat %s : %s", entrytype, entry->d_name);
-            continue;
-        }
-
-        jwArr_object(&jwc);
-        jwObj_raw(&jwc, "sel", "false");
-        jwObj_string(&jwc, "name", (char*) entry->d_name);
-        jwObj_int(&jwc, "size", entry_stat.st_size);
-        jwEnd(&jwc);
-    }
-    jwClose(&jwc);
-
+    FileListHandler(argres, rw, "/data/");
 }
 
 static void funct_file_block(char *argres, int rw)
 {
-FileBlockHandler(argres, rw);
+    FileBlockHandler(argres, rw, "/data/");
 }
+
+#if CONFIG_SDCARD_ENABLE
+static void funct_sd_list(char *argres, int rw)
+{
+    FileListHandler(argres, rw, "/sdcard/");
+}
+
+static void funct_sd_block(char *argres, int rw)
+{
+    FileBlockHandler(argres, rw, "/sdcard/");
+}
+#endif
 
 const int hw_rev = CONFIG_BOARD_HARDWARE_REVISION;
 const bool VAR_TRUE = true;
@@ -428,7 +396,7 @@ const bool VAR_FALSE = false;
 const rest_var_t SystemVariables[] =
         {
 
-                { 0, "exec", &funct_exec, VAR_FUNCT, RW, 0, 0 },
+        { 0, "exec", &funct_exec, VAR_FUNCT, RW, 0, 0 },
                 { 0, "time", &funct_time, VAR_FUNCT, R, 0, 0 },
                 { 0, "uptime", &funct_uptime, VAR_FUNCT, R, 0, 0 },
                 { 0, "free_ram", &funct_fram, VAR_FUNCT, R, 0, 0 },
@@ -442,13 +410,11 @@ const rest_var_t SystemVariables[] =
                 { 0, "hw_rev", ((int*) &hw_rev), VAR_INT, R, 1, 1024 },
                 //{ 0, "hw_opt", CONFIG_BOARD_HARDWARE_OPTION, VAR_STRING, R, 1, 256 },
 
-
                 { 0, "net_bios_name", &SysConfig.NetBIOSName, VAR_STRING, RW, 3, 31 },
                 { 0, "sys_name", &SysConfig.SysName, VAR_STRING, RW, 3, 31 },
                 { 0, "sys_pass", &SysConfig.SysPass, VAR_PASS, RW, 3, 31 },
                 { 0, "primary_color", CONFIG_WEBGUIAPP_ACCENT_COLOR, VAR_STRING, RW, 3, 31 },
                 { 0, "dark_theme", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
-
 
                 { 0, "ota_url", &SysConfig.OTAURL, VAR_STRING, RW, 3, 128 },
                 { 0, "ota_auto_int", &SysConfig.OTAAutoInt, VAR_INT, RW, 0, 65535 },
@@ -540,7 +506,7 @@ const rest_var_t SystemVariables[] =
                 { 0, "wifi_scan_res", &funct_wifiscanres, VAR_FUNCT, R, 0, 0 },
                 { 0, "wifi_level", &funct_wifi_level, VAR_FUNCT, R, 0, 0 },
 
-                #endif
+#endif
 
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
                 { 0, "gsm_enab", &SysConfig.gsmSettings.Flags1.bIsGSMEnabled, VAR_BOOL, RW, 0, 1 },
@@ -566,7 +532,7 @@ const rest_var_t SystemVariables[] =
                 { 0, "gsm_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
                 #else
                 { 0, "gsm_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
-#endif
+                #endif
 
 #ifdef CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
                 { 0, "serial_enab", &SysConfig.serialSettings.Flags.IsSerialEnabled, VAR_BOOL, RW, 0, 1 },
@@ -577,8 +543,7 @@ const rest_var_t SystemVariables[] =
                 { 0, "serial_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
 #else
                 { 0, "serial_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
-#endif
-
+                #endif
 
 #ifdef CONFIG_WEBGUIAPP_LORAWAN_ENABLE
                 { 0, "lora_enab", &SysConfig.lorawanSettings.Flags1.bIsLoRaWANEnabled, VAR_BOOL, RW, 0, 1 },
@@ -590,12 +555,7 @@ const rest_var_t SystemVariables[] =
 
 #else
                 { 0, "lora_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
-#endif
-
-
-
-
-
+                #endif
 
 #ifdef CONFIG_WEBGUIAPP_MBTCP_ENABLED
                 { 0, "mbtcp_enab", &SysConfig.modbusSettings.IsModbusTCPEnabled, VAR_BOOL, RW, 0, 1 },
@@ -603,15 +563,22 @@ const rest_var_t SystemVariables[] =
                 { 0, "mbtcp_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
 #else
                 { 0, "mbtcp_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
-#endif
+                #endif
                 { 0, "cronrecs", &funct_cronrecs, VAR_FUNCT, RW, 0, 0 },
                 { 0, "objsinfo", &funct_objsinfo, VAR_FUNCT, R, 0, 0 },
 
                 { 0, "file_list", &funct_file_list, VAR_FUNCT, R, 0, 0 },
                 { 0, "file_block", &funct_file_block, VAR_FUNCT, R, 0, 0 },
+#if CONFIG_SDCARD_ENABLE
+                { 0, "sd_list", &funct_sd_list, VAR_FUNCT, R, 0, 0 },
+                { 0, "sd_block", &funct_sd_block, VAR_FUNCT, R, 0, 0 },
+                { 0, "sd_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 }
+#else
+                { 0, "sd_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
+#endif
+
 
         };
-
 
 esp_err_t SetConfVar(char *name, char *val, rest_var_types *tp)
 {

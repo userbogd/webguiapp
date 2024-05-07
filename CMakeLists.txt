@@ -25,6 +25,7 @@ idf_component_register(
     	 "src/MQTT.c"
     	 "src/CronTimers.c"
     	 "src/SerialPort.c"
+    	  src/sdcard.c
     	  src/FileBlockHandler.c
     	  src/OTA.c
     	  src/RestApiHandler.c
@@ -45,6 +46,7 @@ idf_component_register(
     			   
     REQUIRES nvs_flash 
     		 spiffs
+    		 fatfs
     		 esp_http_server
     		 mbedtls
     		 lwip

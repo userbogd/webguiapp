@@ -111,6 +111,7 @@ typedef struct
 }UART_DATA_SEND_STRUCT;
 
 void InitSerialPort(void);
+void InitSysSDCard();
 esp_err_t TransmitSerialPort(char *data, int ln);
 
 esp_err_t GetConfVar(char* name, char* val, rest_var_types *tp);

@@ -45,8 +45,8 @@
 
 /* Max length a file path can have on storage */
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
-#define MAX_FILE_SIZE   (1000*1024) // 200 KB
-#define MAX_FILE_SIZE_STR "1MB"
+#define MAX_FILE_SIZE   (100*1000*1024) // 200 KB
+#define MAX_FILE_SIZE_STR "100MB"
 
 /* Scratch buffer size */
 #define SCRATCH_BUFSIZE  EXPECTED_MAX_DATA_SIZE
@@ -109,6 +109,7 @@ esp_err_t upload_post_handler(httpd_req_t *req);
 esp_err_t delete_post_handler(httpd_req_t *req);
 
 esp_err_t ParseBlockDataObject(char *argres, blockdata_transaction_t *ft);
-void FileBlockHandler(char *argres, int rw);
+void FileBlockHandler(char *argres, int rw, const char* path);
+void FileListHandler(char *argres, int rw, const char* path);
 
 #endif /* COMPONENTS_WEB_GUI_APPLICATION_INCLUDE_HTTPSERVER_H_ */

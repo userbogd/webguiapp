@@ -42,7 +42,6 @@
 #define DELETE_ORERATION 2
 #define WRITE_ORERATION 3
 
-static const char *dirpath = "/data/";
 
 static blockdata_transaction_t FileTransaction = {
         .opertype = 0
@@ -78,9 +77,9 @@ esp_err_t ParseBlockDataObject(char *argres, blockdata_transaction_t *ft)
     if (result.elements == 1)
     {
         ft->parts = atoi((char*) result.pValue);
-        if (ft->parts < 0 || ft->parts > 500)
+        if (ft->parts < 0 || ft->parts > 20000)
         {
-            snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:'parts' value not in [0...500]\"");
+            snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:'parts' value not in [0...20000]\"");
             return ESP_ERR_INVALID_ARG;
         }
     }
@@ -140,7 +139,7 @@ esp_err_t ParseBlockDataObject(char *argres, blockdata_transaction_t *ft)
 
 }
 
-void FileBlockHandler(char *argres, int rw)
+void FileBlockHandler(char *argres, int rw, const char* path)
 {
 
     if (ParseBlockDataObject(argres, &FileTransaction) != ESP_OK)
@@ -155,7 +154,7 @@ void FileBlockHandler(char *argres, int rw)
     else if (FileTransaction.part == (FileTransaction.parts - 1))
         FileTransaction.operphase = 2;      //Last block of multipart data (close file)
 
-    strcpy(FileTransaction.filepath, dirpath);
+    strcpy(FileTransaction.filepath, path);
     strcat(FileTransaction.filepath, FileTransaction.mem_object);
 
     if (FileTransaction.operphase == 1 || FileTransaction.operphase == 3)
@@ -297,3 +296,43 @@ void FileBlockHandler(char *argres, int rw)
     }
 
 }
+
+void FileListHandler(char *argres, int rw, const char* path)
+{
+    char entrypath[FILE_PATH_MAX];
+    char entrysize[16];
+    const char *entrytype = "file";
+    struct dirent *entry;
+    struct stat entry_stat;
+    DIR *dir = opendir(path);
+    const size_t dirpath_len = strlen(path);
+    strlcpy(entrypath, path, sizeof(entrypath));
+
+    if (!dir)
+    {
+        ESP_LOGE("FILE_API", "Failed to stat dir : %s", path);
+        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:DIR_NOT_FOUND\"");
+        return;
+    }
+
+    struct jWriteControl jwc;
+    jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_ARRAY, JW_COMPACT);
+    while ((entry = readdir(dir)) != NULL)
+    {
+        strlcpy(entrypath + dirpath_len, entry->d_name, sizeof(entrypath) - dirpath_len);
+        entrytype = (entry->d_type == DT_DIR ? "directory" : "file");
+        if (stat(entrypath, &entry_stat) == -1)
+        {
+            ESP_LOGE("FILE_API", "Failed to stat %s : %s", entrytype, entry->d_name);
+            continue;
+        }
+
+        jwArr_object(&jwc);
+        jwObj_raw(&jwc, "sel", "false");
+        jwObj_string(&jwc, "name", (char*) entry->d_name);
+        jwObj_int(&jwc, "size", entry_stat.st_size);
+        jwEnd(&jwc);
+    }
+    jwClose(&jwc);
+}
+

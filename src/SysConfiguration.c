@@ -99,6 +99,10 @@ esp_err_t WebGuiAppInit(void)
 #if CONFIG_WEBGUIAPP_I2C_ENABLE
     InitSysI2C();
 #endif
+#if CONFIG_SDCARD_ENABLE
+    InitSysSDCard();
+#endif
+
 
     esp_err_t err = nvs_flash_init();
     ESP_ERROR_CHECK(esp_netif_init());
