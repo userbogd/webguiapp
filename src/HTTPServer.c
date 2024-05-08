@@ -57,19 +57,24 @@ void regHTTPUserAppHandlers(char *url,
 
 }
 
+#define BASIC_LOGIN_LENGTH 31
+#define BASIC_PASS_LENGTH 31
+#define BASIC_DECODED_LENGTH (BASIC_LOGIN_LENGTH + BASIC_PASS_LENGTH + 1 + 1)
+#define BASIC_ENCODED_LENGTH (BASIC_DECODED_LENGTH * 4 / 3)
+
 static esp_err_t CheckAuth(httpd_req_t *req)
 {
-    unsigned char pass[18] = { 0 }; //max length of login:password decoded string
-    unsigned char inp[31];  //max length of login:password coded string plus Basic
+    unsigned char pass[BASIC_DECODED_LENGTH] = { 0 }; //max length of login:password decoded string
+    unsigned char inp[BASIC_ENCODED_LENGTH];  //max length of login:password coded string plus Basic
     const char keyword1[] = "Basic ";
     const int keyword1len = sizeof(keyword1) - 1;
-    if (httpd_req_get_hdr_value_len(req, "Authorization") > 31)
+    if (httpd_req_get_hdr_value_len(req, "Authorization") > BASIC_ENCODED_LENGTH)
     {
         httpd_resp_set_hdr(req, "Connection", "close");
         httpd_resp_send_err(req, HTTPD_431_REQ_HDR_FIELDS_TOO_LARGE, "Authorization field value is too large");
         return ESP_FAIL;
     }
-    httpd_req_get_hdr_value_str(req, "Authorization", (char*) inp, 31);
+    httpd_req_get_hdr_value_str(req, "Authorization", (char*) inp, BASIC_ENCODED_LENGTH);
     unsigned char *pt = memmem(inp, sizeof(inp), keyword1, keyword1len);
     if (pt)
     {

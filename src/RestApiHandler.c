@@ -369,12 +369,20 @@ static void funct_exec(char *argres, int rw)
 
 static void funct_file_list(char *argres, int rw)
 {
+#if CONFIG_SDCARD_ENABLE
+    FileListHandler(argres, rw, "/sdcard/");
+#else
     FileListHandler(argres, rw, "/data/");
+#endif
 }
 
 static void funct_file_block(char *argres, int rw)
 {
+#if CONFIG_SDCARD_ENABLE
+    FileBlockHandler(argres, rw, "/sdcard/");
+#else
     FileBlockHandler(argres, rw, "/data/");
+#endif
 }
 
 #if CONFIG_SDCARD_ENABLE
