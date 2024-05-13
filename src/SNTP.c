@@ -143,6 +143,13 @@ void SetSystemTime(struct tm *time, const char* source)
     TimeObtainHandler(&now);
 }
 
+void SetSystemTimeVal(struct timeval *tv, const char* source)
+{
+    ESP_LOGI("SNTP","Setting time: %d from the source %s", (int)(tv->tv_sec), source);
+    settimeofday(tv, NULL);
+    TimeObtainHandler(tv);
+}
+
 void SecondTickSystem(void *param)
 {
     ++UpTime;

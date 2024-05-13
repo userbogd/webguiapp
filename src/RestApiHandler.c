@@ -106,6 +106,20 @@ static void funct_time(char *argres, int rw)
     snprintf(argres, VAR_MAX_VALUE_LENGTH, "%d", (int) now);
 }
 
+static void funct_time_set(char *argres, int rw)
+{
+    time_t unix = atoi(argres);
+    if (unix == 0)
+    {
+        snprintf(argres, VAR_MAX_VALUE_LENGTH, "%s", "\"ERROR_UNIX_TIME_NULL\"");
+        return;
+    }
+    struct timeval tv;
+    tv.tv_sec = unix;
+    SetSystemTimeVal(&tv, "Time set from user API");
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "%s", "\"TIME_SET_OK\"");
+}
+
 static void funct_uptime(char *argres, int rw)
 {
     snprintf(argres, VAR_MAX_VALUE_LENGTH, "%d", (int) GetUpTime());
@@ -406,6 +420,7 @@ const rest_var_t SystemVariables[] =
 
         { 0, "exec", &funct_exec, VAR_FUNCT, RW, 0, 0 },
                 { 0, "time", &funct_time, VAR_FUNCT, R, 0, 0 },
+                { 0, "time_set", &funct_time_set, VAR_FUNCT, RW, 0, 0 },
                 { 0, "uptime", &funct_uptime, VAR_FUNCT, R, 0, 0 },
                 { 0, "free_ram", &funct_fram, VAR_FUNCT, R, 0, 0 },
                 { 0, "free_ram_min", &funct_fram_min, VAR_FUNCT, R, 0, 0 },
@@ -577,14 +592,13 @@ const rest_var_t SystemVariables[] =
 
                 { 0, "file_list", &funct_file_list, VAR_FUNCT, R, 0, 0 },
                 { 0, "file_block", &funct_file_block, VAR_FUNCT, R, 0, 0 },
-#if CONFIG_SDCARD_ENABLE
+                #if CONFIG_SDCARD_ENABLE
                 { 0, "sd_list", &funct_sd_list, VAR_FUNCT, R, 0, 0 },
                 { 0, "sd_block", &funct_sd_block, VAR_FUNCT, R, 0, 0 },
                 { 0, "sd_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 }
 #else
                 { 0, "sd_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
-#endif
-
+        #endif
 
         };
 

@@ -103,7 +103,6 @@ esp_err_t WebGuiAppInit(void)
     InitSysSDCard();
 #endif
 
-
     esp_err_t err = nvs_flash_init();
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -161,7 +160,8 @@ esp_err_t WebGuiAppInit(void)
     /*Start services depends on client connection*/
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE || CONFIG_WEBGUIAPP_ETHERNET_ENABLE || CONFIG_WEBGUIAPP_WIFI_ENABLE
     ESP_ERROR_CHECK(start_file_server());
-    StartTimeGet();
+    if (GetSysConf()->sntpClient.Flags1.bIsGlobalEnabled)
+        StartTimeGet();
     //regTimeSyncCallback(&TimeObtainHandler);
     //mDNSServiceStart();
 
@@ -177,7 +177,6 @@ esp_err_t WebGuiAppInit(void)
 #if CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
     InitSerialPort();
 #endif
-
 
     return ESP_OK;
 }
@@ -253,7 +252,7 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
 
     UINT32_VAL d;
     GetChipId((uint8_t*) d.v);
-    snprintf(Conf->SN, 11, "%010u", (unsigned int)swap(d.Val));
+    snprintf(Conf->SN, 11, "%010u", (unsigned int) swap(d.Val));
 
     Conf->ColorSheme = CONFIG_WEBGUIAPP_DEFAULT_COLOR_SCHEME;
 
@@ -371,8 +370,6 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
     strcat(Conf->mqttStation[0].ClientID, "-");
     strcat(Conf->mqttStation[0].ClientID, Conf->ID);
 
-
-
     memcpy(Conf->mqttStation[0].UserName, CONFIG_WEBGUIAPP_MQTT_USERNAME,
            sizeof(CONFIG_WEBGUIAPP_MQTT_USERNAME));
     memcpy(Conf->mqttStation[0].UserPass, CONFIG_WEBGUIAPP_MQTT_PASSWORD,
@@ -392,7 +389,6 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
     strcat(Conf->mqttStation[1].ClientID, CONFIG_WEBGUIAPP_MQTT_CLIENT_ID_2);
     strcat(Conf->mqttStation[1].ClientID, "-");
     strcat(Conf->mqttStation[1].ClientID, Conf->ID);
-
 
     memcpy(Conf->mqttStation[1].UserName, CONFIG_WEBGUIAPP_MQTT_USERNAME, sizeof(CONFIG_WEBGUIAPP_MQTT_USERNAME));
     memcpy(Conf->mqttStation[1].UserPass, CONFIG_WEBGUIAPP_MQTT_PASSWORD, sizeof(CONFIG_WEBGUIAPP_MQTT_PASSWORD));
@@ -440,9 +436,9 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
 #endif
     Conf->modbusSettings.ModbusTCPPort = CONFIG_WEBGUIAPP_MBTCP_SERVER_PORT;
 #endif
-    for (int i = 0; i < CONFIG_WEBGUIAPP_CRON_NUMBER; i++ )
+    for (int i = 0; i < CONFIG_WEBGUIAPP_CRON_NUMBER; i++)
     {
-        Conf->Timers[i].num = i+1;
+        Conf->Timers[i].num = i + 1;
         Conf->Timers[i].del = true;
         Conf->Timers[i].enab = false;
         Conf->Timers[i].prev = false;
@@ -578,7 +574,7 @@ void DelayedRestartTask(void *pvParameter)
 void DelayedRestart(void)
 {
     xTaskCreate(DelayedRestartTask, "RestartTask", 1024 * 4, (void*) 0, 3,
-                NULL);
+    NULL);
 }
 
 bool GetUserAppNeedReset(void)
