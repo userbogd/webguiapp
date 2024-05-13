@@ -75,4 +75,6 @@ void TimeObtainHandler(struct timeval *tm);
  */
 void custom_cron_execute(int obj, int act);
 
+void SetSunTimes(uint32_t t);
+
 #endif /* COMPONENTS_WEBGUIAPP_INCLUDE_CRONTIMERS_H_ */
