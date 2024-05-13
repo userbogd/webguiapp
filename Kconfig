@@ -180,7 +180,14 @@ menu "WebGUIApp"
 		endif
 	endmenu       		
         		
-	
+	menu "ASTRO timer settings"
+		config WEBGUIAPP_ASTRO_ENABLE
+		bool "Enabled ASTRO relay timer"
+		default n
+			help
+				Include ASTRO timer functionality into firmware
+	endmenu
+
 	menu "SPI settings"
 		config WEBGUIAPP_SPI_ENABLE
 		bool "Enabled SPI interface"
