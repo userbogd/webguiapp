@@ -75,7 +75,9 @@ typedef struct
 
 typedef struct
 {
-
+    float lat;
+    float lon;
+    astro_timer_t timers[CONFIG_WEBGUIAPP_CRON_NUMBER]
 
 } astro_handle_t;
 
