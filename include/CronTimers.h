@@ -65,13 +65,19 @@ typedef struct
 
     bool rise; /*!<If event is sunrise*/
     bool sensor_enab; /*!< Enable light sensor handle */
-    double sensor_angle; /*!<Sun angle start sensor checking*/
-    double main_angle;/*!<Sun angle unconditional event issue*/
+    float sensor_angle; /*!<Sun angle start sensor checking*/
+    float main_angle;/*!<Sun angle unconditional event issue*/
     int sensor_time;
     int main_time;
 
     char exec[TIMER_EXECSTRING_LENGTH]; /*!< Cron command string */
 } astro_timer_t;
+
+typedef struct
+{
+
+
+} astro_handle_t;
 
 esp_err_t InitCronSheduler();
 esp_err_t ReloadCronSheduler();

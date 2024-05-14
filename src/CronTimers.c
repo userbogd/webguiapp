@@ -165,11 +165,11 @@ esp_err_t ReloadCronSheduler()
 static uint16_t srTime = 0;
 static uint16_t ssTime = 0;
 
-static double Lat, Lon, Ang;
+static float Lat, Lon, Ang;
 
 
 
-static double GetSunEvent(uint8_t event, uint16_t day);
+static float GetSunEvent(uint8_t event, uint16_t day);
 
 uint16_t NumberDayFromUnix(uint32_t t)
 {
@@ -221,15 +221,15 @@ uint16_t GetSunset(void)
 }
 
 
-static double GetSunEvent(uint8_t event, uint16_t day)
+static float GetSunEvent(uint8_t event, uint16_t day)
 {
-  double lngHour, t, M, L, RA, sinDec, cosDec, cosH, H, T, UT;
-  double Lquadrant, RAquadrant;
-  double zen;
+  float lngHour, t, M, L, RA, sinDec, cosDec, cosH, H, T, UT;
+  float Lquadrant, RAquadrant;
+  float zen;
   if (SUN_ANG == 0)
-    zen = zenith + (double) SUN_ANG; //sunrise/set
+    zen = zenith + (float) SUN_ANG; //sunrise/set
   else
-    zen = 90.0 + (double) SUN_ANG; //twilight
+    zen = 90.0 + (float) SUN_ANG; //twilight
   lngHour = LON / 15;
   if (event == 0)
     t = day + ((6 - lngHour) / 24);
