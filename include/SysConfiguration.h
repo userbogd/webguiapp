@@ -235,7 +235,7 @@ typedef struct
           cron_timer_t Timers[CONFIG_WEBGUIAPP_CRON_NUMBER];
 
 #ifdef CONFIG_WEBGUIAPP_ASTRO_ENABLE
-
+          astro_handle_t Astro;
 #endif
 
     } SYS_CONFIG;

@@ -311,51 +311,14 @@ static void funct_ota_newver(char *argres, int rw)
 //CRON implementation BEGIN
 static void funct_cronrecs(char *argres, int rw)
 {
-    if (rw)
-    {
-        struct jReadElement result;
-        cron_timer_t T = { 0 };
-        jRead(argres, "", &result);
-        if (result.dataType == JREAD_ARRAY)
-        {
-            int i;
-            for (i = 0; i < result.elements; i++)
-            {
-                T.num = jRead_int(argres, "[*{'num'", &i);
-                T.del = jRead_int(argres, "[*{'del'", &i);
-                T.enab = jRead_int(argres, "[*{'enab'", &i);
-                T.prev = jRead_int(argres, "[*{'prev'", &i);
-                jRead_string(argres, "[*{'name'", T.name, sizeof(T.name), &i);
-                jRead_string(argres, "[*{'cron'", T.cron, sizeof(T.cron), &i);
-                jRead_string(argres, "[*{'exec'", T.exec, sizeof(T.exec), &i);
-                memcpy(&GetSysConf()->Timers[T.num - 1], &T, sizeof(cron_timer_t));
-            }
-            ReloadCronSheduler();
-        }
-    }
-    else
-    {
-        struct jWriteControl jwc;
-        jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_ARRAY, JW_COMPACT);
-        for (int idx = 0; idx < CRON_TIMERS_NUMBER; idx++)
-        {
-            cron_timer_t T;
-            memcpy(&T, &GetSysConf()->Timers[idx], sizeof(cron_timer_t));
-            jwArr_object(&jwc);
-            jwObj_int(&jwc, "num", (unsigned int) T.num);
-            jwObj_int(&jwc, "del", (T.del) ? 1 : 0);
-            jwObj_int(&jwc, "enab", (T.enab) ? 1 : 0);
-            jwObj_int(&jwc, "prev", (T.prev) ? 1 : 0);
-            jwObj_string(&jwc, "name", T.name);
-            jwObj_string(&jwc, "cron", T.cron);
-            jwObj_string(&jwc, "exec", T.exec);
-            jwEnd(&jwc);
-        }
-        jwClose(&jwc);
-    }
+    CronRecordsInterface(argres, rw);
 }
-
 //CRON implementation END
+
+static void funct_astrorecs(char *argres, int rw)
+{
+    AstroRecordsInterface(argres, rw);
+}
 
 static void funct_serial_mode(char *argres, int rw)
 {
@@ -411,7 +374,6 @@ static void funct_sd_block(char *argres, int rw)
 }
 #endif
 
-
 static void funct_astro_test(char *argres, int rw)
 {
     ESP_LOGI("API", "Astro test executed");
@@ -419,7 +381,6 @@ static void funct_astro_test(char *argres, int rw)
     SetSunTimes(unix);
 
 }
-
 
 const int hw_rev = CONFIG_BOARD_HARDWARE_REVISION;
 const bool VAR_TRUE = true;
@@ -608,10 +569,11 @@ const rest_var_t SystemVariables[] =
                 { 0, "sd_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 }
 #else
                 { 0, "sd_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
-        #endif
+                #endif
 
                 { 0, "astro_test", &funct_astro_test, VAR_FUNCT, RW, 0, 0 },
-#ifdef CONFIG_WEBGUIAPP_ASTRO_ENABLE
+        #ifdef CONFIG_WEBGUIAPP_ASTRO_ENABLE
+                { 0, "astrorecs", &funct_astrorecs, VAR_FUNCT, RW, 0, 0 },
 
 #endif
 

@@ -25,7 +25,6 @@
 #include "string.h"
 #include <math.h>
 
-
 #define TAG "CRON_TIMER"
 
 static cron_job *JobsList[CONFIG_WEBGUIAPP_CRON_NUMBER];
@@ -152,6 +151,52 @@ esp_err_t ReloadCronSheduler()
     return ESP_OK;
 }
 
+void CronRecordsInterface(char *argres, int rw)
+{
+    if (rw)
+    {
+        struct jReadElement result;
+        cron_timer_t T = { 0 };
+        jRead(argres, "", &result);
+        if (result.dataType == JREAD_ARRAY)
+        {
+            int i;
+            for (i = 0; i < result.elements; i++)
+            {
+                T.num = jRead_int(argres, "[*{'num'", &i);
+                T.del = jRead_int(argres, "[*{'del'", &i);
+                T.enab = jRead_int(argres, "[*{'enab'", &i);
+                T.prev = jRead_int(argres, "[*{'prev'", &i);
+                jRead_string(argres, "[*{'name'", T.name, sizeof(T.name), &i);
+                jRead_string(argres, "[*{'cron'", T.cron, sizeof(T.cron), &i);
+                jRead_string(argres, "[*{'exec'", T.exec, sizeof(T.exec), &i);
+                memcpy(&GetSysConf()->Timers[T.num - 1], &T, sizeof(cron_timer_t));
+            }
+            ReloadCronSheduler();
+        }
+    }
+    else
+    {
+        struct jWriteControl jwc;
+        jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_ARRAY, JW_COMPACT);
+        for (int idx = 0; idx < CRON_TIMERS_NUMBER; idx++)
+        {
+            cron_timer_t T;
+            memcpy(&T, &GetSysConf()->Timers[idx], sizeof(cron_timer_t));
+            jwArr_object(&jwc);
+            jwObj_int(&jwc, "num", (unsigned int) T.num);
+            jwObj_int(&jwc, "del", (T.del) ? 1 : 0);
+            jwObj_int(&jwc, "enab", (T.enab) ? 1 : 0);
+            jwObj_int(&jwc, "prev", (T.prev) ? 1 : 0);
+            jwObj_string(&jwc, "name", T.name);
+            jwObj_string(&jwc, "cron", T.cron);
+            jwObj_string(&jwc, "exec", T.exec);
+            jwEnd(&jwc);
+        }
+        jwClose(&jwc);
+    }
+}
+
 /************************ ASTRO *******************************/
 
 #define C (3.14159265/180.0)
@@ -167,17 +212,15 @@ static uint16_t ssTime = 0;
 
 static float Lat, Lon, Ang;
 
-
-
-static float GetSunEvent(uint8_t event, uint16_t day);
+static int GetSunEvent(uint8_t event, uint32_t unixt, float ang);
 
 uint16_t NumberDayFromUnix(uint32_t t)
 {
-  time_t clock;
-  struct tm * tp;
-  clock = t;
-  tp = gmtime(&clock);
-  return ((uint16_t) tp->tm_yday) + 1;
+    time_t clock;
+    struct tm *tp;
+    clock = t;
+    tp = gmtime(&clock);
+    return ((uint16_t) tp->tm_yday) + 1;
 }
 
 void SetSunConditions(double lat, double lon, double ang)
@@ -189,110 +232,177 @@ void SetSunConditions(double lat, double lon, double ang)
 
 void SetSunTimes(uint32_t t)
 {
-  if (1)
-    {
-      double tt;
-      tt = GetSunEvent(0, NumberDayFromUnix(t));
-      if (tt > 0)
-        srTime = (uint16_t) (60.0 * tt);
-      else
+    double tt;
+    tt = GetSunEvent(0, t, SUN_ANG);
+    if (tt > 0)
+        srTime = tt;
+    else
         srTime = 0xffff; //no valid sinrise time
-      tt = GetSunEvent(1, NumberDayFromUnix(t));
-      if (tt > 0)
-        ssTime = (uint16_t) (60.0 * tt);
-      else
+    tt = GetSunEvent(1, t, SUN_ANG);
+    if (tt > 0)
+        ssTime = tt;
+    else
         ssTime = 0xffff; //no valid sunset time
-    }
 
-     ESP_LOGI("ASTRO", "Day number %d", NumberDayFromUnix(t));
-     ESP_LOGI("ASTRO", "Sanrise %dh %dm", srTime/60 + 2, srTime - (srTime/60 * 60));
-     ESP_LOGI("ASTRO", "Sanset %dh %dm", ssTime/60 + 2 , ssTime - (ssTime/60 * 60));
+    ESP_LOGI("ASTRO", "Day number %d", NumberDayFromUnix(t));
+    ESP_LOGI("ASTRO", "Sanrise %dh %dm", srTime / 60 + 2, srTime - (srTime / 60 * 60));
+    ESP_LOGI("ASTRO", "Sanset %dh %dm", ssTime / 60 + 2, ssTime - (ssTime / 60 * 60));
 
 }
 
 uint16_t GetSunrise(void)
 {
-  return srTime;
+    return srTime;
 }
 
 uint16_t GetSunset(void)
 {
-  return ssTime;
+    return ssTime;
 }
 
-
-static float GetSunEvent(uint8_t event, uint16_t day)
+static int GetSunEvent(uint8_t event, uint32_t unixt, float ang)
 {
-  float lngHour, t, M, L, RA, sinDec, cosDec, cosH, H, T, UT;
-  float Lquadrant, RAquadrant;
-  float zen;
-  if (SUN_ANG == 0)
-    zen = zenith + (float) SUN_ANG; //sunrise/set
-  else
-    zen = 90.0 + (float) SUN_ANG; //twilight
-  lngHour = LON / 15;
-  if (event == 0)
-    t = day + ((6 - lngHour) / 24);
-  else
-    t = day + ((18 - lngHour) / 24);
+    float lngHour, t, M, L, RA, sinDec, cosDec, cosH, H, T, UT;
+    float Lquadrant, RAquadrant;
+    float zen;
+    int day = NumberDayFromUnix(unixt);
+    if (ang == 0)
+        zen = zenith + (float) ang; //sunrise/set
+    else
+        zen = 90.0 + (float) ang; //twilight
+    lngHour = LON / 15;
+    if (event == 0)
+        t = day + ((6 - lngHour) / 24);
+    else
+        t = day + ((18 - lngHour) / 24);
 
-  M = (0.9856 * t) - 3.289;
-  L = M + (1.916 * sin(M * C)) + (0.020 * sin(2 * M * C)) + 282.634;
-  if (L > 360)
+    M = (0.9856 * t) - 3.289;
+    L = M + (1.916 * sin(M * C)) + (0.020 * sin(2 * M * C)) + 282.634;
+    if (L > 360)
     {
-      L = L - 360;
+        L = L - 360;
     }
-  else if (L < 0)
+    else if (L < 0)
     {
-      L = L + 360;
-    }
-
-  RA = B * atan(0.91764 * tan(L * C));
-  if (RA > 360)
-    {
-      RA = RA - 360;
-    }
-  else if (RA < 0)
-    {
-      RA = RA + 360;
+        L = L + 360;
     }
 
-  Lquadrant = (floor(L / 90)) * 90;
-  RAquadrant = (floor(RA / 90)) * 90;
-  RA = RA + (Lquadrant - RAquadrant);
-  RA = RA / 15;
-  sinDec = 0.39782 * sin(L * C);
-  cosDec = cos(asin(sinDec));
-  cosH = (cos(zen * C) - (sinDec * sin(LAT * C))) / (cosDec * cos(LAT * C));
+    RA = B * atan(0.91764 * tan(L * C));
+    if (RA > 360)
+    {
+        RA = RA - 360;
+    }
+    else if (RA < 0)
+    {
+        RA = RA + 360;
+    }
 
-  if (event == 0)
+    Lquadrant = (floor(L / 90)) * 90;
+    RAquadrant = (floor(RA / 90)) * 90;
+    RA = RA + (Lquadrant - RAquadrant);
+    RA = RA / 15;
+    sinDec = 0.39782 * sin(L * C);
+    cosDec = cos(asin(sinDec));
+    cosH = (cos(zen * C) - (sinDec * sin(LAT * C))) / (cosDec * cos(LAT * C));
+
+    if (event == 0)
     { //rise
-      if (cosH > 1)
-        return -1;
-      H = 360 - B * (acos(cosH));
+        if (cosH > 1)
+            return -1;
+        H = 360 - B * (acos(cosH));
     }
-  else
+    else
     { //set
-      if (cosH < -1)
-        return -1;
-      H = B * (acos(cosH));
+        if (cosH < -1)
+            return -1;
+        H = B * (acos(cosH));
     }
 
-  H = H / 15;
-  T = H + RA - (0.06571 * t) - 6.622;
+    H = H / 15;
+    T = H + RA - (0.06571 * t) - 6.622;
 
-  UT = T - lngHour;
+    UT = T - lngHour;
 
-  if (UT >= 24)
+    if (UT >= 24)
     {
-      UT = UT - 24;
+        UT = UT - 24;
     }
-  else if (UT < 0)
+    else if (UT < 0)
     {
-      UT = UT + 24;
+        UT = UT + 24;
     }
-  return UT;
+    return (int) floor(UT * 60.0);
 }
 
+void AstroRecordsInterface(char *argres, int rw)
+{
+    if (rw)
+    {
+        struct jReadElement result;
+        struct jReadElement arr;
+        jRead(argres, "", &result);
+        if (result.dataType == JREAD_OBJECT)
+        {
+            GetSysConf()->Astro.lat = jRead_double(argres, "{'lat'", 0);
+            GetSysConf()->Astro.lon = jRead_double(argres, "{'lon'", 0);
 
+            jRead(argres, "{'records'", &arr);
+            char *asto_rec = (char*) arr.pValue;
+            for (int i = 0; i < arr.elements; i++)
+            {
+                astro_timer_t T;
+                T.num = jRead_int(asto_rec, "[*{'num'", &i);
+                T.del = jRead_int(asto_rec, "[*{'del'", &i);
+                T.enab = jRead_int(asto_rec, "[*{'enab'", &i);
+                T.rise = jRead_int(asto_rec, "[*{'rise'", &i);
+
+                T.sensor_enab = jRead_int(asto_rec, "[*{'sensor_enab'", &i);
+                T.sensor_angle = (float) jRead_double(asto_rec, "[*{'sensor_angle'", &i);
+                //T.sensor_time = jRead_int(asto_rec, "[*{'sensor_time'", &i);
+
+                T.main_angle = (float) jRead_double(asto_rec, "[*{'main_angle'", &i);
+                //T.main_time = jRead_int(asto_rec, "[*{'main_time'", &i);
+
+                jRead_string(asto_rec, "[*{'name'", T.name, sizeof(T.name), &i);
+                jRead_string(asto_rec, "[*{'exec'", T.exec, sizeof(T.exec), &i);
+
+                time_t now;
+                time(&now);
+                T.sensor_time = GetSunEvent((T.rise) ? 0 : 1, now, T.sensor_angle);
+                T.main_time = GetSunEvent((T.rise) ? 0 : 1, now, T.main_angle);
+                memcpy(&GetSysConf()->Astro.records[T.num - 1], &T, sizeof(astro_timer_t));
+            }
+        }
+    }
+
+    struct jWriteControl jwc;
+    jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_OBJECT, JW_COMPACT);
+    jwObj_double(&jwc, "lat", GetSysConf()->Astro.lat);
+    jwObj_double(&jwc, "lon", GetSysConf()->Astro.lon);
+    jwObj_array(&jwc, "records");
+    for (int idx = 0; idx < CRON_TIMERS_NUMBER; idx++)
+    {
+        astro_timer_t T;
+        memcpy(&T, &GetSysConf()->Astro.records[idx], sizeof(astro_timer_t));
+        jwArr_object(&jwc);
+        jwObj_int(&jwc, "num", (unsigned int) T.num);
+        jwObj_int(&jwc, "del", (T.del) ? 1 : 0);
+        jwObj_int(&jwc, "enab", (T.enab) ? 1 : 0);
+        jwObj_int(&jwc, "rise", (T.rise) ? 1 : 0);
+        jwObj_int(&jwc, "sensor_enab", (T.sensor_enab) ? 1 : 0);
+        jwObj_double(&jwc, "sensor_angle", (double) T.sensor_angle);
+        jwObj_int(&jwc, "sensor_time", T.sensor_time);
+
+        jwObj_double(&jwc, "main_angle", (double) T.main_angle);
+        jwObj_int(&jwc, "main_time", T.main_time);
+
+        jwObj_string(&jwc, "name", T.name);
+        jwObj_string(&jwc, "exec", T.exec);
+        jwEnd(&jwc);
+    }
+    jwEnd(&jwc);
+
+    jwClose(&jwc);
+
+}
 

@@ -447,6 +447,26 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
         strcpy(Conf->Timers[i].exec, "OBJECT,ACTION,ARGUMENTS");
 
     }
+
+#ifdef CONFIG_WEBGUIAPP_ASTRO_ENABLE
+    Conf->Astro.lat = 0.00;
+    Conf->Astro.lon = 0.00;
+    for (int i = 0; i < CONFIG_WEBGUIAPP_CRON_NUMBER; i++)
+    {
+        Conf->Astro.records[i].num = i + 1;
+        Conf-> Astro.records[i].del = true;
+        Conf-> Astro.records[i].enab = false;
+        Conf->Astro.records[i].rise = true;
+        Conf->Astro.records[i].sensor_enab = false;
+        Conf->Astro.records[i].sensor_angle = 3.00;
+        Conf->Astro.records[i].sensor_time = 0;
+        Conf->Astro.records[i].main_angle = 6.00;
+        Conf->Astro.records[i].main_time = 0;
+
+        strcpy(Conf->Astro.records[i].name, "Astro Name");
+        strcpy(Conf->Astro.records[i].exec, "OBJECT,ACTION,ARGUMENTS");
+    }
+#endif
 }
 
 esp_err_t ReadNVSSysConfig(SYS_CONFIG *SysConf)

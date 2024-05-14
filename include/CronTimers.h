@@ -77,7 +77,7 @@ typedef struct
 {
     float lat;
     float lon;
-    astro_timer_t timers[CONFIG_WEBGUIAPP_CRON_NUMBER]
+    astro_timer_t records[CONFIG_WEBGUIAPP_CRON_NUMBER]
 
 } astro_handle_t;
 
@@ -92,7 +92,8 @@ char* GetCronActionName(int idx);
 char* GetCronActAvail(int idx);
 
 void TimeObtainHandler(struct timeval *tm);
-
+void CronRecordsInterface(char *argres, int rw);
+void AstroRecordsInterface(char *argres, int rw);
 /**
  * \brief Handle all actions under all objects
  * \param obj  Index of the object
