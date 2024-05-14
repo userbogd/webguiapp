@@ -31,7 +31,6 @@ idf_component_register(
     	  src/RestApiHandler.c
     	  src/SysComm.c
     	  src/SysErr.c
-    	  src/AstroRelay.c
     	  ${lora_SRCS}
     	  ${gprs_SRCS}
     	  ${jreadwrite_SRCS}

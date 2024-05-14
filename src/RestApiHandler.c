@@ -611,6 +611,9 @@ const rest_var_t SystemVariables[] =
         #endif
 
                 { 0, "astro_test", &funct_astro_test, VAR_FUNCT, RW, 0, 0 },
+#ifdef CONFIG_WEBGUIAPP_ASTRO_ENABLE
+
+#endif
 
         };
 
