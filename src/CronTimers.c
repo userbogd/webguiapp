@@ -270,7 +270,7 @@ static int GetSunEvent(uint8_t event, uint32_t unixt, float ang)
         zen = zenith + (float) ang; //sunrise/set
     else
         zen = 90.0 + (float) ang; //twilight
-    lngHour = LON / 15;
+    lngHour = GetSysConf()->Astro.lon / 15;
     if (event == 0)
         t = day + ((6 - lngHour) / 24);
     else
@@ -303,7 +303,7 @@ static int GetSunEvent(uint8_t event, uint32_t unixt, float ang)
     RA = RA / 15;
     sinDec = 0.39782 * sin(L * C);
     cosDec = cos(asin(sinDec));
-    cosH = (cos(zen * C) - (sinDec * sin(LAT * C))) / (cosDec * cos(LAT * C));
+    cosH = (cos(zen * C) - (sinDec * sin(GetSysConf()->Astro.lat * C))) / (cosDec * cos(GetSysConf()->Astro.lat * C));
 
     if (event == 0)
     { //rise
@@ -343,8 +343,8 @@ void AstroRecordsInterface(char *argres, int rw)
         jRead(argres, "", &result);
         if (result.dataType == JREAD_OBJECT)
         {
-            GetSysConf()->Astro.lat = jRead_double(argres, "{'lat'", 0);
-            GetSysConf()->Astro.lon = jRead_double(argres, "{'lon'", 0);
+            GetSysConf()->Astro.lat = (float)jRead_double(argres, "{'lat'", 0);
+            GetSysConf()->Astro.lon = (float)jRead_double(argres, "{'lon'", 0);
 
             jRead(argres, "{'records'", &arr);
             char *asto_rec = (char*) arr.pValue;
@@ -358,9 +358,8 @@ void AstroRecordsInterface(char *argres, int rw)
 
                 T.sensor_enab = jRead_int(asto_rec, "[*{'sensor_enab'", &i);
                 T.sensor_angle = (float) jRead_double(asto_rec, "[*{'sensor_angle'", &i);
-                //T.sensor_time = jRead_int(asto_rec, "[*{'sensor_time'", &i);
-
                 T.main_angle = (float) jRead_double(asto_rec, "[*{'main_angle'", &i);
+                //T.sensor_time = jRead_int(asto_rec, "[*{'sensor_time'", &i);
                 //T.main_time = jRead_int(asto_rec, "[*{'main_time'", &i);
 
                 jRead_string(asto_rec, "[*{'name'", T.name, sizeof(T.name), &i);
@@ -401,7 +400,6 @@ void AstroRecordsInterface(char *argres, int rw)
         jwEnd(&jwc);
     }
     jwEnd(&jwc);
-
     jwClose(&jwc);
 
 }
