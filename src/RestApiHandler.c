@@ -315,10 +315,6 @@ static void funct_cronrecs(char *argres, int rw)
 }
 //CRON implementation END
 
-static void funct_astrorecs(char *argres, int rw)
-{
-    AstroRecordsInterface(argres, rw);
-}
 
 static void funct_serial_mode(char *argres, int rw)
 {
@@ -382,6 +378,24 @@ static void funct_astro_test(char *argres, int rw)
 
 }
 
+static void funct_lat(char *argres, int rw)
+{
+    if(rw)
+    {
+        GetSysConf()->sntpClient.lat = atof(argres);
+    }
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "%f", GetSysConf()->sntpClient.lat);
+}
+
+static void funct_lon(char *argres, int rw)
+{
+    if(rw)
+    {
+        GetSysConf()->sntpClient.lon = atof(argres);
+    }
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "%f", GetSysConf()->sntpClient.lon);
+}
+
 const int hw_rev = CONFIG_BOARD_HARDWARE_REVISION;
 const bool VAR_TRUE = true;
 const bool VAR_FALSE = false;
@@ -431,6 +445,9 @@ const rest_var_t SystemVariables[] =
                 { 0, "sntp_serv2", &SysConfig.sntpClient.SntpServer2Adr, VAR_STRING, RW, 3, 32 },
                 { 0, "sntp_serv3", &SysConfig.sntpClient.SntpServer3Adr, VAR_STRING, RW, 3, 32 },
                 { 0, "sntp_enab", &SysConfig.sntpClient.Flags1.bIsGlobalEnabled, VAR_BOOL, RW, 0, 1 },
+
+                { 0, "lat", &funct_lat, VAR_FUNCT, RW, 0, 0 },
+                { 0, "lon", &funct_lon, VAR_FUNCT, RW, 0, 0 },
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
                 { 0, "mqtt_1_enab", &SysConfig.mqttStation[0].Flags1.bIsGlobalEnabled, VAR_BOOL, RW, 0, 1 },
@@ -572,10 +589,6 @@ const rest_var_t SystemVariables[] =
                 #endif
 
                 { 0, "astro_test", &funct_astro_test, VAR_FUNCT, RW, 0, 0 },
-        #ifdef CONFIG_WEBGUIAPP_ASTRO_ENABLE
-                { 0, "astrorecs", &funct_astrorecs, VAR_FUNCT, RW, 0, 0 },
-
-#endif
 
         };
 

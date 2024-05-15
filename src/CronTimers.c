@@ -24,11 +24,14 @@
 #include "webguiapp.h"
 #include "string.h"
 #include <math.h>
+#include <stdlib.h>
 
 #define TAG "CRON_TIMER"
 
 static cron_job *JobsList[CONFIG_WEBGUIAPP_CRON_NUMBER];
 static char cron_express_error[CRON_EXPRESS_MAX_LENGTH];
+
+static int GetSunEvent(uint8_t event, uint32_t unixt, float ang);
 
 char* GetCronError()
 {
@@ -167,34 +170,47 @@ void CronRecordsInterface(char *argres, int rw)
                 T.del = jRead_int(argres, "[*{'del'", &i);
                 T.enab = jRead_int(argres, "[*{'enab'", &i);
                 T.prev = jRead_int(argres, "[*{'prev'", &i);
+                T.type = jRead_int(argres, "[*{'type'", &i);
+                T.sun_angle = (float) jRead_double(argres, "[*{'sun_angle'", &i);
                 jRead_string(argres, "[*{'name'", T.name, sizeof(T.name), &i);
                 jRead_string(argres, "[*{'cron'", T.cron, sizeof(T.cron), &i);
                 jRead_string(argres, "[*{'exec'", T.exec, sizeof(T.exec), &i);
+
+                if (T.type > 0)
+                {
+                    time_t now;
+                    time(&now);
+                    int min = GetSunEvent((T.type == 1) ? 0 : 1, now, T.sun_angle);
+                    sprintf(T.cron, "0 %d %d * * *", min % 60, min / 60);
+                    //ESP_LOGI(TAG, "Set CRON to sun event with %dh %dm", min / 60, min % 60);
+                }
+
                 memcpy(&GetSysConf()->Timers[T.num - 1], &T, sizeof(cron_timer_t));
             }
             ReloadCronSheduler();
         }
     }
-    else
+
+    struct jWriteControl jwc;
+    jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_ARRAY, JW_COMPACT);
+    for (int idx = 0; idx < CRON_TIMERS_NUMBER; idx++)
     {
-        struct jWriteControl jwc;
-        jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_ARRAY, JW_COMPACT);
-        for (int idx = 0; idx < CRON_TIMERS_NUMBER; idx++)
-        {
-            cron_timer_t T;
-            memcpy(&T, &GetSysConf()->Timers[idx], sizeof(cron_timer_t));
-            jwArr_object(&jwc);
-            jwObj_int(&jwc, "num", (unsigned int) T.num);
-            jwObj_int(&jwc, "del", (T.del) ? 1 : 0);
-            jwObj_int(&jwc, "enab", (T.enab) ? 1 : 0);
-            jwObj_int(&jwc, "prev", (T.prev) ? 1 : 0);
-            jwObj_string(&jwc, "name", T.name);
-            jwObj_string(&jwc, "cron", T.cron);
-            jwObj_string(&jwc, "exec", T.exec);
-            jwEnd(&jwc);
-        }
-        jwClose(&jwc);
+        cron_timer_t T;
+        memcpy(&T, &GetSysConf()->Timers[idx], sizeof(cron_timer_t));
+        jwArr_object(&jwc);
+        jwObj_int(&jwc, "num", (unsigned int) T.num);
+        jwObj_int(&jwc, "del", (T.del) ? 1 : 0);
+        jwObj_int(&jwc, "enab", (T.enab) ? 1 : 0);
+        jwObj_int(&jwc, "prev", (T.prev) ? 1 : 0);
+        jwObj_int(&jwc, "type", (unsigned int) T.type);
+        jwObj_double(&jwc, "sun_angle", (double) T.sun_angle);
+        jwObj_string(&jwc, "name", T.name);
+        jwObj_string(&jwc, "cron", T.cron);
+        jwObj_string(&jwc, "exec", T.exec);
+        jwEnd(&jwc);
     }
+    jwClose(&jwc);
+
 }
 
 /************************ ASTRO *******************************/
@@ -270,7 +286,7 @@ static int GetSunEvent(uint8_t event, uint32_t unixt, float ang)
         zen = zenith + (float) ang; //sunrise/set
     else
         zen = 90.0 + (float) ang; //twilight
-    lngHour = GetSysConf()->Astro.lon / 15;
+    lngHour = GetSysConf()->sntpClient.lon / 15;
     if (event == 0)
         t = day + ((6 - lngHour) / 24);
     else
@@ -303,7 +319,8 @@ static int GetSunEvent(uint8_t event, uint32_t unixt, float ang)
     RA = RA / 15;
     sinDec = 0.39782 * sin(L * C);
     cosDec = cos(asin(sinDec));
-    cosH = (cos(zen * C) - (sinDec * sin(GetSysConf()->Astro.lat * C))) / (cosDec * cos(GetSysConf()->Astro.lat * C));
+    cosH = (cos(zen * C) - (sinDec * sin(GetSysConf()->sntpClient.lat * C)))
+            / (cosDec * cos(GetSysConf()->sntpClient.lat * C));
 
     if (event == 0)
     { //rise
@@ -336,71 +353,78 @@ static int GetSunEvent(uint8_t event, uint32_t unixt, float ang)
 
 void AstroRecordsInterface(char *argres, int rw)
 {
-    if (rw)
-    {
-        struct jReadElement result;
-        struct jReadElement arr;
-        jRead(argres, "", &result);
-        if (result.dataType == JREAD_OBJECT)
-        {
-            GetSysConf()->Astro.lat = (float)jRead_double(argres, "{'lat'", 0);
-            GetSysConf()->Astro.lon = (float)jRead_double(argres, "{'lon'", 0);
+    /*
+     if (rw)
+     {
+     struct jReadElement result;
+     struct jReadElement arr;
+     jRead(argres, "", &result);
+     if (result.dataType == JREAD_OBJECT)
+     {
+     GetSysConf()->Astro.lat = (float)jRead_double(argres, "{'lat'", 0);
+     GetSysConf()->Astro.lon = (float)jRead_double(argres, "{'lon'", 0);
 
-            jRead(argres, "{'records'", &arr);
-            char *asto_rec = (char*) arr.pValue;
-            for (int i = 0; i < arr.elements; i++)
-            {
-                astro_timer_t T;
-                T.num = jRead_int(asto_rec, "[*{'num'", &i);
-                T.del = jRead_int(asto_rec, "[*{'del'", &i);
-                T.enab = jRead_int(asto_rec, "[*{'enab'", &i);
-                T.rise = jRead_int(asto_rec, "[*{'rise'", &i);
+     jRead(argres, "{'records'", &arr);
+     char *asto_rec = (char*) arr.pValue;
+     for (int i = 0; i < arr.elements; i++)
+     {
+     astro_timer_t T;
+     T.num = jRead_int(asto_rec, "[*{'num'", &i);
+     T.del = jRead_int(asto_rec, "[*{'del'", &i);
+     T.enab = jRead_int(asto_rec, "[*{'enab'", &i);
+     T.rise = jRead_int(asto_rec, "[*{'rise'", &i);
 
-                T.sensor_enab = jRead_int(asto_rec, "[*{'sensor_enab'", &i);
-                T.sensor_angle = (float) jRead_double(asto_rec, "[*{'sensor_angle'", &i);
-                T.main_angle = (float) jRead_double(asto_rec, "[*{'main_angle'", &i);
-                //T.sensor_time = jRead_int(asto_rec, "[*{'sensor_time'", &i);
-                //T.main_time = jRead_int(asto_rec, "[*{'main_time'", &i);
+     T.sensor_enab = jRead_int(asto_rec, "[*{'sensor_enab'", &i);
+     T.sensor_angle = (float) jRead_double(asto_rec, "[*{'sensor_angle'", &i);
+     T.main_angle = (float) jRead_double(asto_rec, "[*{'main_angle'", &i);
+     //T.sensor_time = jRead_int(asto_rec, "[*{'sensor_time'", &i);
+     //T.main_time = jRead_int(asto_rec, "[*{'main_time'", &i);
 
-                jRead_string(asto_rec, "[*{'name'", T.name, sizeof(T.name), &i);
-                jRead_string(asto_rec, "[*{'exec'", T.exec, sizeof(T.exec), &i);
+     jRead_string(asto_rec, "[*{'name'", T.name, sizeof(T.name), &i);
+     jRead_string(asto_rec, "[*{'exec'", T.exec, sizeof(T.exec), &i);
 
-                time_t now;
-                time(&now);
-                T.sensor_time = GetSunEvent((T.rise) ? 0 : 1, now, T.sensor_angle);
-                T.main_time = GetSunEvent((T.rise) ? 0 : 1, now, T.main_angle);
-                memcpy(&GetSysConf()->Astro.records[T.num - 1], &T, sizeof(astro_timer_t));
-            }
-        }
-    }
+     time_t now;
+     time(&now);
+     T.sensor_time = GetSunEvent((T.rise) ? 0 : 1, now, T.sensor_angle);
+     T.main_time = GetSunEvent((T.rise) ? 0 : 1, now, T.main_angle);
+     memcpy(&GetSysConf()->Astro.records[T.num - 1], &T, sizeof(astro_timer_t));
+     }
+     }
+     }
 
-    struct jWriteControl jwc;
-    jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_OBJECT, JW_COMPACT);
-    jwObj_double(&jwc, "lat", GetSysConf()->Astro.lat);
-    jwObj_double(&jwc, "lon", GetSysConf()->Astro.lon);
-    jwObj_array(&jwc, "records");
-    for (int idx = 0; idx < CRON_TIMERS_NUMBER; idx++)
-    {
-        astro_timer_t T;
-        memcpy(&T, &GetSysConf()->Astro.records[idx], sizeof(astro_timer_t));
-        jwArr_object(&jwc);
-        jwObj_int(&jwc, "num", (unsigned int) T.num);
-        jwObj_int(&jwc, "del", (T.del) ? 1 : 0);
-        jwObj_int(&jwc, "enab", (T.enab) ? 1 : 0);
-        jwObj_int(&jwc, "rise", (T.rise) ? 1 : 0);
-        jwObj_int(&jwc, "sensor_enab", (T.sensor_enab) ? 1 : 0);
-        jwObj_double(&jwc, "sensor_angle", (double) T.sensor_angle);
-        jwObj_int(&jwc, "sensor_time", T.sensor_time);
+     struct jWriteControl jwc;
+     jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_OBJECT, JW_COMPACT);
+     jwObj_double(&jwc, "lat", GetSysConf()->Astro.lat);
+     jwObj_double(&jwc, "lon", GetSysConf()->Astro.lon);
+     jwObj_array(&jwc, "records");
+     for (int idx = 0; idx < CRON_TIMERS_NUMBER; idx++)
+     {
+     astro_timer_t T;
+     memcpy(&T, &GetSysConf()->Astro.records[idx], sizeof(astro_timer_t));
+     jwArr_object(&jwc);
+     jwObj_int(&jwc, "num", (unsigned int) T.num);
+     jwObj_int(&jwc, "del", (T.del) ? 1 : 0);
+     jwObj_int(&jwc, "enab", (T.enab) ? 1 : 0);
+     jwObj_int(&jwc, "rise", (T.rise) ? 1 : 0);
+     jwObj_int(&jwc, "sensor_enab", (T.sensor_enab) ? 1 : 0);
+     jwObj_double(&jwc, "sensor_angle", (double) T.sensor_angle);
+     jwObj_int(&jwc, "sensor_time", T.sensor_time);
 
-        jwObj_double(&jwc, "main_angle", (double) T.main_angle);
-        jwObj_int(&jwc, "main_time", T.main_time);
+     jwObj_double(&jwc, "main_angle", (double) T.main_angle);
+     jwObj_int(&jwc, "main_time", T.main_time);
 
-        jwObj_string(&jwc, "name", T.name);
-        jwObj_string(&jwc, "exec", T.exec);
-        jwEnd(&jwc);
-    }
-    jwEnd(&jwc);
-    jwClose(&jwc);
+     jwObj_string(&jwc, "name", T.name);
+     jwObj_string(&jwc, "exec", T.exec);
+     jwEnd(&jwc);
+     }
+     jwEnd(&jwc);
+     jwClose(&jwc);
+
+     }
+
+     void InitAstro()
+     {
+     */
 
 }
 

@@ -402,6 +402,8 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
            sizeof(CONFIG_WEBGUIAPP_SNTP_HOST_3));
     Conf->sntpClient.Flags1.bIsGlobalEnabled = CONFIG_WEBGUIAPP_SNTP_AUTOUPDATE_ENABLE;
     Conf->sntpClient.TimeZone = CONFIG_WEBGUIAPP_SNTP_TIMEZONE;
+    Conf->sntpClient.lat = 0.0;
+    Conf->sntpClient.lon = 0.0;
 
 #ifdef CONFIG_WEBGUIAPP_LORAWAN_ENABLE
     Conf->lorawanSettings.Flags1.bIsLoRaWANEnabled = true;
@@ -442,6 +444,8 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
         Conf->Timers[i].del = true;
         Conf->Timers[i].enab = false;
         Conf->Timers[i].prev = false;
+        Conf->Timers[i].type = 0;
+        Conf->Timers[i].sun_angle = 0;
         strcpy(Conf->Timers[i].name, "Timer Name");
         strcpy(Conf->Timers[i].cron, "* * * * * *");
         strcpy(Conf->Timers[i].exec, "OBJECT,ACTION,ARGUMENTS");
@@ -449,23 +453,7 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
     }
 
 #ifdef CONFIG_WEBGUIAPP_ASTRO_ENABLE
-    Conf->Astro.lat = 0.00;
-    Conf->Astro.lon = 0.00;
-    for (int i = 0; i < CONFIG_WEBGUIAPP_CRON_NUMBER; i++)
-    {
-        Conf->Astro.records[i].num = i + 1;
-        Conf-> Astro.records[i].del = true;
-        Conf-> Astro.records[i].enab = false;
-        Conf->Astro.records[i].rise = true;
-        Conf->Astro.records[i].sensor_enab = false;
-        Conf->Astro.records[i].sensor_angle = 3.00;
-        Conf->Astro.records[i].sensor_time = 0;
-        Conf->Astro.records[i].main_angle = 6.00;
-        Conf->Astro.records[i].main_time = 0;
 
-        strcpy(Conf->Astro.records[i].name, "Astro Name");
-        strcpy(Conf->Astro.records[i].exec, "OBJECT,ACTION,ARGUMENTS");
-    }
 #endif
 }
 

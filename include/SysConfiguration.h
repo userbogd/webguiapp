@@ -103,6 +103,9 @@ typedef struct
             {
                 bool bIsGlobalEnabled;
             } Flags1;
+            float lat;
+            float lon;
+
         } sntpClient;
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
@@ -233,10 +236,6 @@ typedef struct
 
 
           cron_timer_t Timers[CONFIG_WEBGUIAPP_CRON_NUMBER];
-
-#ifdef CONFIG_WEBGUIAPP_ASTRO_ENABLE
-          astro_handle_t Astro;
-#endif
 
     } SYS_CONFIG;
 

@@ -50,6 +50,8 @@ typedef struct
     bool del; /*!< Flag of non valid record, free for future overwrite */
     bool enab; /*!< Enable scheduler */
     bool prev; /*!< Enable to execute nearest in the past sheduled action */
+    int  type; /*!< Type: manual, sunrise, sunset,  more types... */
+    float sun_angle;/*!<Sun angle unconditional event issue*/
     char name[TIMER_NAME_LENGTH]; /*!< Human readable name of scheduler */
     char cron[TIMER_CRONSTRING_LENGTH]; /*!< Cron expression */
     char exec[TIMER_EXECSTRING_LENGTH]; /*!< Cron command string */
@@ -61,15 +63,11 @@ typedef struct
     int num; /*!< Index of sheduler */
     bool del; /*!< Flag of non valid record, free for future overwrite */
     bool enab; /*!< Enable scheduler */
+    bool prev; /*!< Enable to execute nearest in the past sheduled action */
+    int  type; /*!< Type: manual, sunrise, sunset,  more types... */
+    float sun_angle;/*!<Sun angle unconditional event issue*/
     char name[TIMER_NAME_LENGTH]; /*!< Human readable name of scheduler */
-
-    bool rise; /*!<If event is sunrise*/
-    bool sensor_enab; /*!< Enable light sensor handle */
-    float sensor_angle; /*!<Sun angle start sensor checking*/
-    float main_angle;/*!<Sun angle unconditional event issue*/
-    int sensor_time;
-    int main_time;
-
+    char cron[TIMER_CRONSTRING_LENGTH]; /*!< Cron expression */
     char exec[TIMER_EXECSTRING_LENGTH]; /*!< Cron command string */
 } astro_timer_t;
 
