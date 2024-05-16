@@ -131,8 +131,8 @@ void serial_RX_task(void *arg)
 
                             if (GetSysConf()->serialSettings.Flags.IsBridgeEnabled)
                             {
-                                ExternalServiceMQTTSend(rxbuf, buffered_size, 0);
-                                ExternalServiceMQTTSend(rxbuf, buffered_size, 1);
+                                ExternalServiceMQTTSend(EXTERNAL_SERVICE_NAME, rxbuf, buffered_size, 0);
+                                ExternalServiceMQTTSend(EXTERNAL_SERVICE_NAME, rxbuf, buffered_size, 1);
                             }
                             else
                                 ReceiveHandlerAPI();

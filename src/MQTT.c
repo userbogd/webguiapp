@@ -29,10 +29,6 @@
 #define TAG "MQTT"
 #define SERVICE_NAME "SYSTEM"          // Dedicated service name
 
-#define EXTERNAL_SERVICE_NAME "RS485"
-#define UPLINK_SUBTOPIC "UPLINK"        // Device publish to this topic
-#define DOWNLINK_SUBTOPIC "DWLINK"      // Device listen from this topic
-
 #define MQTT_DEBUG_MODE  CONFIG_WEBGUIAPP_MQTT_DEBUG_LEVEL
 
 #define MQTT_MESSAGE_BUFER_LENTH 10  //size of mqtt queue

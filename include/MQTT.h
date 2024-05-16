@@ -47,6 +47,10 @@ typedef int mqtt_app_err_t;
 #define API_FILE_EMPTY_ERR              15
 #define API_UNKNOWN_ERR                 16
 
+#define EXTERNAL_SERVICE_NAME "RS485"
+#define UPLINK_SUBTOPIC "UPLINK"        // Device publish to this topic
+#define DOWNLINK_SUBTOPIC "DWLINK"      // Device listen from this topic
+
 typedef struct
 {
     char topic[CONFIG_WEBGUIAPP_MQTT_MAX_TOPIC_LENGTH];
