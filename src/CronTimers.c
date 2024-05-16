@@ -25,6 +25,7 @@
 #include "string.h"
 #include <math.h>
 #include <stdlib.h>
+#include <freertos/task.h>
 
 #define TAG "CRON_TIMER"
 
@@ -32,6 +33,7 @@ static cron_job *JobsList[CONFIG_WEBGUIAPP_CRON_NUMBER];
 static char cron_express_error[CRON_EXPRESS_MAX_LENGTH];
 
 static int GetSunEvent(uint8_t event, uint32_t unixt, float ang);
+static int RecalcAstro(uint32_t tt);
 
 char* GetCronError()
 {
@@ -41,12 +43,6 @@ char* GetCronError()
 void custom_cron_job_callback(cron_job *job)
 {
     ExecCommand(((cron_timer_t*) job->data)->exec);
-}
-
-esp_err_t InitCronSheduler()
-{
-    esp_err_t res = ESP_OK;
-    return res;
 }
 
 const char* check_expr(const char *expr)
@@ -109,6 +105,7 @@ static void ExecuteLastAction(obj_struct_t *objarr)
 void TimeObtainHandler(struct timeval *tm)
 {
     ESP_LOGI(TAG, "Current time updated with value %d", (unsigned int )tm->tv_sec);
+    RecalcAstro(tm->tv_sec);
     ReloadCronSheduler();
     ExecuteLastAction(GetSystemObjects());
     ExecuteLastAction(GetCustomObjects());
@@ -182,7 +179,6 @@ void CronRecordsInterface(char *argres, int rw)
                     time(&now);
                     int min = GetSunEvent((T.type == 1) ? 0 : 1, now, T.sun_angle);
                     sprintf(T.cron, "0 %d %d * * *", min % 60, min / 60);
-                    //ESP_LOGI(TAG, "Set CRON to sun event with %dh %dm", min / 60, min % 60);
                 }
 
                 memcpy(&GetSysConf()->Timers[T.num - 1], &T, sizeof(cron_timer_t));
@@ -351,80 +347,43 @@ static int GetSunEvent(uint8_t event, uint32_t unixt, float ang)
     return (int) floor(UT * 60.0);
 }
 
-void AstroRecordsInterface(char *argres, int rw)
+static int RecalcAstro(uint32_t tt)
 {
-    /*
-     if (rw)
-     {
-     struct jReadElement result;
-     struct jReadElement arr;
-     jRead(argres, "", &result);
-     if (result.dataType == JREAD_OBJECT)
-     {
-     GetSysConf()->Astro.lat = (float)jRead_double(argres, "{'lat'", 0);
-     GetSysConf()->Astro.lon = (float)jRead_double(argres, "{'lon'", 0);
+    struct timeval tv_now;
+    gettimeofday(&tv_now, NULL);
+    int timers_to_update = 0;
+    ESP_LOGI(TAG, "Recalculation astronomical events");
+    for (int i = 0; i < CRON_TIMERS_NUMBER; i++)
+    {
+        cron_timer_t *T = &GetSysConf()->Timers[i];
+        if (T->type == 0 || T->del)
+            continue;
+        int min = GetSunEvent((T->type == 1) ? 0 : 1, tt, T->sun_angle);
+        sprintf(T->cron, "0 %d %d * * *", min % 60, min / 60);
+        //ESP_LOGI(TAG, "Recalculated astro for rec %d new cron %s", T->num, T->cron);
+        ++timers_to_update;
+    }
+    ESP_LOGI(TAG, "Recalculated %d astro timers", timers_to_update);
+    return timers_to_update;
+}
 
-     jRead(argres, "{'records'", &arr);
-     char *asto_rec = (char*) arr.pValue;
-     for (int i = 0; i < arr.elements; i++)
-     {
-     astro_timer_t T;
-     T.num = jRead_int(asto_rec, "[*{'num'", &i);
-     T.del = jRead_int(asto_rec, "[*{'del'", &i);
-     T.enab = jRead_int(asto_rec, "[*{'enab'", &i);
-     T.rise = jRead_int(asto_rec, "[*{'rise'", &i);
-
-     T.sensor_enab = jRead_int(asto_rec, "[*{'sensor_enab'", &i);
-     T.sensor_angle = (float) jRead_double(asto_rec, "[*{'sensor_angle'", &i);
-     T.main_angle = (float) jRead_double(asto_rec, "[*{'main_angle'", &i);
-     //T.sensor_time = jRead_int(asto_rec, "[*{'sensor_time'", &i);
-     //T.main_time = jRead_int(asto_rec, "[*{'main_time'", &i);
-
-     jRead_string(asto_rec, "[*{'name'", T.name, sizeof(T.name), &i);
-     jRead_string(asto_rec, "[*{'exec'", T.exec, sizeof(T.exec), &i);
-
-     time_t now;
-     time(&now);
-     T.sensor_time = GetSunEvent((T.rise) ? 0 : 1, now, T.sensor_angle);
-     T.main_time = GetSunEvent((T.rise) ? 0 : 1, now, T.main_angle);
-     memcpy(&GetSysConf()->Astro.records[T.num - 1], &T, sizeof(astro_timer_t));
-     }
-     }
-     }
-
-     struct jWriteControl jwc;
-     jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_OBJECT, JW_COMPACT);
-     jwObj_double(&jwc, "lat", GetSysConf()->Astro.lat);
-     jwObj_double(&jwc, "lon", GetSysConf()->Astro.lon);
-     jwObj_array(&jwc, "records");
-     for (int idx = 0; idx < CRON_TIMERS_NUMBER; idx++)
-     {
-     astro_timer_t T;
-     memcpy(&T, &GetSysConf()->Astro.records[idx], sizeof(astro_timer_t));
-     jwArr_object(&jwc);
-     jwObj_int(&jwc, "num", (unsigned int) T.num);
-     jwObj_int(&jwc, "del", (T.del) ? 1 : 0);
-     jwObj_int(&jwc, "enab", (T.enab) ? 1 : 0);
-     jwObj_int(&jwc, "rise", (T.rise) ? 1 : 0);
-     jwObj_int(&jwc, "sensor_enab", (T.sensor_enab) ? 1 : 0);
-     jwObj_double(&jwc, "sensor_angle", (double) T.sensor_angle);
-     jwObj_int(&jwc, "sensor_time", T.sensor_time);
-
-     jwObj_double(&jwc, "main_angle", (double) T.main_angle);
-     jwObj_int(&jwc, "main_time", T.main_time);
-
-     jwObj_string(&jwc, "name", T.name);
-     jwObj_string(&jwc, "exec", T.exec);
-     jwEnd(&jwc);
-     }
-     jwEnd(&jwc);
-     jwClose(&jwc);
-
-     }
-
-     void InitAstro()
-     {
-     */
-
+#define MIDNIGHT_CHECK_INTERVAL 10
+#define MIDNIGHT_DETECT_WINDOW 60
+void MidnightTimer()
+{
+    static int cnt = MIDNIGHT_CHECK_INTERVAL;
+    if (cnt-- <= 0)
+    {
+        cnt = MIDNIGHT_CHECK_INTERVAL;
+        struct timeval tv_now;
+        gettimeofday(&tv_now, NULL);
+        //ESP_LOGI(TAG, "Seconds remains to midnight %d", (int )tv_now.tv_sec % 86400);
+        if (tv_now.tv_sec % 86400 < MIDNIGHT_DETECT_WINDOW)
+        {
+            if (RecalcAstro(tv_now.tv_sec))
+                ReloadCronSheduler();
+            cnt = MIDNIGHT_CHECK_INTERVAL + MIDNIGHT_DETECT_WINDOW;
+        }
+    }
 }
 

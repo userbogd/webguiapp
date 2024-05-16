@@ -370,14 +370,6 @@ static void funct_sd_block(char *argres, int rw)
 }
 #endif
 
-static void funct_astro_test(char *argres, int rw)
-{
-    ESP_LOGI("API", "Astro test executed");
-    uint32_t unix = atoi(argres);
-    SetSunTimes(unix);
-
-}
-
 static void funct_lat(char *argres, int rw)
 {
     if(rw)
@@ -587,8 +579,6 @@ const rest_var_t SystemVariables[] =
 #else
                 { 0, "sd_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
                 #endif
-
-                { 0, "astro_test", &funct_astro_test, VAR_FUNCT, RW, 0, 0 },
 
         };
 

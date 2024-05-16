@@ -153,6 +153,8 @@ void SetSystemTimeVal(struct timeval *tv, const char* source)
 void SecondTickSystem(void *param)
 {
     ++UpTime;
+    MidnightTimer();
+
 }
 
 uint32_t GetUpTime(void)
