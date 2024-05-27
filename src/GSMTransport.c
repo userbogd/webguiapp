@@ -41,9 +41,9 @@ static int ResetType = 0;
 static bool isPPPinitializing = false;
 #endif
 
-#define CUSTOM_MODEM_BAUDRATE 230400
+#define CUSTOM_MODEM_BAUDRATE 115200
 
-#define MAX_COMMAND_REPEATE_NUMBER 5
+#define MAX_COMMAND_REPEATE_NUMBER 15
 #define WATCHDOG_INTERVAL 30
 
 static bool isPPPConn = false;
