@@ -623,6 +623,12 @@ esp_err_t SetConfVar(char *name, char *val, rest_var_types *tp)
             else
                 return ESP_ERR_INVALID_ARG;
         break;
+        case VAR_CHAR:
+            constr = atoi(val);
+            if (constr < V->minlen || constr > V->maxlen)
+                return ESP_ERR_INVALID_ARG;
+            *((uint8_t*) V->ref) = constr;
+        break;
         case VAR_INT:
             constr = atoi(val);
             if (constr < V->minlen || constr > V->maxlen)
@@ -691,6 +697,9 @@ esp_err_t GetConfVar(char *name, char *val, rest_var_types *tp)
         break;
         case VAR_INT:
             itoa(*((int*) V->ref), val, 10);
+        break;
+        case VAR_CHAR:
+            itoa(*((uint8_t*) V->ref), val, 10);
         break;
         case VAR_STRING:
             strcpy(val, (char*) V->ref);

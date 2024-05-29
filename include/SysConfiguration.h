@@ -43,7 +43,8 @@ typedef enum{
     VAR_STRING,
     VAR_PASS,
     VAR_IPADDR,
-    VAR_FUNCT
+    VAR_FUNCT,
+	VAR_CHAR
 } rest_var_types;
 
 
