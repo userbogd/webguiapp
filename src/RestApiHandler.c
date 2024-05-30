@@ -96,7 +96,9 @@ static void funct_mqtt_2_test(char *argres, int rw)
 
 static void funct_def_interface(char *argres, int rw)
 {
-    GetDefaultNetIFName(argres);
+    char interface[3];
+    GetDefaultNetIFName(interface);
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", interface);
 }
 
 static void funct_time(char *argres, int rw)
