@@ -376,9 +376,6 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
            sizeof(CONFIG_WEBGUIAPP_MQTT_PASSWORD));
 #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
     Conf->mqttStation[1].Flags1.bIsGlobalEnabled = false;
-#if CONFIG_WEBGUIAPP_MQTT_ON
-    Conf->mqttStation[1].Flags1.bIsGlobalEnabled = true;
-#endif
     memcpy(Conf->mqttStation[1].ServerAddr, CONFIG_WEBGUIAPP_MQTT_SERVER_URL, sizeof(CONFIG_WEBGUIAPP_MQTT_SERVER_URL));
     Conf->mqttStation[1].ServerPort = CONFIG_WEBGUIAPP_MQTT_SERVER_PORT;
     memcpy(Conf->mqttStation[1].SystemName, CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME,
