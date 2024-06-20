@@ -122,4 +122,7 @@ sys_error_code SysVarsPayloadHandler(data_message_t *MSG);
 void GetSysErrorDetales(sys_error_code err, const char **br, const char **ds);
 
 
+esp_err_t eepr_i2c_read(uint16_t addr, uint8_t *data, int length);
+esp_err_t eepr_i2c_write(uint16_t addr, uint8_t *data, int length);
+
 #endif /* COMPONENTS_WEBGUIAPP_INCLUDE_SYSTEMAPPLICATION_H_ */

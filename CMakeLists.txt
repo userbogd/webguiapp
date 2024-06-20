@@ -31,6 +31,7 @@ idf_component_register(
     	  src/RestApiHandler.c
     	  src/SysComm.c
     	  src/SysErr.c
+    	  src/EEPROM.c
     	  ${lora_SRCS}
     	  ${gprs_SRCS}
     	  ${jreadwrite_SRCS}
