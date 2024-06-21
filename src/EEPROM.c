@@ -103,7 +103,8 @@ esp_err_t eepr_i2c_read(uint16_t addr, uint8_t *data, int length)
 }
 
 #define EEPROM_WRITE_PAGE_SIZE 32
-#define EEPROM_WRITE_MAX_ATTEMPTS 5
+#define EEPROM_WRITE_MAX_ATTEMPTS 20
+
 esp_err_t eepr_i2c_write(uint16_t addr, uint8_t *data, int length)
 {
     int written = 0, attempts = 0;
@@ -115,12 +116,19 @@ esp_err_t eepr_i2c_write(uint16_t addr, uint8_t *data, int length)
         uint8_t adr[] = { (uint8_t)(block_addr >> 8), (uint8_t)(block_addr & 0xff) };
         while ((err = i2c_dev_write(&eepr_24c32, adr, 2, data + written, block_len)) != ESP_OK)
         {
+            ESP_LOGW(TAG, "EEPROM not ready attempt %d", attempts);
             if (++attempts >= EEPROM_WRITE_MAX_ATTEMPTS) //Critical error
+            {
+                ESP_LOGE(TAG, "EEPROM write critical error!");
                 return err;
-            vTaskDelay(pdMS_TO_TICKS(5));
+            }
+            vTaskDelay(pdMS_TO_TICKS(10));
         }
+        attempts = 0;
         written += block_len;
+        ESP_LOGI(TAG, "written %d byte from addr %d", written, block_addr);
         block_addr += EEPROM_WRITE_PAGE_SIZE;
+
     }
     return ESP_OK;
 }
