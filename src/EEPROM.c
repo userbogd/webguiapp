@@ -33,6 +33,9 @@
 
 #define EEPR24CXX_ADDR                  0xA0                        /*!< Slave address of 24Cxx devices*/
 
+#define EEPROM_WRITE_PAGE_SIZE 32
+#define EEPROM_WRITE_MAX_ATTEMPTS 20
+
 typedef struct
 {
     i2c_port_t port;            // I2C port number
@@ -96,14 +99,27 @@ static esp_err_t i2c_dev_write(const i2c_dev_t *dev, const void *out_reg, size_t
     return res;
 }
 
+
+
 esp_err_t eepr_i2c_read(uint16_t addr, uint8_t *data, int length)
 {
+
+    int attempts = 0;
+    esp_err_t err;
     uint8_t adr[] = { (uint8_t)(addr >> 8), (uint8_t)(addr & 0xff) };
-    return i2c_dev_read(&eepr_24c32, adr, 2, data, length);
+    while ((err = i2c_dev_read(&eepr_24c32, adr, 2, data, length)) != ESP_OK)
+    {
+        //ESP_LOGW(TAG, "EEPROM not ready attempt %d", attempts);
+        if (++attempts >= EEPROM_WRITE_MAX_ATTEMPTS) //Critical error
+        {
+            ESP_LOGE(TAG, "EEPROM read critical error!");
+            return err;
+        }
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+    return ESP_OK;
 }
 
-#define EEPROM_WRITE_PAGE_SIZE 32
-#define EEPROM_WRITE_MAX_ATTEMPTS 20
 
 esp_err_t eepr_i2c_write(uint16_t addr, uint8_t *data, int length)
 {
@@ -116,7 +132,7 @@ esp_err_t eepr_i2c_write(uint16_t addr, uint8_t *data, int length)
         uint8_t adr[] = { (uint8_t)(block_addr >> 8), (uint8_t)(block_addr & 0xff) };
         while ((err = i2c_dev_write(&eepr_24c32, adr, 2, data + written, block_len)) != ESP_OK)
         {
-            ESP_LOGW(TAG, "EEPROM not ready attempt %d", attempts);
+            //ESP_LOGW(TAG, "EEPROM not ready attempt %d", attempts);
             if (++attempts >= EEPROM_WRITE_MAX_ATTEMPTS) //Critical error
             {
                 ESP_LOGE(TAG, "EEPROM write critical error!");
@@ -126,7 +142,7 @@ esp_err_t eepr_i2c_write(uint16_t addr, uint8_t *data, int length)
         }
         attempts = 0;
         written += block_len;
-        ESP_LOGI(TAG, "written %d byte from addr %d", written, block_addr);
+        //ESP_LOGI(TAG, "written %d byte from addr %d", written, block_addr);
         block_addr += EEPROM_WRITE_PAGE_SIZE;
 
     }
