@@ -24,6 +24,8 @@
 #include "esp_log.h"
 #include "esp_err.h"
 
+#ifdef CONFIG_WEBGUIAPP_I2C_ENABLE
+
 #define TAG "EEPROMDriver"
 
 #define I2C_MASTER_TIMEOUT_MS       1000
@@ -148,4 +150,6 @@ esp_err_t eepr_i2c_write(uint16_t addr, uint8_t *data, int length)
     }
     return ESP_OK;
 }
+
+#endif
 
