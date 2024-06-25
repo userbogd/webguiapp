@@ -333,21 +333,20 @@ static void funct_objsinfo(char *argres, int rw)
     GetObjectsInfo(argres);
 }
 
+const char *EXEC_ERROR[] = {
+        "EXECUTED_OK",
+        "ERROR_TOO_LONG_COMMAND",
+        "ERROR_OBJECT_NOT_PARSED",
+        "ERROR_ACTION_NOT_PARSED",
+        "ERROR_OBJECT_NOT_FOUND",
+        "ERROR_ACTION_NOT_FOUND",
+        "ERROR_HANDLER_NOT_IMPLEMENTED",
+};
+
 static void funct_exec(char *argres, int rw)
 {
-    int len = strlen(argres);
-    if (rw)
-    {
-        if ( argres[0] == '"' && argres[len - 1] == '"')
-        {
-            argres[len - 1] = 0x00;
-            ExecCommand(argres + 1);
-        }
-        else
-            snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR_NOTASTRING\"");
-    }
-    else
-        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"EXECUTED\"");
+    int res = ExecCommand(argres);
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", EXEC_ERROR[res]);
 }
 
 static void funct_file_list(char *argres, int rw)

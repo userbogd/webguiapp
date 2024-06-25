@@ -147,7 +147,7 @@ static int ExecCommandParse(char *cmd)
     //int err = 0;
     int commlen = strlen(cmd);
     if (commlen > CONFIG_WEBGUIAPP_MAX_COMMAND_STRING_LENGTH)
-        return 1;
+        return 1; //ERROR_TOO_LONG_COMMAND
     char comm[CONFIG_WEBGUIAPP_MAX_COMMAND_STRING_LENGTH + 1];
 
     strcpy(comm, cmd);
@@ -155,9 +155,9 @@ static int ExecCommandParse(char *cmd)
     com = strtok(NULL, ",");
     arg = strtok(NULL, "\0");
     if (!obj)
-        return 2;
+        return 2; //ERROR_OBJECT_NOT_PARSED
     if (!com)
-        return 3;
+        return 3; //ERROR_ACTION_NOT_PARSED
 
     for (int idx = 0; idx < CONFIG_WEBGUIAPP_MAX_OBJECTS_NUM; idx++)
     {
@@ -170,13 +170,13 @@ static int ExecCommandParse(char *cmd)
                     if (com_obj_arr[idx].command_handlers[i] != NULL)
                     {
                         com_obj_arr[idx].command_handlers[i](obj, com, arg);
-                        return 0;
+                        return 0; //EXECUTED_OK
                     }
                     else
-                        return 6;
+                        return 6; //ERROR_HANDLER_NOT_IMPLEMENTED
                 }
             }
-            return 5;
+            return 5; //ERROR_ACTION_NOT_FOUND
         }
     }
 
@@ -191,15 +191,15 @@ static int ExecCommandParse(char *cmd)
                     if (custom_com_obj_arr[idx].command_handlers[i] != NULL)
                     {
                         custom_com_obj_arr[idx].command_handlers[i](obj, com, arg);
-                        return 0;
+                        return 0; //EXECUTED_OK
                     }
                     else
-                        return 6;
+                        return 6; //ERROR_HANDLER_NOT_IMPLEMENTED
                 }
             }
-            return 5;
+            return 5; //ERROR_ACTION_NOT_FOUND
         }
     }
-    return 4;
+    return 4; //ERROR_OBJECT_NOT_FOUND
 }
 
