@@ -45,6 +45,7 @@ static bool isPPPinitializing = false;
 
 #define MAX_COMMAND_REPEATE_NUMBER 15
 #define WATCHDOG_INTERVAL 30
+#define WAIT_FOR_GET_IP 30
 
 static bool isPPPConn = false;
 static int attimeout = 1000;
@@ -265,7 +266,7 @@ static void GSMInitTask(void *pvParameter) {
   }
 
   ESP_LOGI(TAG, "PPP data mode OK");
-  xEventGroupWaitBits(event_group, CONNECT_BIT, pdTRUE, pdTRUE, portMAX_DELAY);
+  xEventGroupWaitBits(event_group, CONNECT_BIT, pdTRUE, pdTRUE, pdMS_TO_TICKS(WAIT_FOR_GET_IP * 1000));
 
   isPPPinitializing = false;
   vTaskDelete(NULL);
