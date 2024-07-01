@@ -317,7 +317,6 @@ static void funct_cronrecs(char *argres, int rw)
 }
 //CRON implementation END
 
-
 static void funct_serial_mode(char *argres, int rw)
 {
 
@@ -334,12 +333,20 @@ static void funct_objsinfo(char *argres, int rw)
     GetObjectsInfo(argres);
 }
 
+const char *EXEC_ERROR[] = {
+        "EXECUTED_OK",
+        "ERROR_TOO_LONG_COMMAND",
+        "ERROR_OBJECT_NOT_PARSED",
+        "ERROR_ACTION_NOT_PARSED",
+        "ERROR_OBJECT_NOT_FOUND",
+        "ERROR_ACTION_NOT_FOUND",
+        "ERROR_HANDLER_NOT_IMPLEMENTED",
+};
+
 static void funct_exec(char *argres, int rw)
 {
-    if (rw)
-        ExecCommand(argres);
-    else
-        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"EXECUTED\"");
+    int res = ExecCommand(argres);
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", EXEC_ERROR[res]);
 }
 
 static void funct_file_list(char *argres, int rw)
@@ -374,7 +381,7 @@ static void funct_sd_block(char *argres, int rw)
 
 static void funct_lat(char *argres, int rw)
 {
-    if(rw)
+    if (rw)
     {
         GetSysConf()->sntpClient.lat = atof(argres);
     }
@@ -383,7 +390,7 @@ static void funct_lat(char *argres, int rw)
 
 static void funct_lon(char *argres, int rw)
 {
-    if(rw)
+    if (rw)
     {
         GetSysConf()->sntpClient.lon = atof(argres);
     }
@@ -529,7 +536,7 @@ const rest_var_t SystemVariables[] =
                 { 0, "gsm_dns2", &SysConfig.gsmSettings.DNSAddr2, VAR_IPADDR, RW, 0, 0 },
                 { 0, "gsm_dns3", &SysConfig.gsmSettings.DNSAddr3, VAR_IPADDR, RW, 0, 0 },
                 { 0, "gsm_stat", &funct_gsm_stat, VAR_FUNCT, R, 0, 0 },
-#ifdef CONFIG_WEBGUIAPP_MODEM_AT_ACCESS
+                #ifdef CONFIG_WEBGUIAPP_MODEM_AT_ACCESS
                 { 0, "gsm_at_timeout", &funct_gsm_at_timeout, VAR_FUNCT, R, 0, 0 },
                 { 0, "gsm_at", &funct_gsm_at, VAR_FUNCT, R, 0, 0 },
 #endif
@@ -546,7 +553,7 @@ const rest_var_t SystemVariables[] =
                 { 0, "serial_baud", &SysConfig.serialSettings.BaudRate, VAR_INT, RW, 1200, 4096000 },
                 { 0, "serial_break", &SysConfig.serialSettings.InputBrake, VAR_INT, RW, 1, 50 },
                 { 0, "serial_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
-#else
+                #else
                 { 0, "serial_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
                 #endif
 
@@ -580,7 +587,7 @@ const rest_var_t SystemVariables[] =
                 { 0, "sd_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 }
 #else
                 { 0, "sd_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
-                #endif
+        #endif
 
         };
 
