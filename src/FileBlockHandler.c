@@ -42,7 +42,6 @@
 #define DELETE_ORERATION 2
 #define WRITE_ORERATION 3
 
-
 static cb_blockdata_transfer_t FileTransaction = {
         .opertype = 0
 };
@@ -60,8 +59,28 @@ esp_err_t ParseBlockDataObject(char *argres, cb_blockdata_transfer_t *ft)
     jRead(argres, "{'transid'", &result);
     if (result.elements == 1)
     {
-        ft->transid = atoi((char*) result.pValue);
-        ESP_LOGI(TAG, "Transaction with id %d", ft->transid);
+        int trans = atoi((char*) result.pValue);
+
+        if (FileTransaction.open_file_timeout != 0)
+        {
+            if (trans != FileTransaction.transid)
+            {
+                ESP_LOGW(TAG, "Attempt second client access while first is not finished");
+                snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"Device is busy, please try later\"");
+                return ESP_ERR_NOT_FINISHED;
+            }
+        }
+        else
+        {
+            ft->transid = trans;
+            ESP_LOGI(TAG, "New transaction with id %d", ft->transid);
+        }
+
+    }
+    else
+    {
+        snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:key 'transid' not found, frontend update needed\"");
+        return ESP_ERR_INVALID_ARG;
     }
 
     jRead(argres, "{'opertype'", &result);
@@ -146,11 +165,13 @@ esp_err_t ParseBlockDataObject(char *argres, cb_blockdata_transfer_t *ft)
 
 }
 
-void FileBlockHandler(char *argres, int rw, const char* path)
+void FileBlockHandler(char *argres, int rw, const char *path)
 {
 
     if (ParseBlockDataObject(argres, &FileTransaction) != ESP_OK)
         return;
+
+    FileTransaction.open_file_timeout = BLOCK_OPERATION_TIMEOUT;   //restart timeout on every block
 
     //Phase of file operation calculate
     FileTransaction.operphase = 0;           //Simple read or write
@@ -223,6 +244,8 @@ void FileBlockHandler(char *argres, int rw, const char* path)
         if (FileTransaction.operphase == 2 || FileTransaction.operphase == 3)
         {
             fclose(FileTransaction.f);
+            FileTransaction.f = NULL;
+            FileTransaction.open_file_timeout = 0;
             ESP_LOGI("FILE_API", "Close file for read : %s", FileTransaction.mem_object);
         }
         dlen = 0;
@@ -244,6 +267,7 @@ void FileBlockHandler(char *argres, int rw, const char* path)
         jwClose(&jwc);
         free(scr);
         free(dst);
+
     }
     else if (FileTransaction.opertype == WRITE_ORERATION)
     {
@@ -276,6 +300,8 @@ void FileBlockHandler(char *argres, int rw, const char* path)
                 if (FileTransaction.operphase == 2 || FileTransaction.operphase == 3)
                 {
                     fclose(FileTransaction.f);
+                    FileTransaction.f = NULL;
+                    FileTransaction.open_file_timeout = 0;
                     ESP_LOGI("FILE_API", "Close file for write : %s", FileTransaction.mem_object);
                 }
 
@@ -289,6 +315,7 @@ void FileBlockHandler(char *argres, int rw, const char* path)
                 jwObj_string(&jwc, "mem_object", FileTransaction.mem_object);
                 jwObj_int(&jwc, "size", write);
                 jwClose(&jwc);
+
             }
             else
             {
@@ -306,7 +333,20 @@ void FileBlockHandler(char *argres, int rw, const char* path)
 
 }
 
-void FileListHandler(char *argres, int rw, const char* path)
+void FileBlockTimeoutCounter()
+{
+    if (FileTransaction.open_file_timeout)
+    {
+        if (--FileTransaction.open_file_timeout == 0)
+        {
+            if (FileTransaction.f != NULL)
+                fclose(FileTransaction.f);
+        }
+    }
+    //ESP_LOGI(TAG, "Block timeout %d", FileTransaction.open_file_timeout);
+}
+
+void FileListHandler(char *argres, int rw, const char *path)
 {
     char entrypath[FILE_PATH_MAX];
     char entrysize[16];

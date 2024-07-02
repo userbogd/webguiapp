@@ -84,6 +84,7 @@ typedef struct
     void (*HandlerRoutine)(char *VarData, void *arg);
 } dyn_var_handler_t;
 
+#define BLOCK_OPERATION_TIMEOUT 30
 #define MEM_OBLECT_MAX_LENGTH 32
 typedef struct
 {
@@ -112,5 +113,6 @@ esp_err_t delete_post_handler(httpd_req_t *req);
 esp_err_t ParseBlockDataObject(char *argres, cb_blockdata_transfer_t *ft);
 void FileBlockHandler(char *argres, int rw, const char* path);
 void FileListHandler(char *argres, int rw, const char* path);
+void FileBlockTimeoutCounter();
 
 #endif /* COMPONENTS_WEB_GUI_APPLICATION_INCLUDE_HTTPSERVER_H_ */

@@ -154,7 +154,7 @@ void SecondTickSystem(void *param)
 {
     ++UpTime;
     MidnightTimer();
-
+    FileBlockTimeoutCounter();
 }
 
 uint32_t GetUpTime(void)
