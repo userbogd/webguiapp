@@ -43,11 +43,11 @@
 #define WRITE_ORERATION 3
 
 
-static blockdata_transaction_t FileTransaction = {
+static cb_blockdata_transfer_t FileTransaction = {
         .opertype = 0
 };
 
-esp_err_t ParseBlockDataObject(char *argres, blockdata_transaction_t *ft)
+esp_err_t ParseBlockDataObject(char *argres, cb_blockdata_transfer_t *ft)
 {
     struct jReadElement result;
     jRead(argres, "", &result);
@@ -55,6 +55,13 @@ esp_err_t ParseBlockDataObject(char *argres, blockdata_transaction_t *ft)
     {
         snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:not an object\"");
         return ESP_ERR_INVALID_ARG;
+    }
+
+    jRead(argres, "{'transid'", &result);
+    if (result.elements == 1)
+    {
+        ft->transid = atoi((char*) result.pValue);
+        ESP_LOGI(TAG, "Transaction with id %d", ft->transid);
     }
 
     jRead(argres, "{'opertype'", &result);
@@ -226,6 +233,7 @@ void FileBlockHandler(char *argres, int rw, const char* path)
 
         struct jWriteControl jwc;
         jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_OBJECT, JW_COMPACT);
+        jwObj_int(&jwc, "transid", FileTransaction.transid);
         jwObj_int(&jwc, "opertype", FileTransaction.opertype);
         jwObj_int(&jwc, "parts", FileTransaction.parts);
         jwObj_int(&jwc, "part", FileTransaction.part);
@@ -274,6 +282,7 @@ void FileBlockHandler(char *argres, int rw, const char* path)
                 free(dst);
                 struct jWriteControl jwc;
                 jwOpen(&jwc, argres, VAR_MAX_VALUE_LENGTH, JW_OBJECT, JW_COMPACT);
+                jwObj_int(&jwc, "transid", FileTransaction.transid);
                 jwObj_int(&jwc, "opertype", FileTransaction.opertype);
                 jwObj_int(&jwc, "parts", FileTransaction.parts);
                 jwObj_int(&jwc, "part", FileTransaction.part);

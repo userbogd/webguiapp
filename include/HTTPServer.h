@@ -87,6 +87,7 @@ typedef struct
 #define MEM_OBLECT_MAX_LENGTH 32
 typedef struct
 {
+    int transid;
     int opertype;
     int operphase;
     int part;
@@ -97,7 +98,7 @@ typedef struct
     struct stat file_stat;
     FILE *f;
     int open_file_timeout;
-} blockdata_transaction_t;
+} cb_blockdata_transfer_t;
 
 esp_err_t start_file_server(void);
 HTTP_IO_RESULT HTTPPostApp(httpd_req_t *req, const char *filename, char *PostData);
@@ -108,7 +109,7 @@ esp_err_t download_get_handler(httpd_req_t *req);
 esp_err_t upload_post_handler(httpd_req_t *req);
 esp_err_t delete_post_handler(httpd_req_t *req);
 
-esp_err_t ParseBlockDataObject(char *argres, blockdata_transaction_t *ft);
+esp_err_t ParseBlockDataObject(char *argres, cb_blockdata_transfer_t *ft);
 void FileBlockHandler(char *argres, int rw, const char* path);
 void FileListHandler(char *argres, int rw, const char* path);
 
