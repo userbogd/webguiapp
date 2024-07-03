@@ -280,8 +280,8 @@ modem_init_fail:
 
 void PPPModemColdStart(void) {
   ResetType = 0;
-  xTaskCreate(GSMInitTask, "GSMInitTask", 1024 * 6, &ResetType, 3,
-              &initTaskhandle);
+  xTaskCreatePinnedToCore(GSMInitTask, "GSMInitTask", 1024 * 6, &ResetType, 3,
+              &initTaskhandle, 1);
   ESP_LOGI(TAG, "Start GSM cold initialization task");
 }
 
@@ -303,7 +303,7 @@ static void GSMRunTask(void *pvParameter) {
 }
 
 void PPPModemStart(void) {
-  xTaskCreate(GSMRunTask, "GSMRunTask", 1024 * 4, &ResetType, 3, NULL);
+  xTaskCreatePinnedToCore(GSMRunTask, "GSMRunTask", 1024 * 4, &ResetType, 3, NULL, 1);
 }
 
 int PPPModemGetRSSI(void) {
