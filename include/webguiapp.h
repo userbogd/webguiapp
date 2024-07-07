@@ -42,5 +42,6 @@ void SetAppVars( rest_var_t* appvars, int size);
 bool GetUserAppNeedReset(void);
 void SetUserAppNeedReset(bool res);
 void LogFile(char *fname, char *format, ...);
+void SysLog(char *format, ...);
 
 #endif /* COMPONENTS_WEBGUIAPPCOMPONENT_INCLUDE_WEBGUIAPP_H_ */

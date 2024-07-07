@@ -109,7 +109,7 @@ esp_err_t WebGuiAppInit(void)
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND
             ||
             MANUAL_RESET == 1
-            #if (MAIN_FUNCTIONAL_BUTTON_GPIO >= 0)
+                    #if (MAIN_FUNCTIONAL_BUTTON_GPIO >= 0)
             || gpio_get_level(MAIN_FUNCTIONAL_BUTTON_GPIO) == 0
                     #endif
                     )
@@ -590,6 +590,71 @@ bool GetUserAppNeedReset(void)
 void SetUserAppNeedReset(bool res)
 {
     isUserAppNeedReset = res;
+}
+
+#define LOG_MAX_CHUNK_SIZE 10
+#define LOG_MAX_CHUNKS 4
+#define DEFAULT_LOG_FILE_NAME "syslog"
+
+static void ComposeLogFilename(int chunk, char *filename)
+{
+    char chunkstr[2];
+    strcpy(filename, "/data/");
+    strcat(filename, DEFAULT_LOG_FILE_NAME);
+    itoa(chunk, chunkstr, 10);
+    strcat(filename, chunkstr);
+    strcat(filename, ".log");
+}
+
+void SysLog(char *format, ...)
+{
+    char tstamp[ISO8601_TIMESTAMP_LENGTH + 2];
+    static int cur_chunk = 0, isstart = 1;
+    char filename[32];
+    struct stat file_stat;
+    FILE *f;
+    ComposeLogFilename(cur_chunk, filename);
+
+    //If first call after reboot, try to find not full chunk
+    if (isstart)
+    {
+        while (file_stat.st_size > LOG_MAX_CHUNK_SIZE * 1024 && cur_chunk <= LOG_MAX_CHUNKS)
+        {
+            cur_chunk++;
+            ComposeLogFilename(cur_chunk, filename);
+        }
+        isstart = 0;
+    }
+
+
+    stat(filename, &file_stat);
+    if (file_stat.st_size > LOG_MAX_CHUNK_SIZE * 1024)
+    {
+        if (++cur_chunk > LOG_MAX_CHUNKS)
+            cur_chunk = 0;
+        ComposeLogFilename(cur_chunk, filename);
+        f = fopen(filename, "w");
+    }
+    else
+        f = fopen(filename, "a");
+
+    if (f == NULL)
+    {
+        ESP_LOGE(TAG, "Failed to open file %s for writing", filename);
+        return;
+    }
+    va_list arg;
+    va_start(arg, format);
+    va_end(arg);
+    strcpy(tstamp, "\r\n");
+    char ts[ISO8601_TIMESTAMP_LENGTH];
+    GetISO8601Time(ts);
+    strcat(tstamp, ts);
+    strcat(tstamp, " ");
+    fwrite(tstamp, 1, strlen(tstamp), f);
+    vfprintf(f, format, arg);
+    fclose(f);
+    ESP_LOGI(TAG, "File written to %s", filename);
 }
 
 void LogFile(char *fname, char *format, ...)
