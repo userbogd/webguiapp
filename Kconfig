@@ -916,8 +916,6 @@ menu "WebGUIApp"
 	   endif
 	endmenu
 	
-	
-    
 	menu "MQTT settings"
 		config WEBGUIAPP_MQTT_ENABLE
 			bool "Enabled MQTT transport"
@@ -979,6 +977,18 @@ menu "WebGUIApp"
 	    		default 1			 			        
 	   	
 	   	endif
+	endmenu
+	
+	menu "System log"	     	
+     	config WEBGUIAPP_SYSLOG_MAX_CHUNKS
+    		int "Number of syslog parts"
+    		range 1 10
+    		default 4 
+    		
+    	config WEBGUIAPP_SYSLOG_CHUNK_SIZE
+    		int "Size of one part in kilobytes"
+    		range 1 256
+    		default 50 					            
 	endmenu
 	
 	if 	WEBGUIAPP_WIFI_ENABLE || WEBGUIAPP_ETHERNET_ENABLE || WEBGUIAPP_GPRS_ENABLE

@@ -592,14 +592,15 @@ void SetUserAppNeedReset(bool res)
     isUserAppNeedReset = res;
 }
 
-#define LOG_MAX_CHUNK_SIZE 10
-#define LOG_MAX_CHUNKS 4
+#define LOG_MAX_CHUNK_SIZE CONFIG_WEBGUIAPP_SYSLOG_CHUNK_SIZE
+#define LOG_MAX_CHUNKS CONFIG_WEBGUIAPP_SYSLOG_MAX_CHUNKS
 #define DEFAULT_LOG_FILE_NAME "syslog"
+#define LOG_PARTITION "/data/"
 
 static void ComposeLogFilename(int chunk, char *filename)
 {
     char chunkstr[2];
-    strcpy(filename, "/data/");
+    strcpy(filename, LOG_PARTITION);
     strcat(filename, DEFAULT_LOG_FILE_NAME);
     itoa(chunk, chunkstr, 10);
     strcat(filename, chunkstr);
@@ -618,19 +619,18 @@ void SysLog(char *format, ...)
     //If first call after reboot, try to find not full chunk
     if (isstart)
     {
-        while (file_stat.st_size > LOG_MAX_CHUNK_SIZE * 1024 && cur_chunk <= LOG_MAX_CHUNKS)
+        while (file_stat.st_size > LOG_MAX_CHUNK_SIZE * 1024 && cur_chunk <= LOG_MAX_CHUNKS - 1)
         {
             cur_chunk++;
             ComposeLogFilename(cur_chunk, filename);
         }
         isstart = 0;
     }
-
-
     stat(filename, &file_stat);
+    //next if full, else append to current
     if (file_stat.st_size > LOG_MAX_CHUNK_SIZE * 1024)
     {
-        if (++cur_chunk > LOG_MAX_CHUNKS)
+        if (++cur_chunk > LOG_MAX_CHUNKS - 1)
             cur_chunk = 0;
         ComposeLogFilename(cur_chunk, filename);
         f = fopen(filename, "w");
