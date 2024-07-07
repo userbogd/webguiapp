@@ -654,7 +654,6 @@ void SysLog(char *format, ...)
     fwrite(tstamp, 1, strlen(tstamp), f);
     vfprintf(f, format, arg);
     fclose(f);
-    ESP_LOGI(TAG, "File written to %s", filename);
 }
 
 void LogFile(char *fname, char *format, ...)
