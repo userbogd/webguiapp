@@ -61,9 +61,9 @@ esp_err_t ParseBlockDataObject(char *argres, cb_blockdata_transfer_t *ft)
     {
         int trans = atoi((char*) result.pValue);
 
-        if (FileTransaction.open_file_timeout != 0)
+        if (ft->open_file_timeout != 0)
         {
-            if (trans != FileTransaction.transid)
+            if (trans != ft->transid)
             {
                 ESP_LOGW(TAG, "Attempt second client access while first is not finished");
                 snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"Device is busy, please try later\"");
@@ -73,7 +73,7 @@ esp_err_t ParseBlockDataObject(char *argres, cb_blockdata_transfer_t *ft)
         else
         {
             ft->transid = trans;
-            ESP_LOGI(TAG, "New transaction with id %d", ft->transid);
+            //ESP_LOGI(TAG, "New transaction with id %d", ft->transid);
         }
 
     }
