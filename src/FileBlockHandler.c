@@ -29,6 +29,7 @@
 
 /*
  {
+ "transid": 623787878,
  "opertype" : 1,                [1-READ, 2-DELETE, 3-WRITE]
  "part": 0,                     []
  "parts": 3,                    []
@@ -37,6 +38,7 @@
  "dat" : "" ,                   [Data block BASE64 encoded]
  }
  */
+
 
 #define READ_ORERATION 1
 #define DELETE_ORERATION 2
@@ -213,6 +215,7 @@ void FileBlockHandler(char *argres, int rw, const char *path)
     if (FileTransaction.opertype == DELETE_ORERATION)
     {
         unlink(FileTransaction.filepath);
+        FileTransaction.open_file_timeout = 0;
         snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"DELETED OK\"");
         return;
     }
