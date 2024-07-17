@@ -196,6 +196,7 @@ void FileBlockHandler(char *argres, int rw, const char *path)
             {
                 ESP_LOGE("FILE_API", "File does not exist : %s", FileTransaction.mem_object);
                 snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"ERROR:DIR_NOT_FOUND\"");
+                FileTransaction.open_file_timeout = 0;
                 return;
             }
         }
