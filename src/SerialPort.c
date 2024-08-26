@@ -231,12 +231,21 @@ void InitSerialPort(void)
 {
     uart_config_t uart_config = {
             .baud_rate = GetSysConf()->serialSettings.BaudRate,
-            .data_bits = UART_DATA_8_BITS,
-            .parity = UART_PARITY_DISABLE,
+            .data_bits = UART_DATA_7_BITS,
+            .parity = UART_PARITY_EVEN,
             .stop_bits = UART_STOP_BITS_1,
             .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
             .source_clk = UART_SCLK_APB,
     };
+
+    //uart_config.data_bits = (uint8_t) GetSysConf()->serialSettings.DataBits;
+    //uart_config.parity = (uint8_t) GetSysConf()->serialSettings.Parity;
+    //uart_config.stop_bits = (uint8_t) GetSysConf()->serialSettings.StopBits;
+
+    ESP_LOGI(TAG, "UART data_bits:%d parity:%d stop_bits:%d",
+             GetSysConf()->serialSettings.DataBits,
+             GetSysConf()->serialSettings.Parity,
+             GetSysConf()->serialSettings.StopBits);
 
     ESP_ERROR_CHECK(
             uart_driver_install(CONFIG_WEBGUIAPP_UART_PORT_NUM, CONFIG_WEBGUIAPP_UART_BUF_SIZE * 2, 0, 20, &uart_event_queue, 0));

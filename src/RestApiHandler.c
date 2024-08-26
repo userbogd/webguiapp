@@ -551,6 +551,11 @@ const rest_var_t SystemVariables[] =
                 { 0, "serial_bridge", &SysConfig.serialSettings.Flags.IsBridgeEnabled, VAR_BOOL, RW, 0, 1 },
                 { 0, "serial_mode", &funct_serial_mode, VAR_FUNCT, R, 1, 2 },
                 { 0, "serial_baud", &SysConfig.serialSettings.BaudRate, VAR_INT, RW, 1200, 4096000 },
+
+                { 0, "serial_bits", &SysConfig.serialSettings.DataBits, VAR_INT, RW, 0, 3 },
+                { 0, "serial_parity", &SysConfig.serialSettings.Parity, VAR_INT, RW, 0, 3 },
+                { 0, "serial_stop", &SysConfig.serialSettings.StopBits, VAR_INT, RW, 1, 3 },
+
                 { 0, "serial_break", &SysConfig.serialSettings.InputBrake, VAR_INT, RW, 1, 50 },
                 { 0, "serial_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
                 #else

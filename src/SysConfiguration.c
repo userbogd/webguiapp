@@ -33,6 +33,7 @@
 #include "driver/gpio.h"
 #include "driver/adc.h"
 #include "driver/i2c.h"
+#include <driver/uart.h>
 
 #include "romfs.h"
 #include "spifs.h"
@@ -425,6 +426,9 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
 #endif
     Conf->serialSettings.Serialmode = 1;
     Conf->serialSettings.BaudRate = CONFIG_WEBGUIAPP_UART_BAUD_RATE;
+    Conf->serialSettings.DataBits = UART_DATA_8_BITS;
+    Conf->serialSettings.Parity = UART_PARITY_DISABLE;
+    Conf->serialSettings.StopBits = UART_STOP_BITS_1;
     Conf->serialSettings.InputBrake = 50;
 #endif
 

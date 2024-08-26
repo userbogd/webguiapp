@@ -204,6 +204,9 @@ typedef struct
         {
             int Serialmode;
             int BaudRate;
+            int DataBits;
+            int Parity;
+            int StopBits;
             int InputBrake;
             struct
             {
