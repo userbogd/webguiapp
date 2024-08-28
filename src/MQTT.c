@@ -161,6 +161,7 @@ esp_err_t ExternalServiceMQTTSend(char *servname, char *data, int len, int idx)
 }
 
 #define MAX_ERROR_JSON  256
+/*
 mqtt_app_err_t PublicTestMQTT(int idx)
 {
     char tmp[10];
@@ -183,6 +184,70 @@ mqtt_app_err_t PublicTestMQTT(int idx)
     ComposeTopic(resp, idx, SERVICE_NAME, DOWNLINK_SUBTOPIC);
     jwObj_string(&jwc, "rx_topic", resp);
     jwEnd(&jwc);
+    jwClose(&jwc);
+    mqtt_app_err_t merr = API_OK;
+    if (SysServiceMQTTSend(JSONMess, strlen(JSONMess), idx) != ESP_OK)
+        merr = API_INTERNAL_ERR;
+    return merr;
+}
+*/
+
+mqtt_app_err_t PublicTestMQTT(int idx)
+{
+    char tmp[10];
+    char resp[256];
+    char JSONMess[1024];
+    struct jWriteControl jwc;
+    jwOpen(&jwc, JSONMess, 1024 - 64, JW_OBJECT, JW_COMPACT);
+    jwObj_object(&jwc, "data");
+    time_t now;
+    time(&now);
+    jwObj_int(&jwc, "msgid", (unsigned int) now);
+    jwObj_string(&jwc, "srcid", GetSysConf()->ID);
+    jwObj_string(&jwc, "dstid", "FFFFFFFF");
+    char time[ISO8601_TIMESTAMP_LENGTH];
+    GetISO8601Time(time);
+    jwObj_string(&jwc, "time", time);
+    jwObj_int(&jwc, "msgtype", DATA_MESSAGE_TYPE_COMMAND);
+    jwObj_int(&jwc, "payloadtype", 1);
+    jwObj_object(&jwc, "payload");
+    jwObj_int(&jwc, "applytype", 0);
+    jwObj_object(&jwc, "variables");
+
+    jwObj_string(&jwc, "event", "MQTT_TEST_MESSAGE)");
+    strcpy(resp, "mqtt://");
+    strcat(resp, GetSysConf()->mqttStation[idx].ServerAddr);
+    itoa(GetSysConf()->mqttStation[idx].ServerPort, tmp, 10);
+    strcat(resp, ":");
+    strcat(resp, tmp);
+    jwObj_string(&jwc, "url", resp);
+    ComposeTopic(resp, idx, SERVICE_NAME, UPLINK_SUBTOPIC);
+    jwObj_string(&jwc, "tx_topic", resp);
+    ComposeTopic(resp, idx, SERVICE_NAME, DOWNLINK_SUBTOPIC);
+    jwObj_string(&jwc, "rx_topic", resp);
+
+
+    jwEnd(&jwc); //close variables
+    jwEnd(&jwc); //close payload
+    jwEnd(&jwc); //close data
+    //calculate sha from 'data' object
+    char *datap = strstr(JSONMess, "\"data\":");
+    if (datap)
+    {
+        datap += sizeof("\"data\":") - 1;
+        unsigned char sha[32 + 1];
+        unsigned char sha_print[32 * 2 + 1];
+        SHA256hmacHash((unsigned char*) datap, strlen(datap), (unsigned char*) "mykey", sizeof("mykey"), sha);
+        BytesToStr(sha, sha_print, 32);
+        sha_print[32 * 2] = 0x00;
+#if REAST_API_DEBUG_MODE
+            ESP_LOGI(TAG, "SHA256 of DATA object is %s", sha_print);
+    #endif
+        jwObj_string(&jwc, "signature", (char*) sha_print);
+    }
+    else
+        return ESP_ERR_NOT_FOUND;
+
     jwClose(&jwc);
     mqtt_app_err_t merr = API_OK;
     if (SysServiceMQTTSend(JSONMess, strlen(JSONMess), idx) != ESP_OK)
