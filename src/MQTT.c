@@ -162,35 +162,35 @@ esp_err_t ExternalServiceMQTTSend(char *servname, char *data, int len, int idx)
 
 #define MAX_ERROR_JSON  256
 /*
-mqtt_app_err_t PublicTestMQTT(int idx)
-{
-    char tmp[10];
-    char resp[256];
-    char JSONMess[512];
-    struct jWriteControl jwc;
-    jwOpen(&jwc, JSONMess, MAX_ERROR_JSON, JW_OBJECT, JW_PRETTY);
-    time_t now;
-    time(&now);
-    jwObj_int(&jwc, "time", (unsigned int) now);
-    jwObj_string(&jwc, "event", "MQTT_TEST_MESSAGE)");
-    strcpy(resp, "mqtt://");
-    strcat(resp, GetSysConf()->mqttStation[idx].ServerAddr);
-    itoa(GetSysConf()->mqttStation[idx].ServerPort, tmp, 10);
-    strcat(resp, ":");
-    strcat(resp, tmp);
-    jwObj_string(&jwc, "url", resp);
-    ComposeTopic(resp, idx, SERVICE_NAME, UPLINK_SUBTOPIC);
-    jwObj_string(&jwc, "tx_topic", resp);
-    ComposeTopic(resp, idx, SERVICE_NAME, DOWNLINK_SUBTOPIC);
-    jwObj_string(&jwc, "rx_topic", resp);
-    jwEnd(&jwc);
-    jwClose(&jwc);
-    mqtt_app_err_t merr = API_OK;
-    if (SysServiceMQTTSend(JSONMess, strlen(JSONMess), idx) != ESP_OK)
-        merr = API_INTERNAL_ERR;
-    return merr;
-}
-*/
+ mqtt_app_err_t PublicTestMQTT(int idx)
+ {
+ char tmp[10];
+ char resp[256];
+ char JSONMess[512];
+ struct jWriteControl jwc;
+ jwOpen(&jwc, JSONMess, MAX_ERROR_JSON, JW_OBJECT, JW_PRETTY);
+ time_t now;
+ time(&now);
+ jwObj_int(&jwc, "time", (unsigned int) now);
+ jwObj_string(&jwc, "event", "MQTT_TEST_MESSAGE)");
+ strcpy(resp, "mqtt://");
+ strcat(resp, GetSysConf()->mqttStation[idx].ServerAddr);
+ itoa(GetSysConf()->mqttStation[idx].ServerPort, tmp, 10);
+ strcat(resp, ":");
+ strcat(resp, tmp);
+ jwObj_string(&jwc, "url", resp);
+ ComposeTopic(resp, idx, SERVICE_NAME, UPLINK_SUBTOPIC);
+ jwObj_string(&jwc, "tx_topic", resp);
+ ComposeTopic(resp, idx, SERVICE_NAME, DOWNLINK_SUBTOPIC);
+ jwObj_string(&jwc, "rx_topic", resp);
+ jwEnd(&jwc);
+ jwClose(&jwc);
+ mqtt_app_err_t merr = API_OK;
+ if (SysServiceMQTTSend(JSONMess, strlen(JSONMess), idx) != ESP_OK)
+ merr = API_INTERNAL_ERR;
+ return merr;
+ }
+ */
 
 mqtt_app_err_t PublicTestMQTT(int idx)
 {
@@ -209,12 +209,59 @@ mqtt_app_err_t PublicTestMQTT(int idx)
     GetISO8601Time(time);
     jwObj_string(&jwc, "time", time);
     jwObj_int(&jwc, "msgtype", DATA_MESSAGE_TYPE_COMMAND);
-    jwObj_int(&jwc, "payloadtype", 1);
+    jwObj_int(&jwc, "payloadtype", 1000);
     jwObj_object(&jwc, "payload");
     jwObj_int(&jwc, "applytype", 0);
     jwObj_object(&jwc, "variables");
 
-    jwObj_string(&jwc, "event", "MQTT_TEST_MESSAGE)");
+    rest_var_types tp = VAR_STRING;
+    GetConfVar("dev_id", resp, &tp);
+    jwObj_string(&jwc, "dev_id", resp);
+    GetConfVar("ser_num", resp, &tp);
+    jwObj_string(&jwc, "ser_num", resp);
+    GetConfVar("model_name", resp, &tp);
+    jwObj_string(&jwc, "model_name", resp);
+    GetConfVar("hw_rev", resp, &tp);
+    jwObj_string(&jwc, "hw_rev", resp);
+
+    tp = VAR_FUNCT;
+    GetConfVar("time", resp, &tp);
+    jwObj_raw(&jwc, "time", resp);
+    GetConfVar("lat", resp, &tp);
+    jwObj_raw(&jwc, "lat", resp);
+    GetConfVar("lon", resp, &tp);
+    jwObj_raw(&jwc, "lon", resp);
+    GetConfVar("uptime", resp, &tp);
+    jwObj_raw(&jwc, "uptime", resp);
+    GetConfVar("free_ram", resp, &tp);
+    jwObj_raw(&jwc, "free_ram", resp);
+    GetConfVar("free_ram_min", resp, &tp);
+    jwObj_raw(&jwc, "free_ram_min", resp);
+    GetConfVar("def_interface", resp, &tp);
+    jwObj_raw(&jwc, "def_interface", resp);
+
+    GetConfVar("fw_rev", resp, &tp);
+    jwObj_raw(&jwc, "fw_rev", resp);
+    GetConfVar("idf_rev", resp, &tp);
+    jwObj_raw(&jwc, "idf_rev", resp);
+#if CONFIG_WEBGUIAPP_WIFI_ENABLE
+    GetConfVar("wifi_stat", resp, &tp);
+    jwObj_raw(&jwc, "wifi_stat", resp);
+    GetConfVar("wifi_level", resp, &tp);
+    jwObj_raw(&jwc, "wifi_level", resp);
+    tp = VAR_INT;
+    GetConfVar("wifi_mode", resp, &tp);
+    jwObj_raw(&jwc, "wifi_mode", resp);
+    tp = VAR_STRING;
+    GetConfVar("wifi_ap_ssid", resp, &tp);
+    jwObj_string(&jwc, "wifi_ap_ssid", resp);
+    GetConfVar("wifi_sta_ssid", resp, &tp);
+    jwObj_string(&jwc, "wifi_sta_ssid", resp);
+#endif
+#if CONFIG_WEBGUIAPP_GPRS_ENABLE
+
+#endif
+
     strcpy(resp, "mqtt://");
     strcat(resp, GetSysConf()->mqttStation[idx].ServerAddr);
     itoa(GetSysConf()->mqttStation[idx].ServerPort, tmp, 10);
@@ -225,7 +272,6 @@ mqtt_app_err_t PublicTestMQTT(int idx)
     jwObj_string(&jwc, "tx_topic", resp);
     ComposeTopic(resp, idx, SERVICE_NAME, DOWNLINK_SUBTOPIC);
     jwObj_string(&jwc, "rx_topic", resp);
-
 
     jwEnd(&jwc); //close variables
     jwEnd(&jwc); //close payload
@@ -277,9 +323,9 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED client %d", idx);
 #endif
             ComposeTopic(topic, idx, SERVICE_NAME, DOWNLINK_SUBTOPIC);
-            msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
+msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
 #if MQTT_DEBUG_MODE > 0
-            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
+                        ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
             ESP_LOGI(TAG, "Subscribe to %s", topic);
 #endif
 

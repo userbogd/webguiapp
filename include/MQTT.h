@@ -51,6 +51,9 @@ typedef int mqtt_app_err_t;
 #define UPLINK_SUBTOPIC "UPLINK"        // Device publish to this topic
 #define DOWNLINK_SUBTOPIC "DWLINK"      // Device listen from this topic
 
+#define MQTT1  0
+#define MQTT2  1
+
 typedef struct
 {
     char topic[CONFIG_WEBGUIAPP_MQTT_MAX_TOPIC_LENGTH];
