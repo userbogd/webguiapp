@@ -20,6 +20,7 @@
  */
 
 #include <CronTimers.h>
+#include "SysConfiguration.h"
 #include "esp_log.h"
 #include "webguiapp.h"
 #include "string.h"
@@ -42,7 +43,8 @@ char* GetCronError()
 
 void custom_cron_job_callback(cron_job *job)
 {
-    ExecCommand(((cron_timer_t*) job->data)->exec);
+    if (GetSysConf()->bIsCRONEnabled)
+    	ExecCommand(((cron_timer_t*) job->data)->exec);
 }
 
 const char* check_expr(const char *expr)
@@ -96,7 +98,8 @@ static void ExecuteLastAction(obj_struct_t *objarr)
         if (minimal != -1)
         {
             ESP_LOGI(TAG, "Run previous CRON \"%s\" with delta %d", GetSysConf()->Timers[minimal].exec, (int )delta);
-            ExecCommand(GetSysConf()->Timers[minimal].exec);
+            if (GetSysConf()->bIsCRONEnabled)
+            	ExecCommand(GetSysConf()->Timers[minimal].exec);
 
         }
     }

@@ -449,7 +449,9 @@ const rest_var_t SystemVariables[] =
 
                 { 0, "lat", &funct_lat, VAR_FUNCT, RW, 0, 0 },
                 { 0, "lon", &funct_lon, VAR_FUNCT, RW, 0, 0 },
-
+                
+ 				{ 0, "cronrecs_enab", &SysConfig.bIsCRONEnabled, VAR_BOOL, RW, 0, 1 },
+ 				
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
                 { 0, "mqtt_1_enab", &SysConfig.mqttStation[0].Flags1.bIsGlobalEnabled, VAR_BOOL, RW, 0, 1 },
                 { 0, "mqtt_1_serv", &SysConfig.mqttStation[0].ServerAddr, VAR_STRING, RW, 3, 63 },

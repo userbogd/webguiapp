@@ -452,6 +452,7 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
         strcpy(Conf->Timers[i].exec, "OBJECT,ACTION,ARGUMENTS");
 
     }
+    Conf->bIsCRONEnabled = true;
 
 #ifdef CONFIG_WEBGUIAPP_ASTRO_ENABLE
 

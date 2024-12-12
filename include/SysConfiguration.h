@@ -238,8 +238,9 @@ typedef struct
 
           } modbusSettings;
 
-
+	
           cron_timer_t Timers[CONFIG_WEBGUIAPP_CRON_NUMBER];
+          bool bIsCRONEnabled;
 
     } SYS_CONFIG;
 
