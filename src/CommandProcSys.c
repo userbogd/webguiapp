@@ -34,7 +34,8 @@ const char *exec_errors[] = {
         "param COMMAND not found",
         "object not exists",
         "command not exists",
-        "handler not set"
+        "handler not set",
+         "param ARGUMENT not found",
 };
 
 
@@ -158,6 +159,8 @@ static int ExecCommandParse(char *cmd)
         return 2; //ERROR_OBJECT_NOT_PARSED
     if (!com)
         return 3; //ERROR_ACTION_NOT_PARSED
+    if (!arg)
+        return 7; //ERROR_ACTION_NOT_PARSED    
 
     for (int idx = 0; idx < CONFIG_WEBGUIAPP_MAX_OBJECTS_NUM; idx++)
     {
