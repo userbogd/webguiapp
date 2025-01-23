@@ -16,7 +16,7 @@
  *     Project: ChargePointMainboard
  *  Created on: 2022-07-21
  *      Author: Bogdan Pilyugin
- * Description:	
+ * Description:
  */
 
 #include <SysConfiguration.h>
@@ -39,12 +39,12 @@ esp_netif_t *ap_netif;
 
 static const char *TAG = "WiFiTransport";
 
-#define WIFI_CONNECT_AFTER_FAIL_DELAY   40
-#define WIFI_AP_ONBOOT_TIME 300
+#define WIFI_CONNECT_AFTER_FAIL_DELAY 40
+#define WIFI_AP_ONBOOT_TIME           300
 
-#define EXAMPLE_ESP_MAXIMUM_RETRY  5
-#define EXAMPLE_ESP_WIFI_CHANNEL   6
-#define EXAMPLE_MAX_STA_CONN       10
+#define EXAMPLE_ESP_MAXIMUM_RETRY 5
+#define EXAMPLE_ESP_WIFI_CHANNEL  6
+#define EXAMPLE_MAX_STA_CONN      10
 
 static bool isWiFiRunning = false;
 static bool isWiFiConnected = false;
@@ -56,7 +56,7 @@ static int TempAPCounter = 0;
 static wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
 static bool isScanExecuting = false;
 
-wifi_ap_record_t* GetWiFiAPRecord(uint8_t n)
+wifi_ap_record_t *GetWiFiAPRecord(uint8_t n)
 {
     if (n < DEFAULT_SCAN_LIST_SIZE)
     {
@@ -65,12 +65,12 @@ wifi_ap_record_t* GetWiFiAPRecord(uint8_t n)
     return NULL;
 }
 
-esp_netif_t* GetSTANetifAdapter(void)
+esp_netif_t *GetSTANetifAdapter(void)
 {
     return sta_netif;
 }
 
-esp_netif_t* GetAPNetifAdapter(void)
+esp_netif_t *GetAPNetifAdapter(void)
 {
     return ap_netif;
 }
@@ -87,9 +87,7 @@ void resonnectWithDelay(void *agr)
     vTaskDelete(NULL);
 }
 
-static void event_handler(void *arg, esp_event_base_t event_base,
-                          int32_t event_id,
-                          void *event_data)
+static void event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
     {
@@ -116,12 +114,11 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_BEACON_TIMEOUT)
     {
         ESP_LOGW(TAG, "STA beacon timeout");
-
     }
 
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
     {
-        ip_event_got_ip_t *event = (ip_event_got_ip_t*) event_data;
+        ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
         const esp_netif_ip_info_t *ip_info = &event->ip_info;
         memcpy(&GetSysConf()->wifiSettings.InfIPAddr, &event->ip_info.ip, sizeof(event->ip_info.ip));
         memcpy(&GetSysConf()->wifiSettings.InfMask, &event->ip_info.netmask, sizeof(event->ip_info.netmask));
@@ -136,7 +133,7 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     }
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_LOST_IP)
     {
-        ip_event_got_ip_t *event = (ip_event_got_ip_t*) event_data;
+        ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
         const esp_netif_ip_info_t *ip_info = &event->ip_info;
         memcpy(&GetSysConf()->wifiSettings.InfIPAddr, &event->ip_info.ip, sizeof(event->ip_info.ip));
         memcpy(&GetSysConf()->wifiSettings.InfMask, &event->ip_info.netmask, sizeof(event->ip_info.netmask));
@@ -152,30 +149,26 @@ static void event_handler(void *arg, esp_event_base_t event_base,
 
     else if (event_id == WIFI_EVENT_AP_STACONNECTED)
     {
-        wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t*) event_data;
-        ESP_LOGI(TAG, "station "MACSTR" join, AID=%d", MAC2STR(event->mac), event->aid);
+        wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *)event_data;
+        ESP_LOGI(TAG, "station " MACSTR " join, AID=%d", MAC2STR(event->mac), event->aid);
     }
     else if (event_id == WIFI_EVENT_AP_STADISCONNECTED)
     {
-        wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t*) event_data;
-        ESP_LOGI(TAG, "station "MACSTR" leave, AID=%d", MAC2STR(event->mac), event->aid);
+        wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *)event_data;
+        ESP_LOGI(TAG, "station " MACSTR " leave, AID=%d", MAC2STR(event->mac), event->aid);
     }
 }
 
 static void wifi_init_softap(void *pvParameter)
 {
     char if_key_str[24];
-    esp_netif_inherent_config_t esp_netif_conf = ESP_NETIF_INHERENT_DEFAULT_WIFI_AP()
-            ;
+    esp_netif_inherent_config_t esp_netif_conf = ESP_NETIF_INHERENT_DEFAULT_WIFI_AP();
 
     strcpy(if_key_str, "WIFI_AP_USER");
     esp_netif_conf.if_key = if_key_str;
     esp_netif_conf.route_prio = AP_PRIO;
 
-    esp_netif_config_t cfg_netif = {
-            .base = &esp_netif_conf,
-            .stack = ESP_NETIF_NETSTACK_DEFAULT_WIFI_AP
-    };
+    esp_netif_config_t cfg_netif = { .base = &esp_netif_conf, .stack = ESP_NETIF_NETSTACK_DEFAULT_WIFI_AP };
 
     ap_netif = esp_netif_new(&cfg_netif);
     assert(ap_netif);
@@ -196,15 +189,10 @@ static void wifi_init_softap(void *pvParameter)
     esp_netif_attach_wifi_ap(ap_netif);
     esp_wifi_set_default_wifi_ap_handlers();
 
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT()
-            ;
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
-    ESP_EVENT_ANY_ID,
-                                                        &event_handler,
-                                                        NULL,
-                                                        NULL));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL, NULL));
 
     wifi_config_t wifi_config = {
             .ap = {
@@ -220,8 +208,7 @@ static void wifi_init_softap(void *pvParameter)
     }
 
     memcpy(wifi_config.ap.ssid, GetSysConf()->wifiSettings.ApSSID, strlen(GetSysConf()->wifiSettings.ApSSID));
-    memcpy(wifi_config.ap.password, GetSysConf()->wifiSettings.ApSecurityKey,
-           strlen(GetSysConf()->wifiSettings.ApSecurityKey));
+    memcpy(wifi_config.ap.password, GetSysConf()->wifiSettings.ApSecurityKey, strlen(GetSysConf()->wifiSettings.ApSecurityKey));
     wifi_config.ap.ssid_len = strlen(GetSysConf()->wifiSettings.ApSSID);
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
@@ -238,16 +225,13 @@ static void wifi_init_softap(void *pvParameter)
 
 static void wifi_init_sta(void *pvParameter)
 {
-    //sta_netif = esp_netif_create_default_wifi_sta();
+    // sta_netif = esp_netif_create_default_wifi_sta();
     char if_key_str[24];
     esp_netif_inherent_config_t esp_netif_conf = ESP_NETIF_INHERENT_DEFAULT_WIFI_STA();
     strcpy(if_key_str, "WIFI_STA_USER");
     esp_netif_conf.if_key = if_key_str;
     esp_netif_conf.route_prio = STA_PRIO;
-    esp_netif_config_t cfg_netif = {
-            .base = &esp_netif_conf,
-            .stack = ESP_NETIF_NETSTACK_DEFAULT_WIFI_STA
-    };
+    esp_netif_config_t cfg_netif = { .base = &esp_netif_conf, .stack = ESP_NETIF_NETSTACK_DEFAULT_WIFI_STA };
     sta_netif = esp_netif_new(&cfg_netif);
     assert(sta_netif);
 
@@ -262,7 +246,7 @@ static void wifi_init_sta(void *pvParameter)
     esp_netif_set_ip_info(sta_netif, &ip_info);
     esp_netif_set_dns_info(sta_netif, ESP_NETIF_DNS_MAIN, &dns_info);
 
-    //esp_netif_str_to_ip4(&GetSysConf()->wifiSettings.DNSAddr3, (esp_ip4_addr_t*)(&dns_info.ip));
+    // esp_netif_str_to_ip4(&GetSysConf()->wifiSettings.DNSAddr3, (esp_ip4_addr_t*)(&dns_info.ip));
     memcpy(&dns_info.ip, &GetSysConf()->wifiSettings.DNSAddr3, sizeof(esp_ip4_addr_t));
 
     esp_netif_set_dns_info(sta_netif, ESP_NETIF_DNS_FALLBACK, &dns_info);
@@ -273,22 +257,13 @@ static void wifi_init_sta(void *pvParameter)
     esp_netif_attach_wifi_station(sta_netif);
     esp_wifi_set_default_wifi_sta_handlers();
 
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT()
-            ;
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
     esp_event_handler_instance_t instance_any_id;
     esp_event_handler_instance_t instance_got_ip;
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
-    ESP_EVENT_ANY_ID,
-                                                        &event_handler,
-                                                        NULL,
-                                                        &instance_any_id));
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT,
-                                                        IP_EVENT_STA_GOT_IP,
-                                                        &event_handler,
-                                                        NULL,
-                                                        &instance_got_ip));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL, &instance_any_id));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL, &instance_got_ip));
 
     wifi_config_t wifi_config = {
             .sta = {
@@ -304,8 +279,7 @@ static void wifi_init_sta(void *pvParameter)
             },
     };
     memcpy(wifi_config.sta.ssid, GetSysConf()->wifiSettings.InfSSID, strlen(GetSysConf()->wifiSettings.InfSSID));
-    memcpy(wifi_config.sta.password, GetSysConf()->wifiSettings.InfSecurityKey,
-           strlen(GetSysConf()->wifiSettings.InfSecurityKey));
+    memcpy(wifi_config.sta.password, GetSysConf()->wifiSettings.InfSecurityKey, strlen(GetSysConf()->wifiSettings.InfSecurityKey));
 
     esp_netif_set_hostname(sta_netif, GetSysConf()->NetBIOSName);
 
@@ -323,39 +297,32 @@ static void wifi_init_sta(void *pvParameter)
 
 static void wifi_init_apsta(void *pvParameter)
 {
-    //BEGIN AP MODE IF
+    // BEGIN AP MODE IF
     char ap_if_key_str[24];
-    esp_netif_inherent_config_t ap_esp_netif_conf = ESP_NETIF_INHERENT_DEFAULT_WIFI_AP()
-            ;
+    esp_netif_inherent_config_t ap_esp_netif_conf = ESP_NETIF_INHERENT_DEFAULT_WIFI_AP();
 
     strcpy(ap_if_key_str, "WIFI_AP_USER");
     ap_esp_netif_conf.if_key = ap_if_key_str;
     ap_esp_netif_conf.route_prio = AP_PRIO;
 
-    esp_netif_config_t cfg_netif = {
-            .base = &ap_esp_netif_conf,
-            .stack = ESP_NETIF_NETSTACK_DEFAULT_WIFI_AP
-    };
+    esp_netif_config_t cfg_netif = { .base = &ap_esp_netif_conf, .stack = ESP_NETIF_NETSTACK_DEFAULT_WIFI_AP };
 
     ap_netif = esp_netif_new(&cfg_netif);
     assert(ap_netif);
-    //END AP MODE IF
+    // END AP MODE IF
 
-    //BEGIN STA MODE IF
+    // BEGIN STA MODE IF
     char sta_if_key_str[24];
     esp_netif_inherent_config_t staesp_netif_conf = ESP_NETIF_INHERENT_DEFAULT_WIFI_STA();
     strcpy(sta_if_key_str, "WIFI_STA_USER");
     staesp_netif_conf.if_key = sta_if_key_str;
     staesp_netif_conf.route_prio = STA_PRIO;
-    esp_netif_config_t sta_cfg_netif = {
-            .base = &staesp_netif_conf,
-            .stack = ESP_NETIF_NETSTACK_DEFAULT_WIFI_STA
-    };
+    esp_netif_config_t sta_cfg_netif = { .base = &staesp_netif_conf, .stack = ESP_NETIF_NETSTACK_DEFAULT_WIFI_STA };
     sta_netif = esp_netif_new(&sta_cfg_netif);
     assert(sta_netif);
-    //END STA MODE IF
+    // END STA MODE IF
 
-    //BEGIN AP MODE CONFIGURATION
+    // BEGIN AP MODE CONFIGURATION
     esp_netif_ip_info_t ip_info;
     memcpy(&ip_info.ip, &GetSysConf()->wifiSettings.ApIPAddr, 4);
     memcpy(&ip_info.gw, &GetSysConf()->wifiSettings.ApIPAddr, 4);
@@ -372,8 +339,7 @@ static void wifi_init_apsta(void *pvParameter)
     esp_netif_attach_wifi_ap(ap_netif);
     esp_wifi_set_default_wifi_ap_handlers();
 
-    wifi_init_config_t ap_cfg = WIFI_INIT_CONFIG_DEFAULT()
-            ;
+    wifi_init_config_t ap_cfg = WIFI_INIT_CONFIG_DEFAULT();
 
     ESP_ERROR_CHECK(esp_wifi_init(&ap_cfg));
     wifi_config_t ap_wifi_config = {
@@ -395,13 +361,12 @@ static void wifi_init_apsta(void *pvParameter)
     }
 
     memcpy(ap_wifi_config.ap.ssid, GetSysConf()->wifiSettings.ApSSID, strlen(GetSysConf()->wifiSettings.ApSSID));
-    memcpy(ap_wifi_config.ap.password, GetSysConf()->wifiSettings.ApSecurityKey,
-           strlen(GetSysConf()->wifiSettings.ApSecurityKey));
+    memcpy(ap_wifi_config.ap.password, GetSysConf()->wifiSettings.ApSecurityKey, strlen(GetSysConf()->wifiSettings.ApSecurityKey));
     ap_wifi_config.ap.ssid_len = strlen(GetSysConf()->wifiSettings.ApSSID);
-    //END AP MODE CONFIGURATION
+    // END AP MODE CONFIGURATION
 
-    //BEGIN STA MODE CONFIGURATION
-    //esp_netif_ip_info_t ip_info;
+    // BEGIN STA MODE CONFIGURATION
+    // esp_netif_ip_info_t ip_info;
     memcpy(&ip_info.ip, &GetSysConf()->wifiSettings.InfIPAddr, 4);
     memcpy(&ip_info.gw, &GetSysConf()->wifiSettings.InfGateway, 4);
     memcpy(&ip_info.netmask, &GetSysConf()->wifiSettings.InfMask, 4);
@@ -412,7 +377,7 @@ static void wifi_init_apsta(void *pvParameter)
     esp_netif_set_ip_info(sta_netif, &ip_info);
     esp_netif_set_dns_info(sta_netif, ESP_NETIF_DNS_MAIN, &sta_dns_info);
 
-    //esp_netif_str_to_ip4(&GetSysConf()->wifiSettings.DNSAddr3, (esp_ip4_addr_t*)(&dns_info.ip));
+    // esp_netif_str_to_ip4(&GetSysConf()->wifiSettings.DNSAddr3, (esp_ip4_addr_t*)(&dns_info.ip));
     memcpy(&sta_dns_info.ip, &GetSysConf()->wifiSettings.DNSAddr3, sizeof(esp_ip4_addr_t));
 
     esp_netif_set_dns_info(sta_netif, ESP_NETIF_DNS_FALLBACK, &sta_dns_info);
@@ -423,22 +388,13 @@ static void wifi_init_apsta(void *pvParameter)
     esp_netif_attach_wifi_station(sta_netif);
     esp_wifi_set_default_wifi_sta_handlers();
 
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT()
-            ;
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
     esp_event_handler_instance_t instance_any_id;
     esp_event_handler_instance_t instance_got_ip;
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT,
-    ESP_EVENT_ANY_ID,
-                                                        &event_handler,
-                                                        NULL,
-                                                        &instance_any_id));
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT,
-                                                        IP_EVENT_STA_GOT_IP,
-                                                        &event_handler,
-                                                        NULL,
-                                                        &instance_got_ip));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL, &instance_any_id));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL, &instance_got_ip));
 
     wifi_config_t sta_wifi_config = {
             .sta = {
@@ -456,9 +412,8 @@ static void wifi_init_apsta(void *pvParameter)
             },
     };
     memcpy(sta_wifi_config.sta.ssid, GetSysConf()->wifiSettings.InfSSID, strlen(GetSysConf()->wifiSettings.InfSSID));
-    memcpy(sta_wifi_config.sta.password, GetSysConf()->wifiSettings.InfSecurityKey,
-           strlen(GetSysConf()->wifiSettings.InfSecurityKey));
-    //END STA MODE CONFIGURATION
+    memcpy(sta_wifi_config.sta.password, GetSysConf()->wifiSettings.InfSecurityKey, strlen(GetSysConf()->wifiSettings.InfSecurityKey));
+    // END STA MODE CONFIGURATION
 
     ESP_ERROR_CHECK(esp_netif_set_hostname(sta_netif, "test_TEST"));
     ESP_ERROR_CHECK(esp_netif_set_hostname(ap_netif, GetSysConf()->NetBIOSName));
@@ -479,8 +434,7 @@ static void wifi_init_apsta(void *pvParameter)
 
     wifi_country_t CC;
     esp_wifi_get_country(&CC);
-    ESP_LOGI(TAG, "Country code %.*s, start_ch=%d, total_ch=%d, max power %d", 3, CC.cc, CC.schan, CC.nchan,
-             CC.max_tx_power);
+    ESP_LOGI(TAG, "Country code %.*s, start_ch=%d, total_ch=%d, max power %d", 3, CC.cc, CC.schan, CC.nchan, CC.max_tx_power);
 
     ESP_LOGI(TAG, "wifi_init_softap_sta finished");
     vTaskDelete(NULL);
@@ -496,38 +450,40 @@ void WiFiConnect(void)
     esp_wifi_connect();
 }
 
-#define RECONNECT_INTERVAL_AP 60
-#define RECONNECT_INTERVAL_STA 30
-#define WAITIP_INTERVAL 10
+#define RECONNECT_INTERVAL_AP   30
+#define RECONNECT_INTERVAL_STA  30
+#define RECONNECT_FAST_ATTEMPTS 5
+#define WAITIP_INTERVAL         10
 
 static void WiFiControlTask(void *arg)
 {
-    //WiFi init and start block
+    // WiFi init and start block
+    static int attempts = 0;
     static int reconnect_counter;
-    reconnect_counter =
-            (GetSysConf()->wifiSettings.WiFiMode == WIFI_MODE_STA) ? RECONNECT_INTERVAL_STA : RECONNECT_INTERVAL_AP;
+    reconnect_counter = 5;
     static int waitip_counter = WAITIP_INTERVAL;
-    //s_wifi_event_group = xEventGroupCreate();
+    // s_wifi_event_group = xEventGroupCreate();
     switch (GetSysConf()->wifiSettings.WiFiMode)
     {
         case WIFI_MODE_STA:
-            xTaskCreate(wifi_init_sta, "InitStationTask", 1024 * 4, (void*) 0, 3, NULL);
-        break;
+            xTaskCreate(wifi_init_sta, "InitStationTask", 1024 * 4, (void *)0, 3, NULL);
+            break;
         case WIFI_MODE_AP:
-            xTaskCreate(wifi_init_softap, "InitSoftAPTask", 1024 * 4, (void*) 0, 3, NULL);
-        break;
+            xTaskCreate(wifi_init_softap, "InitSoftAPTask", 1024 * 4, (void *)0, 3, NULL);
+            break;
         case WIFI_MODE_APSTA:
-            xTaskCreate(wifi_init_apsta, "InitSoftAPSTATask", 1024 * 4, (void*) 0, 3, NULL);
-        break;
+            xTaskCreate(wifi_init_apsta, "InitSoftAPSTATask", 1024 * 4, (void *)0, 3, NULL);
+            break;
     }
     isWiFiRunning = true;
-    //WiFi in work service
+    // WiFi in work service
     TempAPCounter = GetSysConf()->wifiSettings.AP_disab_time * 60;
     while (isWiFiRunning)
     {
         vTaskDelay(pdMS_TO_TICKS(1000));
         if (isWiFiConnected)
         {
+            attempts = 0;
             reconnect_counter = RECONNECT_INTERVAL_STA;
             if (!isWiFiGotIp)
             {
@@ -540,16 +496,19 @@ static void WiFiControlTask(void *arg)
             }
         }
         if (isWiFiFail)
+
         {
             if (--reconnect_counter <= 0 && !isScanExecuting)
             {
                 ESP_LOGI(TAG, "WiFi STA started, reconnecting to AP...");
                 esp_wifi_connect();
-                reconnect_counter =
-                        (GetSysConf()->wifiSettings.WiFiMode == WIFI_MODE_STA) ?
-                                RECONNECT_INTERVAL_STA : RECONNECT_INTERVAL_AP;
+                if (++attempts <= RECONNECT_FAST_ATTEMPTS)
+                    reconnect_counter = 5;
+                else
+                    reconnect_counter = (GetSysConf()->wifiSettings.WiFiMode == WIFI_MODE_STA) ? RECONNECT_INTERVAL_STA : RECONNECT_INTERVAL_AP;
             }
         }
+
         if (TempAPCounter > 0)
         {
             if (--TempAPCounter <= 0)
@@ -563,7 +522,6 @@ static void WiFiControlTask(void *arg)
                 }
             }
         }
-
     }
 
     if (isWiFiConnected)
@@ -578,7 +536,7 @@ static void WiFiControlTask(void *arg)
 
 void WiFiStart(void)
 {
-    xTaskCreate(WiFiControlTask, "WiFiCtrlTask", 1024 * 4, (void*) 0, 3, NULL);
+    xTaskCreate(WiFiControlTask, "WiFiCtrlTask", 1024 * 4, (void *)0, 3, NULL);
 }
 
 void WiFiStop()
@@ -614,7 +572,7 @@ static void wifi_scan(void *arg)
 {
     uint16_t number = DEFAULT_SCAN_LIST_SIZE;
     uint16_t ap_count = 0;
-    vTaskDelay(pdMS_TO_TICKS(1000)); //delay for command result get before network break
+    vTaskDelay(pdMS_TO_TICKS(1000)); // delay for command result get before network break
     memset(ap_info, 0, sizeof(ap_info));
     while (esp_wifi_scan_start(NULL, true) == ESP_ERR_WIFI_STATE)
     {
@@ -631,7 +589,7 @@ static void wifi_scan(void *arg)
 void WiFiScan(void)
 {
     isScanExecuting = true;
-    xTaskCreate(wifi_scan, "ScanWiFiTask", 1024 * 4, (void*) 0, 3, NULL);
+    xTaskCreate(wifi_scan, "ScanWiFiTask", 1024 * 4, (void *)0, 3, NULL);
 }
 
 int GetAPClientsNumber()
@@ -647,4 +605,3 @@ int GetAPClientsNumber()
     }
     return -1;
 }
-

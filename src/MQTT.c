@@ -161,42 +161,12 @@ esp_err_t ExternalServiceMQTTSend(char *servname, char *data, int len, int idx)
 }
 
 #define MAX_ERROR_JSON  256
-/*
- mqtt_app_err_t PublicTestMQTT(int idx)
- {
- char tmp[10];
- char resp[256];
- char JSONMess[512];
- struct jWriteControl jwc;
- jwOpen(&jwc, JSONMess, MAX_ERROR_JSON, JW_OBJECT, JW_PRETTY);
- time_t now;
- time(&now);
- jwObj_int(&jwc, "time", (unsigned int) now);
- jwObj_string(&jwc, "event", "MQTT_TEST_MESSAGE)");
- strcpy(resp, "mqtt://");
- strcat(resp, GetSysConf()->mqttStation[idx].ServerAddr);
- itoa(GetSysConf()->mqttStation[idx].ServerPort, tmp, 10);
- strcat(resp, ":");
- strcat(resp, tmp);
- jwObj_string(&jwc, "url", resp);
- ComposeTopic(resp, idx, SERVICE_NAME, UPLINK_SUBTOPIC);
- jwObj_string(&jwc, "tx_topic", resp);
- ComposeTopic(resp, idx, SERVICE_NAME, DOWNLINK_SUBTOPIC);
- jwObj_string(&jwc, "rx_topic", resp);
- jwEnd(&jwc);
- jwClose(&jwc);
- mqtt_app_err_t merr = API_OK;
- if (SysServiceMQTTSend(JSONMess, strlen(JSONMess), idx) != ESP_OK)
- merr = API_INTERNAL_ERR;
- return merr;
- }
- */
-
+static char resp[256];
+static char JSONMess[1024];
 mqtt_app_err_t PublicTestMQTT(int idx)
 {
     char tmp[10];
-    char resp[256];
-    char JSONMess[1024];
+
     struct jWriteControl jwc;
     jwOpen(&jwc, JSONMess, 1024 - 64, JW_OBJECT, JW_COMPACT);
     jwObj_object(&jwc, "data");

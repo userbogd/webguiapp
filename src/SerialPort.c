@@ -231,8 +231,8 @@ void InitSerialPort(void)
 {
     uart_config_t uart_config = {
             .baud_rate = GetSysConf()->serialSettings.BaudRate,
-            .data_bits = UART_DATA_7_BITS,
-            .parity = UART_PARITY_EVEN,
+            .data_bits = UART_DATA_8_BITS,
+            .parity = UART_PARITY_DISABLE,
             .stop_bits = UART_STOP_BITS_1,
             .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
             .source_clk = UART_SCLK_APB,
