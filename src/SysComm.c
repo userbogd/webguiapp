@@ -16,14 +16,15 @@
  *    \version 1.0
  * 		 \date 2023-07-26
  *     \author Bogdan Pilyugin
- * 	    \brief    
- *    \details 
+ * 	    \brief
+ *    \details
  *	\copyright Apache License, Version 2.0
  */
 
 #include "webguiapp.h"
 #include "SystemApplication.h"
 #include "mbedtls/md.h"
+#include <string.h>
 
 #define TAG "SysComm"
 
@@ -59,13 +60,14 @@ static sys_error_code PayloadDefaultTypeHandler(data_message_t *MSG)
     jwObj_string(&jwc, "time", time);
     jwObj_int(&jwc, "msgtype", DATA_MESSAGE_TYPE_RESPONSE);
     jwObj_int(&jwc, "payloadtype", MSG->parsedData.payloadType);
+    jwObj_string(&jwc, "payloadname", MSG->parsedData.payloadName);
     jwObj_object(&jwc, "payload");
     jwObj_int(&jwc, "applytype", 0);
     jwObj_object(&jwc, "variables");
 
     jRead(MSG->inputDataBuffer, "{'data'{'payload'{'variables'", &result);
     if (result.dataType == JREAD_OBJECT)
-    { //Write variables
+    { // Write variables
         char VarName[VAR_MAX_NAME_LENGTH];
         char *VarValue = malloc(VAR_MAX_VALUE_LENGTH);
         if (!VarValue)
@@ -73,9 +75,7 @@ static sys_error_code PayloadDefaultTypeHandler(data_message_t *MSG)
 
         for (int i = 0; i < result.elements; ++i)
         {
-            jRead_string(MSG->inputDataBuffer, "{'data'{'payload'{'variables'{*", VarName,
-            VAR_MAX_NAME_LENGTH,
-                         &i);
+            jRead_string(MSG->inputDataBuffer, "{'data'{'payload'{'variables'{*", VarName, VAR_MAX_NAME_LENGTH, &i);
             const char parsevar[] = "{'data'{'payload'{'variables'{'";
             char expr[sizeof(parsevar) + VAR_MAX_NAME_LENGTH];
             strcpy(expr, parsevar);
@@ -89,7 +89,7 @@ static sys_error_code PayloadDefaultTypeHandler(data_message_t *MSG)
             esp_err_t res = ESP_ERR_INVALID_ARG;
             rest_var_types tp = VAR_ERROR;
             if (MSG->parsedData.msgType == DATA_MESSAGE_TYPE_COMMAND)
-            { //Write variables
+            { // Write variables
                 res = SetConfVar(VarName, VarValue, &tp);
                 if (tp != VAR_FUNCT)
                 {
@@ -101,20 +101,18 @@ static sys_error_code PayloadDefaultTypeHandler(data_message_t *MSG)
                         tp = VAR_ERROR;
                     }
                 }
-
             }
             else
-            { //Read variables
+            { // Read variables
                 res = GetConfVar(VarName, VarValue, &tp);
                 if (res != ESP_OK)
                     strcpy(VarValue, esp_err_to_name(res));
             }
-            //Response with actual data
+            // Response with actual data
             if (tp == VAR_STRING || tp == VAR_IPADDR || tp == VAR_ERROR || tp == VAR_PASS)
                 jwObj_string(&jwc, VarName, VarValue);
             else
                 jwObj_raw(&jwc, VarName, VarValue);
-
         }
         free(VarValue);
     }
@@ -123,24 +121,23 @@ static sys_error_code PayloadDefaultTypeHandler(data_message_t *MSG)
 
     jwEnd(&jwc);
     jwEnd(&jwc);
-    GetSysErrorDetales((sys_error_code) MSG->err_code, &err_br, &err_desc);
-    jwObj_string(&jwc, "error", (char*) err_br);
-    jwObj_string(&jwc, "error_descr", (char*) err_desc);
+    GetSysErrorDetales((sys_error_code)MSG->err_code, &err_br, &err_desc);
+    jwObj_string(&jwc, "error", (char *)err_br);
+    jwObj_string(&jwc, "error_descr", (char *)err_desc);
     jwEnd(&jwc);
 
     char *datap = strstr(MSG->outputDataBuffer, "\"data\":");
     if (datap)
     {
         datap += sizeof("\"data\":") - 1;
-        SHA256hmacHash((unsigned char*) datap, strlen(datap), (unsigned char*) "mykey", sizeof("mykey"),
-                       MSG->parsedData.sha256);
+        SHA256hmacHash((unsigned char *)datap, strlen(datap), (unsigned char *)"mykey", sizeof("mykey"), MSG->parsedData.sha256);
         unsigned char sha_print[32 * 2 + 1];
         BytesToStr(MSG->parsedData.sha256, sha_print, 32);
         sha_print[32 * 2] = 0x00;
 #if REAST_API_DEBUG_MODE
         ESP_LOGI(TAG, "SHA256 of DATA object is %s", sha_print);
 #endif
-        jwObj_string(&jwc, "signature", (char*) sha_print);
+        jwObj_string(&jwc, "signature", (char *)sha_print);
     }
     else
         return SYS_ERROR_SHA256_DATA;
@@ -150,7 +147,7 @@ static sys_error_code PayloadDefaultTypeHandler(data_message_t *MSG)
     jRead(MSG->inputDataBuffer, "{'data'{'payload'{'applytype'", &result);
     if (result.elements == 1)
     {
-        int atype = atoi((char*) result.pValue);
+        int atype = atoi((char *)result.pValue);
         switch (atype)
         {
             case 0:
@@ -159,17 +156,16 @@ static sys_error_code PayloadDefaultTypeHandler(data_message_t *MSG)
                 WriteNVSSysConfig(GetSysConf());
                 if (CustomSaveConf != NULL)
                     CustomSaveConf();
-            break;
+                break;
             case 2:
                 WriteNVSSysConfig(GetSysConf());
                 if (CustomSaveConf != NULL)
                     CustomSaveConf();
                 DelayedRestart();
-            break;
+                break;
             default:
                 return SYS_ERROR_PARSE_APPLYTYPE;
         }
-
     }
     else
     {
@@ -194,8 +190,7 @@ static sys_error_code DataHeaderParser(data_message_t *MSG)
     jRead_string(MSG->inputDataBuffer, "{'data'", hashbuf, MSG->inputDataLength, 0);
     if (strlen(hashbuf) > 0)
     {
-        SHA256hmacHash((unsigned char*) hashbuf, strlen(hashbuf), (unsigned char*) "mykey", sizeof("mykey"),
-                       MSG->parsedData.sha256);
+        SHA256hmacHash((unsigned char *)hashbuf, strlen(hashbuf), (unsigned char *)"mykey", sizeof("mykey"), MSG->parsedData.sha256);
         unsigned char sha_print[32 * 2 + 1];
         BytesToStr(MSG->parsedData.sha256, sha_print, 32);
         sha_print[32 * 2] = 0x00;
@@ -210,22 +205,19 @@ static sys_error_code DataHeaderParser(data_message_t *MSG)
         return SYS_ERROR_PARSE_DATA;
     }
 
-
     jRead(MSG->inputDataBuffer, "{'signature'", &result);
     if (result.elements == 1)
     {
 #if REAST_API_DEBUG_MODE
-        ESP_LOGI(TAG, "Signature is %.*s", 64, (char* )result.pValue);
+        ESP_LOGI(TAG, "Signature is %.*s", 64, (char *)result.pValue);
 #endif
 
-        //Here compare calculated and received signature;
+        // Here compare calculated and received signature;
     }
     else
         return SYS_ERROR_PARSE_SIGNATURE;
 
-
-
-    //Extract 'messidx' or throw exception
+    // Extract 'messidx' or throw exception
     jRead(MSG->inputDataBuffer, "{'data'{'msgid'", &result);
     if (result.elements == 1)
     {
@@ -252,11 +244,11 @@ static sys_error_code DataHeaderParser(data_message_t *MSG)
     else
         strcpy(MSG->parsedData.dstID, "FFFFFFFF");
 
-    //Extract 'msgtype' or throw exception
+    // Extract 'msgtype' or throw exception
     jRead(MSG->inputDataBuffer, "{'data'{'msgtype'", &result);
     if (result.elements == 1)
     {
-        MSG->parsedData.msgType = atoi((char*) result.pValue);
+        MSG->parsedData.msgType = atoi((char *)result.pValue);
         if (MSG->parsedData.msgType > DATA_MESSAGE_TYPE_RESPONSE || MSG->parsedData.msgType < DATA_MESSAGE_TYPE_COMMAND)
             return SYS_ERROR_PARSE_MSGTYPE;
         if (MSG->parsedData.msgType == DATA_MESSAGE_TYPE_RESPONSE)
@@ -265,21 +257,29 @@ static sys_error_code DataHeaderParser(data_message_t *MSG)
     else
         return SYS_ERROR_PARSE_MSGTYPE;
 
-    //Extract 'payloadtype' or throw exception
+    // Extract 'payloadtype' or throw exception
     jRead(MSG->inputDataBuffer, "{'data'{'payloadtype'", &result);
     if (result.elements == 1)
     {
-        MSG->parsedData.payloadType = atoi((char*) result.pValue);
+        MSG->parsedData.payloadType = atoi((char *)result.pValue);
     }
     else
         return SYS_ERROR_PARSE_PAYLOADTYPE;
+
+    jRead(MSG->inputDataBuffer, "{'data'{'payloadname'", &result);
+    if (result.elements == 1)
+    {
+        jRead_string(MSG->inputDataBuffer, "{'data'{'payloadname'", MSG->parsedData.payloadName, 31, 0);
+    }
+    else
+        strcpy(MSG->parsedData.payloadName, "notset");
 
     sys_error_code err = SYS_ERROR_HANDLER_NOT_SET;
     switch (MSG->parsedData.payloadType)
     {
         case PAYLOAD_DEFAULT:
             err = PayloadDefaultTypeHandler(MSG);
-        break;
+            break;
     }
     if (err != SYS_ERROR_HANDLER_NOT_SET)
         return err;
@@ -314,7 +314,7 @@ esp_err_t ServiceDataHandler(data_message_t *MSG)
 
     if (MSG->err_code == SYS_GOT_RESPONSE_MESSAGE)
     {
-        //ToDo Here handler of received data
+        // ToDo Here handler of received data
 #if REAST_API_DEBUG_MODE
         ESP_LOGI(TAG, "Got response message with msgid=%d", (int)MSG->parsedData.msgID);
 #endif
@@ -336,9 +336,9 @@ esp_err_t ServiceDataHandler(data_message_t *MSG)
         jwObj_int(&jwc, "messtype", DATA_MESSAGE_TYPE_RESPONSE);
         const char *err_br;
         const char *err_desc;
-        GetSysErrorDetales((sys_error_code) MSG->err_code, &err_br, &err_desc);
-        jwObj_string(&jwc, "error", (char*) err_br);
-        jwObj_string(&jwc, "error_descr", (char*) err_desc);
+        GetSysErrorDetales((sys_error_code)MSG->err_code, &err_br, &err_desc);
+        jwObj_string(&jwc, "error", (char *)err_br);
+        jwObj_string(&jwc, "error_descr", (char *)err_desc);
         jwEnd(&jwc);
         jwClose(&jwc);
     }

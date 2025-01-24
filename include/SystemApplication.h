@@ -98,6 +98,7 @@ typedef struct
         time_t time;
         int msgType;
         int payloadType;
+        char payloadName[32];
         void *payload;
         unsigned char sha256[32];
     } parsedData;
