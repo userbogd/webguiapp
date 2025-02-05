@@ -624,8 +624,8 @@ esp_err_t ExtendedLog(esp_log_level_t level, char *format, ...)
     {
         if (GetMQTTHandlesPool(idx)->mqtt_queue == NULL)
             continue;
-        char time[RFC3339_TIMESTAMP_LENGTH];
-        GetRFC3339Time(time);
+        char time[ISO8601_TIMESTAMP_LENGTH];
+        GetISO8601Time(time);
         char *buf = (char*) malloc(strlen(data) + RFC3339_TIMESTAMP_LENGTH + 2);
         if (buf)
         {
