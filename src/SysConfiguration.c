@@ -73,6 +73,7 @@ static void InitSysIO(void);
 static void InitSysSPI(void);
 static void InitSysI2C(void);
 
+
 esp_err_t spi_device_polling_transmit_synchronized(spi_device_handle_t handle,
                                                    spi_transaction_t *trans_desc)
 {
@@ -178,7 +179,8 @@ esp_err_t WebGuiAppInit(void)
 #if CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
     InitSerialPort();
 #endif
-
+	
+	InitPPPSerial();
     return ESP_OK;
 }
 

@@ -37,15 +37,22 @@
 #include "webguiapp.h"
 #include "driver/gpio.h"
 
+#include "lwip/opt.h"
+#include "lwip/sys.h"
+#include "lwip/netif.h"
+#include "netif/ppp/pppapi.h"
+#include "netif/ppp/pppos.h"
+#include "esp_netif.h"
+
 #define TAG             "serial_port"
 #define UART_READ_TOUT  (80) // 3.5T * 8 = 28 ticks, TOUT=3 -> ~24..33 ticks
 #define PATTERN_CHR_NUM (3)   /*!< Set the number of consecutive and identical characters received by receiver which defines a UART pattern*/
 
 #define UART_TX_QUEUE_SIZE (5)
 #define UART_RX_QUEUE_SIZE (5)
-#define UART_DEBUG_MODE    0
+#define UART_DEBUG_MODE    1
 
-#ifdef CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
+#if CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
 
 QueueHandle_t UARTtxQueueHandle;
 static StaticQueue_t xStaticUARTtxQueue;
@@ -54,8 +61,10 @@ uint8_t UARTtxQueueStorageArea[UART_TX_QUEUE_SIZE * sizeof(UART_DATA_SEND_STRUCT
 static QueueHandle_t uart_event_queue;
 static char rxbuf[CONFIG_WEBGUIAPP_UART_BUF_SIZE];
 
+
 esp_err_t TransmitSerialPort(char *data, int ln)
 {
+    return ESP_OK;
     UART_DATA_SEND_STRUCT DSS;
     char *buf = malloc(ln);
     if (!buf)
@@ -108,7 +117,7 @@ void serial_RX_task(void *arg)
         if (xQueueReceive(uart_event_queue, (void *)&event, portMAX_DELAY))
         {
 #if UART_DEBUG_MODE == 1
-            ESP_LOGI(TAG, "uart[%d] event:%d", CONFIG_UART_PORT_NUM, event.type);
+            ESP_LOGI(TAG, "uart[%d] event:%d", CONFIG_WEBGUIAPP_UART_PORT_NUM, event.type);
 #endif
             switch (event.type)
             {
@@ -127,7 +136,7 @@ void serial_RX_task(void *arg)
 #if UART_DEBUG_MODE == 1
                             ESP_LOGI(TAG, "read of %d bytes: %s", buffered_size, rxbuf);
 #endif
-
+                            
                             if (GetSysConf()->serialSettings.Flags.IsBridgeEnabled)
                             {
                                 ExternalServiceMQTTSend(EXTERNAL_SERVICE_NAME, rxbuf, buffered_size, 0);
@@ -135,6 +144,7 @@ void serial_RX_task(void *arg)
                             }
                             else
                                 ReceiveHandlerAPI();
+
                         }
                     }
                     break;
@@ -304,8 +314,11 @@ void InitSerialPort(void)
     UARTtxQueueHandle = NULL;
     UARTtxQueueHandle = xQueueCreateStatic(UART_TX_QUEUE_SIZE, sizeof(UART_DATA_SEND_STRUCT), UARTtxQueueStorageArea, &xStaticUARTtxQueue);
 
-    xTaskCreate(serial_TX_task, "serial_tx", 1024 * 2, (void *)0, 7, NULL);
-    xTaskCreate(serial_RX_task, "serial_rx", 1024 * 4, (void *)0, 12, NULL);
+
+
+
+    xTaskCreate(serial_TX_task, "serial_tx", 4096 * 2, (void *)0, 7, NULL);
+    xTaskCreate(serial_RX_task, "serial_rx", 4096 * 4, (void *)0, 12, NULL);
     ESP_LOGI(TAG, "Serial port initialized on UART%d with baudrate %d", CONFIG_WEBGUIAPP_UART_PORT_NUM, GetSysConf()->serialSettings.BaudRate);
 }
 

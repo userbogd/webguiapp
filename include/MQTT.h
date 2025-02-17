@@ -54,6 +54,9 @@ typedef int mqtt_app_err_t;
 #define MQTT1  0
 #define MQTT2  1
 
+#if CONFIG_WEBGUIAPP_MQTT_ENABLE
+
+
 typedef struct
 {
     char topic[CONFIG_WEBGUIAPP_MQTT_MAX_TOPIC_LENGTH];
@@ -85,5 +88,7 @@ void SystemDataHandler(char *data, uint32_t len, int idx);
 
 mqtt_app_err_t PublicTestMQTT(int idx);
 esp_err_t ExternalServiceMQTTSend(char *servname, char *data, int len, int idx);
+
+#endif
 
 #endif /* MAIN_INCLUDE_MQTT_H_ */
