@@ -626,7 +626,7 @@ esp_err_t ExtendedLog(esp_log_level_t level, char *format, ...)
             continue;
         char time[ISO8601_TIMESTAMP_LENGTH];
         GetISO8601Time(time);
-        char *buf = (char*) malloc(strlen(data) + RFC3339_TIMESTAMP_LENGTH + 2);
+        char *buf = (char*) malloc(strlen(data) + ISO8601_TIMESTAMP_LENGTH + 2);
         if (buf)
         {
             strcpy(buf, time);
