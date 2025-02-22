@@ -20,7 +20,9 @@
  */
 
 #include "CommandProcSys.h"
+#include "NetTransport.h"
 #include "webguiapp.h"
+
 
 #define TAG "COMMAND_PROC_SYS"
 
@@ -48,6 +50,14 @@ static void SYSTEM_TEST_handle(char *obj, char *com, char *arg)
 static void SYSTEM_REBOOT_handle(char *obj, char *com, char *arg)
 {
     ESP_LOGI(TAG, "Object:%s, Command:%s, Argument %s", obj, com, arg);
+     esp_restart();
+}
+static void MODEM_REBOOT_handle(char *obj, char *com, char *arg)
+{
+    ESP_LOGI(TAG, "Object:%s, Command:%s, Argument %s", obj, com, arg);
+#if CONFIG_WEBGUIAPP_GPRS_ENABLE 
+     PPPConnReset();
+#endif
 }
 
 obj_struct_t *custom_com_obj_arr = NULL;
@@ -65,9 +75,9 @@ const obj_struct_t com_obj_arr[] = {
         },
         {
                 .index = 0,
-                .object_name = "SYSTEM1",
+                .object_name = "MODEM",
                 .allowed_actions = { "TEST", "REBOOT", "TEST2", "TEST3", "TEST4" },
-                .command_handlers = { &SYSTEM_TEST_handle, &SYSTEM_REBOOT_handle }
+                .command_handlers = { &SYSTEM_TEST_handle, &MODEM_REBOOT_handle }
         },
         {
                 .index = 0,

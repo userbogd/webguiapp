@@ -73,6 +73,7 @@ void EthStart(void);
 
 void WiFiTransportTask(void *prm);
 
+void PPPConnReset (void);
 
 void PPPModemColdStart(void);
 void PPPModemSoftRestart(void);
@@ -95,6 +96,7 @@ esp_netif_t* GetPPPNetifAdapter(void);
 esp_netif_t* GetSTANetifAdapter(void);
 esp_netif_t* GetAPNetifAdapter(void);
 esp_netif_t* GetETHNetifAdapter(void);
+
 
 bool isWIFIConnected(void);
 bool isETHConnected(void);

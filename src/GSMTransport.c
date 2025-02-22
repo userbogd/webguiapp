@@ -63,12 +63,13 @@ esp_netif_t *GetPPPNetifAdapter(void) {
   if (isPPPConn)
     return ppp_netif;
   else
- 	return NULL;  
+    return NULL;
 }
 
 MODEM_INFO *GetPPPModemInfo(void) { return &mod_info; }
 
 bool isPPPConnected(void) { return isPPPConn; }
+void PPPConnReset(void) { isPPPConn = false; }
 
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
 static void on_ppp_changed(void *arg, esp_event_base_t event_base,
@@ -266,7 +267,8 @@ static void GSMInitTask(void *pvParameter) {
   }
 
   ESP_LOGI(TAG, "PPP data mode OK");
-  xEventGroupWaitBits(event_group, CONNECT_BIT, pdTRUE, pdTRUE, pdMS_TO_TICKS(WAIT_FOR_GET_IP * 1000));
+  xEventGroupWaitBits(event_group, CONNECT_BIT, pdTRUE, pdTRUE,
+                      pdMS_TO_TICKS(WAIT_FOR_GET_IP * 1000));
 
   isPPPinitializing = false;
   vTaskDelete(NULL);
@@ -281,7 +283,7 @@ modem_init_fail:
 void PPPModemColdStart(void) {
   ResetType = 0;
   xTaskCreatePinnedToCore(GSMInitTask, "GSMInitTask", 1024 * 6, &ResetType, 3,
-              &initTaskhandle, 1);
+                          &initTaskhandle, 1);
   ESP_LOGI(TAG, "Start GSM cold initialization task");
 }
 
@@ -303,7 +305,8 @@ static void GSMRunTask(void *pvParameter) {
 }
 
 void PPPModemStart(void) {
-  xTaskCreatePinnedToCore(GSMRunTask, "GSMRunTask", 1024 * 4, &ResetType, 3, NULL, 1);
+  xTaskCreatePinnedToCore(GSMRunTask, "GSMRunTask", 1024 * 4, &ResetType, 3,
+                          NULL, 1);
 }
 
 int PPPModemGetRSSI(void) {

@@ -812,6 +812,12 @@ menu "WebGUIApp"
 	   endif
 	endmenu
 	
+	menu "PPPoS configuration"
+	    config WEBGUIAPP_PPPOS_ENABLE
+	        bool "Enabled PPPoS transport"
+	        default n
+	endmenu
+	
 	menu "Serial port configuration"
 	
 	    config WEBGUIAPP_UART_TRANSPORT_ENABLE

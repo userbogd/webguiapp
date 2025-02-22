@@ -20,6 +20,7 @@
  */
 #include <SysConfiguration.h>
 #include <SystemApplication.h>
+#include <string.h>
 #include "esp_log.h"
 #include "Helpers.h"
 #include "NetTransport.h"
@@ -319,8 +320,14 @@ msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
 #endif
             if (++MQTTReconnectCounter > MQTT_RECONNECT_CHANGE_ADAPTER)
             {
+#if CONFIG_WEBGUIAPP_GPRS_ENABLE
+                char interface[3];
+    			GetDefaultNetIFName(interface);
+                if(!strcmp((const char*)interface , "pp"))  //Cold reboot modem on can't  connect to ppp
+  					 PPPConnReset();         
+#endif	 
                 MQTTReconnectCounter = 0;
-                NextDefaultNetIF();
+                NextDefaultNetIF();	
             }
             mqtt[idx].is_connected = false;
         break;

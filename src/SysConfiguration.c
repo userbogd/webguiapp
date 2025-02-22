@@ -179,8 +179,11 @@ esp_err_t WebGuiAppInit(void)
 #if CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
     InitSerialPort();
 #endif
-	
+
+#ifdef CONFIG_WEBGUIAPP_PPPOS_ENABLE	
 	InitPPPSerial();
+#endif
+	
     return ESP_OK;
 }
 

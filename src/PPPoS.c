@@ -27,6 +27,8 @@
 #define UART_TX_PIN    17
 #define UART_BUF_SIZE  12000
 
+#ifdef CONFIG_WEBGUIAPP_PPPOS_ENABLE
+
 // PPP configuration
 static ppp_pcb *ppp;
 static struct netif ppp_netif;
@@ -98,3 +100,4 @@ void InitPPPSerial()
    
     xTaskCreate(pppos_task, "pppos_task", 4096 , (void *)0, 7, NULL);
 }
+#endif
