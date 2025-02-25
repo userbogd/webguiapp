@@ -20,6 +20,7 @@
  */
 #include <SysConfiguration.h>
 #include <SystemApplication.h>
+#include <stdlib.h>
 #include <string.h>
 #include "esp_log.h"
 #include "Helpers.h"
@@ -162,14 +163,16 @@ esp_err_t ExternalServiceMQTTSend(char *servname, char *data, int len, int idx)
 }
 
 #define MAX_ERROR_JSON  256
-static char resp[256];
-static char JSONMess[1024];
+#define MAX_MQTT_PUBLICTEST_MESSAGE  1024
 mqtt_app_err_t PublicTestMQTT(int idx)
 {
     char tmp[10];
-
+	    char *data = (char*) malloc(MAX_MQTT_PUBLICTEST_MESSAGE);
+    if (data == NULL)
+        return ESP_ERR_NO_MEM;
+    static char resp[256];
     struct jWriteControl jwc;
-    jwOpen(&jwc, JSONMess, 1024 - 64, JW_OBJECT, JW_COMPACT);
+    jwOpen(&jwc, data, 1024 - 64, JW_OBJECT, JW_COMPACT);
     jwObj_object(&jwc, "data");
     time_t now;
     time(&now);
@@ -248,7 +251,7 @@ mqtt_app_err_t PublicTestMQTT(int idx)
     jwEnd(&jwc); //close payload
     jwEnd(&jwc); //close data
     //calculate sha from 'data' object
-    char *datap = strstr(JSONMess, "\"data\":");
+    char *datap = strstr(data, "\"data\":");
     if (datap)
     {
         datap += sizeof("\"data\":") - 1;
@@ -262,13 +265,15 @@ mqtt_app_err_t PublicTestMQTT(int idx)
     #endif
         jwObj_string(&jwc, "signature", (char*) sha_print);
     }
-    else
-        return ESP_ERR_NOT_FOUND;
+    else{
+		free(data);
+        return ESP_ERR_NOT_FOUND;}
 
     jwClose(&jwc);
     mqtt_app_err_t merr = API_OK;
-    if (SysServiceMQTTSend(JSONMess, strlen(JSONMess), idx) != ESP_OK)
+    if (SysServiceMQTTSend(data, strlen(data), idx) != ESP_OK)
         merr = API_INTERNAL_ERR;
+    free(data);
     return merr;
 }
 
