@@ -50,7 +50,7 @@
 
 #define UART_TX_QUEUE_SIZE (5)
 #define UART_RX_QUEUE_SIZE (5)
-#define UART_DEBUG_MODE    1
+#define UART_DEBUG_MODE    0
 
 #if CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
 
@@ -64,7 +64,6 @@ static char rxbuf[CONFIG_WEBGUIAPP_UART_BUF_SIZE];
 
 esp_err_t TransmitSerialPort(char *data, int ln)
 {
-    return ESP_OK;
     UART_DATA_SEND_STRUCT DSS;
     char *buf = malloc(ln);
     if (!buf)
@@ -93,7 +92,6 @@ static void ReceiveHandlerAPI()
         M.outputDataBuffer = respbuf;
         M.outputDataLength = EXPECTED_MAX_DATA_SIZE;
         ServiceDataHandler(&M);
-
         if (M.outputDataBuffer[0] != 0x00 && M.outputDataLength > 0)
         {
             TransmitSerialPort(M.outputDataBuffer, MIN(EXPECTED_MAX_DATA_SIZE, strlen(M.outputDataBuffer)));
