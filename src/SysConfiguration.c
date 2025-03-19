@@ -177,7 +177,8 @@ esp_err_t WebGuiAppInit(void)
 #endif
 
 #if CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
-    InitSerialPort();
+    if(GetSysConf()->serialSettings.Flags.IsSerialEnabled)
+    	InitSerialPort();
 #endif
 
 #ifdef CONFIG_WEBGUIAPP_PPPOS_ENABLE	
