@@ -34,6 +34,7 @@
 #include <sdkconfig.h>
 #include <stdlib.h>
 #include <string.h>
+#include "SysConfiguration.h"
 #include "webguiapp.h"
 #include "driver/gpio.h"
 
@@ -64,6 +65,8 @@ static char rxbuf[CONFIG_WEBGUIAPP_UART_BUF_SIZE];
 
 esp_err_t TransmitSerialPort(char *data, int ln)
 {
+    if(!GetSysConf()->serialSettings.Flags.IsSerialEnabled)
+    	return ESP_ERR_NOT_ALLOWED;
     UART_DATA_SEND_STRUCT DSS;
     char *buf = malloc(ln);
     if (!buf)
