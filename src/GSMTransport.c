@@ -24,6 +24,7 @@
 #include "../include/SysConfiguration.h"
 #include "NetTransport.h"
 #include "driver/gpio.h"
+#include "driver/uart.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_modem_api.h"
@@ -32,6 +33,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "freertos/task.h"
+#include "sdkconfig.h"
 
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
 static EventGroupHandle_t event_group = NULL;
@@ -197,8 +199,9 @@ static void GSMInitTask(void *pvParameter) {
                           ppp_netif);
   assert(dce);
 
+
   if (esp_modem_set_baud(dce, CUSTOM_MODEM_BAUDRATE) == ESP_OK)
-    uart_set_baudrate(0, CUSTOM_MODEM_BAUDRATE);
+    uart_set_baudrate(CONFIG_MODEM_UART_PORT_NUM, CUSTOM_MODEM_BAUDRATE);
 
   mod_info.model[0] = 0x00;
 
