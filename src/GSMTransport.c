@@ -309,7 +309,7 @@ static void GSMRunTask(void *pvParameter) {
 
 void PPPModemStart(void) {
   xTaskCreatePinnedToCore(GSMRunTask, "GSMRunTask", 1024 * 4, &ResetType, 3,
-                          NULL, 1);
+                          NULL, 0);
 }
 
 int PPPModemGetRSSI(void) {
