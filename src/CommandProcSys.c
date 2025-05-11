@@ -94,12 +94,12 @@ const obj_struct_t com_obj_arr[] = {
         { 0 }
 };
 
-obj_struct_t* GetSystemObjects()
+const obj_struct_t* GetSystemObjects()
 {
-    return &com_obj_arr;
+    return (obj_struct_t*)&com_obj_arr;
 }
 
-obj_struct_t* GetCustomObjects()
+const obj_struct_t* GetCustomObjects()
 {
     return custom_com_obj_arr;
 }

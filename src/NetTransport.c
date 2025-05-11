@@ -30,7 +30,7 @@ extern struct netif *netif_default;
 
 esp_netif_t* GetNetifCurrentDefault()
 {
-    return netif_default;
+    return (esp_netif_t*)netif_default;
 }
 
 esp_netif_t* GetNetifByName(char *name)

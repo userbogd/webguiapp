@@ -418,7 +418,7 @@ static void wifi_init_apsta(void *pvParameter)
     ESP_ERROR_CHECK(esp_netif_set_hostname(sta_netif, "test_TEST"));
     ESP_ERROR_CHECK(esp_netif_set_hostname(ap_netif, GetSysConf()->NetBIOSName));
     char name[32];
-    esp_netif_get_hostname(sta_netif, &name);
+    esp_netif_get_hostname(sta_netif, (const char**)(&name));
     ESP_LOGW(TAG, "Net bios name set to %s", name);
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
