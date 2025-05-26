@@ -408,6 +408,8 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
     Conf->sntpClient.TimeZone = CONFIG_WEBGUIAPP_SNTP_TIMEZONE;
     Conf->sntpClient.lat = 0.0;
     Conf->sntpClient.lon = 0.0;
+    strcpy(Conf->sntpClient.latitude, "0.0");
+    strcpy(Conf->sntpClient.longitude, "0.0");
 
 #ifdef CONFIG_WEBGUIAPP_LORAWAN_ENABLE
     Conf->lorawanSettings.Flags1.bIsLoRaWANEnabled = true;

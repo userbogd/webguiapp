@@ -384,6 +384,8 @@ static void funct_lat(char *argres, int rw)
     if (rw)
     {
         GetSysConf()->sntpClient.lat = atof(argres);
+        strcpy(GetSysConf()->sntpClient.latitude, argres);
+        
     }
     snprintf(argres, VAR_MAX_VALUE_LENGTH, "%f", GetSysConf()->sntpClient.lat);
 }
@@ -393,6 +395,7 @@ static void funct_lon(char *argres, int rw)
     if (rw)
     {
         GetSysConf()->sntpClient.lon = atof(argres);
+        strcpy(GetSysConf()->sntpClient.longitude, argres);
     }
     snprintf(argres, VAR_MAX_VALUE_LENGTH, "%f", GetSysConf()->sntpClient.lon);
 }
@@ -449,6 +452,8 @@ const rest_var_t SystemVariables[] =
 
                 { 0, "lat", &funct_lat, VAR_FUNCT, RW, 0, 0 },
                 { 0, "lon", &funct_lon, VAR_FUNCT, RW, 0, 0 },
+                { 0, "latitude", &SysConfig.sntpClient.latitude, VAR_STRING, RW, 0, 16 },
+                { 0, "longitude", &SysConfig.sntpClient.longitude, VAR_STRING, RW, 0, 16 },
                 
  				{ 0, "cronrecs_enab", &SysConfig.bIsCRONEnabled, VAR_BOOL, RW, 0, 1 },
  				

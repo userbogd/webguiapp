@@ -285,7 +285,7 @@ static int GetSunEvent(uint8_t event, uint32_t unixt, float ang)
         zen = zenith + (float) ang; //sunrise/set
     else
         zen = 90.0 + (float) ang; //twilight
-    lngHour = GetSysConf()->sntpClient.lon / 15;
+    lngHour = atof(GetSysConf()->sntpClient.longitude) / 15;
     if (event == 0)
         t = day + ((6 - lngHour) / 24);
     else
@@ -318,8 +318,9 @@ static int GetSunEvent(uint8_t event, uint32_t unixt, float ang)
     RA = RA / 15;
     sinDec = 0.39782 * sin(L * C);
     cosDec = cos(asin(sinDec));
-    cosH = (cos(zen * C) - (sinDec * sin(GetSysConf()->sntpClient.lat * C)))
-            / (cosDec * cos(GetSysConf()->sntpClient.lat * C));
+    float lat = atof(GetSysConf()->sntpClient.latitude);
+    cosH = (cos(zen * C) - (sinDec * sin(lat * C)))
+            / (cosDec * cos(lat * C));
 
     if (event == 0)
     { //rise
