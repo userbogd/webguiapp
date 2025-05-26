@@ -35,6 +35,7 @@
 #include "SystemApplication.h"
 #include "UserCallbacks.h"
 #include "CommandProcSys.h"
+#include "ShiftRegisterSPI.h"
 
 
 esp_err_t spi_device_polling_transmit_synchronized(spi_device_handle_t handle, spi_transaction_t *trans_desc);

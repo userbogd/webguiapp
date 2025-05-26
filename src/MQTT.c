@@ -27,6 +27,9 @@
 #include "NetTransport.h"
 #include "MQTT.h"
 #include "UserCallbacks.h"
+#if (ESP_IDF_VERSION_MAJOR == 5	&& ESP_IDF_VERSION_MINOR > 1)
+#include "esp_log_level.h"
+#endif
 
 #define TAG "MQTT"
 #define SERVICE_NAME "SYSTEM"          // Dedicated service name
@@ -630,6 +633,9 @@ esp_err_t ExtendedLog(esp_log_level_t level, char *format, ...)
         case ESP_LOG_ERROR:
             ESP_LOGE(SPIRAL_LOG_TAG, "%s", data);
         break;
+#if (ESP_IDF_VERSION_MAJOR == 5	&& ESP_IDF_VERSION_MINOR > 1) 
+		case ESP_LOG_MAX:
+#endif		
     }
 
     for (int idx = 0; idx < 2; idx++)

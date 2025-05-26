@@ -121,9 +121,9 @@ static sys_error_code PayloadDefaultTypeHandler(data_message_t *MSG)
 
     jwEnd(&jwc);
     jwEnd(&jwc);
-    GetSysErrorDetales((sys_error_code)MSG->err_code, &err_br, &err_desc);
-    jwObj_string(&jwc, "error", (char *)err_br);
-    jwObj_string(&jwc, "error_descr", (char *)err_desc);
+    //GetSysErrorDetales((sys_error_code)MSG->err_code, &err_br, &err_desc);
+    //jwObj_string(&jwc, "error", (char *)err_br);
+    //jwObj_string(&jwc, "error_descr", (char *)err_desc);
     jwEnd(&jwc);
 
     char *datap = strstr(MSG->outputDataBuffer, "\"data\":");

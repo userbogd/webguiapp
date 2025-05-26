@@ -26,6 +26,7 @@ idf_component_register(
     	 "src/CronTimers.c"
     	 "src/SerialPort.c"
     	  src/PPPoS.c
+    	  src/ShiftRegisterSPI.c
     	  src/sdcard.c
     	  src/FileBlockHandler.c
     	  src/OTA.c

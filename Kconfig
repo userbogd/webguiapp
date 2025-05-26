@@ -818,6 +818,42 @@ menu "WebGUIApp"
 	        default n
 	endmenu
 	
+	menu "SR IO extender configuration"
+	    config WEBGUIAPP_SR_ENABLE
+	        bool "Enabled SR IO extender"
+	        default n
+        
+        config WEBGUIAPP_SR_CLOCK_MHZ
+            int "SR extender clock speed (MHz)"
+            range 1 20
+            default 10 if IDF_TARGET_ESP32 || IDF_TARGET_ESP32C3
+            default 30 if IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
+            help
+                Set the clock speed (MHz) of SPI interface.
+
+        config WEBGUIAPP_SR_CS
+            int "SR SC signal GPIO"
+            range  GPIO_RANGE_MIN GPIO_RANGE_MAX
+            default 12
+            help
+                Set GPIO for chip select signal.   
+                
+        config WEBGUIAPP_SR_OUTPUTS
+            int "SR outputs number"
+            range 0 64
+            default 8
+            help
+                Set the number of outputs (must be a multiple of 8).     
+        
+        config WEBGUIAPP_SR_INPUTS
+            int "SR inputs number"
+            range 0 64
+            default 8
+            help
+                Set the number of inputs (must be a multiple of 8).                            
+                	        
+	endmenu
+	
 	menu "Serial port configuration"
 	
 	    config WEBGUIAPP_UART_TRANSPORT_ENABLE

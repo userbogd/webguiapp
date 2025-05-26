@@ -23,6 +23,7 @@
 
 #include "../include/SysConfiguration.h"
 
+#include "ShiftRegisterSPI.h"
 #include "SystemApplication.h"
 #include <webguiapp.h>
 #include "stdlib.h"
@@ -98,6 +99,11 @@ esp_err_t WebGuiAppInit(void)
 #if CONFIG_WEBGUIAPP_SPI_ENABLE
     InitSysSPI();
 #endif
+
+#ifdef CONFIG_WEBGUIAPP_SR_ENABLE
+	ShiftRegInit();
+#endif
+
 #if CONFIG_WEBGUIAPP_I2C_ENABLE
     InitSysI2C();
 #endif
