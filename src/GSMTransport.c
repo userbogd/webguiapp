@@ -199,10 +199,9 @@ static void GSMInitTask(void *pvParameter) {
                           ppp_netif);
   assert(dce);
 
-  /*
+ 
   if (esp_modem_set_baud(dce, CUSTOM_MODEM_BAUDRATE) == ESP_OK)
     uart_set_baudrate(CONFIG_MODEM_UART_PORT_NUM, CUSTOM_MODEM_BAUDRATE);
-*/
 
   mod_info.model[0] = 0x00;
 
