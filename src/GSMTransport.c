@@ -199,9 +199,10 @@ static void GSMInitTask(void *pvParameter) {
                           ppp_netif);
   assert(dce);
 
-
+  /*
   if (esp_modem_set_baud(dce, CUSTOM_MODEM_BAUDRATE) == ESP_OK)
     uart_set_baudrate(CONFIG_MODEM_UART_PORT_NUM, CUSTOM_MODEM_BAUDRATE);
+*/
 
   mod_info.model[0] = 0x00;
 
@@ -286,14 +287,14 @@ modem_init_fail:
 void PPPModemColdStart(void) {
   ResetType = 0;
   xTaskCreatePinnedToCore(GSMInitTask, "GSMInitTask", 1024 * 6, &ResetType, 3,
-                          &initTaskhandle, 1);
+                          &initTaskhandle, 0);
   ESP_LOGI(TAG, "Start GSM cold initialization task");
 }
 
 void PPPModemSoftRestart(void) {
   ResetType = 1;
-  xTaskCreate(GSMInitTask, "GSMInitTask", 1024 * 6, &ResetType, 3,
-              &initTaskhandle);
+   xTaskCreatePinnedToCore(GSMInitTask, "GSMInitTask", 1024 * 6, &ResetType, 3,
+              &initTaskhandle, 0);
   ESP_LOGI(TAG, "Start GSM soft initialization task");
 }
 
