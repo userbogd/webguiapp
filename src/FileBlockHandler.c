@@ -21,6 +21,7 @@
 
 #include "SystemApplication.h"
 #include <SysConfiguration.h>
+#include <stdio.h>
 #include <webguiapp.h>
 #include "esp_vfs.h"
 #include "mbedtls/base64.h"
@@ -184,8 +185,11 @@ void FileBlockHandler(char *argres, int rw, const char *path)
     else if (FileTransaction.part == (FileTransaction.parts - 1))
         FileTransaction.operphase = 2;      //Last block of multipart data (close file)
 
-    strcpy(FileTransaction.filepath, path);
-    strcat(FileTransaction.filepath, FileTransaction.mem_object);
+    //strcpy(FileTransaction.filepath, path);
+    //strcat(FileTransaction.filepath, FileTransaction.mem_object);
+
+	snprintf(FileTransaction.filepath, FILE_PATH_MAX, "%s%s", path, FileTransaction.mem_object);
+		
 
     if (FileTransaction.operphase == 1 || FileTransaction.operphase == 3)
     {
@@ -353,7 +357,6 @@ void FileBlockTimeoutCounter()
 void FileListHandler(char *argres, int rw, const char *path)
 {
     char entrypath[FILE_PATH_MAX];
-    char entrysize[16];
     const char *entrytype = "file";
     struct dirent *entry;
     struct stat entry_stat;
