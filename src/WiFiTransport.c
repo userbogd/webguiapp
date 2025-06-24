@@ -414,8 +414,6 @@ static void wifi_init_apsta(void *pvParameter)
     memcpy(sta_wifi_config.sta.ssid, GetSysConf()->wifiSettings.InfSSID, strlen(GetSysConf()->wifiSettings.InfSSID));
     memcpy(sta_wifi_config.sta.password, GetSysConf()->wifiSettings.InfSecurityKey, strlen(GetSysConf()->wifiSettings.InfSecurityKey));
     // END STA MODE CONFIGURATION
-
-    ESP_ERROR_CHECK(esp_netif_set_hostname(sta_netif, "test_TEST"));
     ESP_ERROR_CHECK(esp_netif_set_hostname(ap_netif, GetSysConf()->NetBIOSName));
     char name[32];
     esp_netif_get_hostname(sta_netif, (const char**)(&name));

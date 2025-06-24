@@ -21,6 +21,7 @@
 
 #include <SysConfiguration.h>
 #include "NetTransport.h"
+#include "esp_netif.h"
 #include "sdkconfig.h"
 #include "lwip/netif.h"
 
@@ -92,7 +93,7 @@ void NextDefaultNetIF(void)
 void PrintNetifs(void)
 {
 // Create an esp_netif pointer to store current interface
-    esp_netif_t *interface = esp_netif_next(NULL);
+    esp_netif_t *interface = esp_netif_next_unsafe(NULL);
     // Stores the unique interface descriptor, such as "PP1", etc
     char ifdesc[7];
     ifdesc[6] = 0;  // Ensure null terminated string
@@ -146,7 +147,7 @@ void PrintNetifs(void)
         ESP_LOGI(TAG, "-----------------------");
 
         // Get the next interface
-        interface = esp_netif_next(interface);
+        interface = esp_netif_next_unsafe(interface);
     }
     ESP_LOGI(TAG, "***************************************");
 }

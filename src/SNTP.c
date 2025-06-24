@@ -24,6 +24,7 @@
 #include "NetTransport.h"
 #include "UserCallbacks.h"
 #include "CronTimers.h"
+#include "MQTT.h"
 
 #define YEAR_BASE (1900) //tm structure base year
 
@@ -155,6 +156,7 @@ void SecondTickSystem(void *param)
     ++UpTime;
     MidnightTimer();
     FileBlockTimeoutCounter();
+	HeartbeatMQTT();
 }
 
 uint32_t GetUpTime(void)

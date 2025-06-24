@@ -16,7 +16,7 @@
  *     Project: ChargePointMainboard
  *  Created on: 2022-07-21
  *      Author: Bogdan Pilyugin
- * Description:	
+ * Description:
  */
 #include <SysConfiguration.h>
 #include <SystemApplication.h>
@@ -27,17 +27,17 @@
 #include "NetTransport.h"
 #include "MQTT.h"
 #include "UserCallbacks.h"
-#if (ESP_IDF_VERSION_MAJOR == 5	&& ESP_IDF_VERSION_MINOR > 1)
+#if (ESP_IDF_VERSION_MAJOR == 5 && ESP_IDF_VERSION_MINOR > 1)
 #include "esp_log_level.h"
 #endif
 
-#define TAG "MQTT"
-#define SERVICE_NAME "SYSTEM"          // Dedicated service name
+#define TAG          "MQTT"
+#define SERVICE_NAME "SYSTEM" // Dedicated service name
 
-#define MQTT_DEBUG_MODE  CONFIG_WEBGUIAPP_MQTT_DEBUG_LEVEL
+#define MQTT_DEBUG_MODE CONFIG_WEBGUIAPP_MQTT_DEBUG_LEVEL
 
-#define MQTT_MESSAGE_BUFER_LENTH 10  //size of mqtt queue
-#define MQTT_RECONNECT_CHANGE_ADAPTER  3
+#define MQTT_MESSAGE_BUFER_LENTH      10 // size of mqtt queue
+#define MQTT_RECONNECT_CHANGE_ADAPTER 3
 
 #define MQTT_RECONNECT_TIMEOUT 10
 
@@ -55,8 +55,7 @@ uint8_t MQTT2MessagesQueueStorageArea[MQTT_MESSAGE_BUFER_LENTH * sizeof(MQTT_DAT
 
 mqtt_client_t mqtt[CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM] = { 0 };
 
-static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_base_t base, int32_t event_id,
-                                      void *event_data);
+static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
 
 static void mqtt1_system_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
 static void mqtt2_system_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
@@ -65,15 +64,13 @@ static void mqtt2_user_event_handler(void *handler_args, esp_event_base_t base, 
 
 void (*UserEventHandler)(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data);
 static void *UserArg;
-void regUserEventHandler(
-        void (*event_handler)(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data),
-        void *user_arg)
+void regUserEventHandler(void (*event_handler)(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data), void *user_arg)
 {
     UserEventHandler = event_handler;
     UserArg = user_arg;
 }
 
-mqtt_client_t* GetMQTTHandlesPool(int idx)
+mqtt_client_t *GetMQTTHandlesPool(int idx)
 {
     return &mqtt[idx];
 }
@@ -103,24 +100,24 @@ static void log_error_if_nonzero(const char *message, int error_code)
 
 void ComposeTopic(char *topic, int idx, char *service_name, char *direct)
 {
-    strcpy((char*) topic, GetSysConf()->mqttStation[idx].SystemName);                 // Global system name
-    strcat((char*) topic, "/");
-    strcat((char*) topic, GetSysConf()->mqttStation[idx].GroupName);                // Global system name
-    strcat((char*) topic, "/");
-    strcat((char*) topic, GetSysConf()->mqttStation[idx].ClientID);     // Device client name  (for multiclient devices)
-    //strcat((char*) topic, "-");
-    //strcat((char*) topic, GetSysConf()->ID);                 //
-    strcat((char*) topic, "/");
-    strcat((char*) topic, (const char*) service_name);  // Device service name
-    strcat((char*) topic, "/");
-    strcat((char*) topic, direct);  // Data direction UPLINK or DOWNLINK
+    strcpy((char *)topic, GetSysConf()->mqttStation[idx].SystemName); // Global system name
+    strcat((char *)topic, "/");
+    strcat((char *)topic, GetSysConf()->mqttStation[idx].GroupName); // Global system name
+    strcat((char *)topic, "/");
+    strcat((char *)topic, GetSysConf()->mqttStation[idx].ClientID); // Device client name  (for multiclient devices)
+    // strcat((char*) topic, "-");
+    // strcat((char*) topic, GetSysConf()->ID);                 //
+    strcat((char *)topic, "/");
+    strcat((char *)topic, (const char *)service_name); // Device service name
+    strcat((char *)topic, "/");
+    strcat((char *)topic, direct); // Data direction UPLINK or DOWNLINK
 }
 
 esp_err_t SysServiceMQTTSend(char *data, int len, int idx)
 {
     if (GetMQTTHandlesPool(idx)->mqtt_queue == NULL)
         return ESP_ERR_NOT_FOUND;
-    char *buf = (char*) malloc(len);
+    char *buf = (char *)malloc(len);
     if (buf)
     {
         memcpy(buf, data, len);
@@ -145,7 +142,7 @@ esp_err_t ExternalServiceMQTTSend(char *servname, char *data, int len, int idx)
 {
     if (GetMQTTHandlesPool(idx)->mqtt_queue == NULL)
         return ESP_ERR_NOT_FOUND;
-    char *buf = (char*) malloc(len);
+    char *buf = (char *)malloc(len);
     if (buf)
     {
         memcpy(buf, data, len);
@@ -165,12 +162,25 @@ esp_err_t ExternalServiceMQTTSend(char *servname, char *data, int len, int idx)
     return ESP_ERR_NO_MEM;
 }
 
-#define MAX_ERROR_JSON  256
-#define MAX_MQTT_PUBLICTEST_MESSAGE  1024
+void HeartbeatMQTT()
+{
+    static int hb_cntr[] = { 0, 0 };
+    for (uint8_t i = 0; i < 2; i++)
+    {
+        if (mqtt[i].is_connected && GetSysConf()->mqttStation[0].Flags1.bIsHeartbeatEnabled && hb_cntr[i]++ >= GetSysConf()->mqttStation[i].HeartbeatInterval)
+        {
+            hb_cntr[i] = 0;
+            PublicTestMQTT(i);
+        }
+    }
+}
+
+#define MAX_ERROR_JSON              256
+#define MAX_MQTT_PUBLICTEST_MESSAGE 1024
 mqtt_app_err_t PublicTestMQTT(int idx)
 {
     char tmp[10];
-	    char *data = (char*) malloc(MAX_MQTT_PUBLICTEST_MESSAGE);
+    char *data = (char *)malloc(MAX_MQTT_PUBLICTEST_MESSAGE);
     if (data == NULL)
         return ESP_ERR_NO_MEM;
     static char resp[256];
@@ -179,7 +189,7 @@ mqtt_app_err_t PublicTestMQTT(int idx)
     jwObj_object(&jwc, "data");
     time_t now;
     time(&now);
-    jwObj_int(&jwc, "msgid", (unsigned int) now);
+    jwObj_int(&jwc, "msgid", (unsigned int)now);
     jwObj_string(&jwc, "srcid", GetSysConf()->ID);
     jwObj_string(&jwc, "dstid", "FFFFFFFF");
     char time[ISO8601_TIMESTAMP_LENGTH];
@@ -187,6 +197,7 @@ mqtt_app_err_t PublicTestMQTT(int idx)
     jwObj_string(&jwc, "time", time);
     jwObj_int(&jwc, "msgtype", DATA_MESSAGE_TYPE_COMMAND);
     jwObj_int(&jwc, "payloadtype", 1000);
+    jwObj_string(&jwc, "payloadname", "heartbeat");
     jwObj_object(&jwc, "payload");
     jwObj_int(&jwc, "applytype", 0);
     jwObj_object(&jwc, "variables");
@@ -200,14 +211,14 @@ mqtt_app_err_t PublicTestMQTT(int idx)
     jwObj_string(&jwc, "model_name", resp);
     GetConfVar("hw_rev", resp, &tp);
     jwObj_string(&jwc, "hw_rev", resp);
+    GetConfVar("latitude", resp, &tp);
+    jwObj_string(&jwc, "latitude", resp);
+    GetConfVar("longitude", resp, &tp);
+    jwObj_string(&jwc, "longitude", resp);
 
     tp = VAR_FUNCT;
     GetConfVar("time", resp, &tp);
     jwObj_raw(&jwc, "time", resp);
-    GetConfVar("lat", resp, &tp);
-    jwObj_raw(&jwc, "lat", resp);
-    GetConfVar("lon", resp, &tp);
-    jwObj_raw(&jwc, "lon", resp);
     GetConfVar("uptime", resp, &tp);
     jwObj_raw(&jwc, "uptime", resp);
     GetConfVar("free_ram", resp, &tp);
@@ -250,27 +261,29 @@ mqtt_app_err_t PublicTestMQTT(int idx)
     ComposeTopic(resp, idx, SERVICE_NAME, DOWNLINK_SUBTOPIC);
     jwObj_string(&jwc, "rx_topic", resp);
 
-    jwEnd(&jwc); //close variables
-    jwEnd(&jwc); //close payload
-    jwEnd(&jwc); //close data
-    //calculate sha from 'data' object
+    jwEnd(&jwc); // close variables
+    jwEnd(&jwc); // close payload
+    jwEnd(&jwc); // close data
+    // calculate sha from 'data' object
     char *datap = strstr(data, "\"data\":");
     if (datap)
     {
         datap += sizeof("\"data\":") - 1;
         unsigned char sha[32 + 1];
         unsigned char sha_print[32 * 2 + 1];
-        SHA256hmacHash((unsigned char*) datap, strlen(datap), (unsigned char*) "mykey", sizeof("mykey"), sha);
+        SHA256hmacHash((unsigned char *)datap, strlen(datap), (unsigned char *)"mykey", sizeof("mykey"), sha);
         BytesToStr(sha, sha_print, 32);
         sha_print[32 * 2] = 0x00;
 #if REAST_API_DEBUG_MODE
-            ESP_LOGI(TAG, "SHA256 of DATA object is %s", sha_print);
-    #endif
-        jwObj_string(&jwc, "signature", (char*) sha_print);
+        ESP_LOGI(TAG, "SHA256 of DATA object is %s", sha_print);
+#endif
+        jwObj_string(&jwc, "signature", (char *)sha_print);
     }
-    else{
-		free(data);
-        return ESP_ERR_NOT_FOUND;}
+    else
+    {
+        free(data);
+        return ESP_ERR_NOT_FOUND;
+    }
 
     jwClose(&jwc);
     mqtt_app_err_t merr = API_OK;
@@ -280,20 +293,19 @@ mqtt_app_err_t PublicTestMQTT(int idx)
     return merr;
 }
 
-static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_base_t base, int32_t event_id,
-                                      void *event_data)
+static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
     xSemaphoreTake(xSemaphoreMQTTHandle, pdMS_TO_TICKS(1000));
 #if MQTT_DEBUG_MODE > 1
-    ESP_LOGI(TAG, "Event dispatched from event loop base=%s, event_id=%d", base, (int )event_id);
+    ESP_LOGI(TAG, "Event dispatched from event loop base=%s, event_id=%d", base, (int)event_id);
 #endif
     esp_mqtt_event_handle_t event = event_data;
     esp_mqtt_client_handle_t client = event->client;
 
     int msg_id;
-    static int MQTTReconnectCounter = 0; //Change network adapter every MQTT_RECONNECT_CHANGE_ADAPTER number attempts
-    char topic[CONFIG_WEBGUIAPP_MQTT_MAX_TOPIC_LENGTH]; //TODO need define max topic length
-    switch ((esp_mqtt_event_id_t) event_id)
+    static int MQTTReconnectCounter = 0;                // Change network adapter every MQTT_RECONNECT_CHANGE_ADAPTER number attempts
+    char topic[CONFIG_WEBGUIAPP_MQTT_MAX_TOPIC_LENGTH]; // TODO need define max topic length
+    switch ((esp_mqtt_event_id_t)event_id)
     {
         case MQTT_EVENT_CONNECTED:
             mqtt[idx].is_connected = true;
@@ -302,25 +314,25 @@ static void mqtt_system_event_handler(int idx, void *handler_args, esp_event_bas
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED client %d", idx);
 #endif
             ComposeTopic(topic, idx, SERVICE_NAME, DOWNLINK_SUBTOPIC);
-msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
+            msg_id = esp_mqtt_client_subscribe(client, (char *)topic, 0);
 #if MQTT_DEBUG_MODE > 0
-                        ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
+            ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
             ESP_LOGI(TAG, "Subscribe to %s", topic);
 #endif
 
-#ifdef  CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
+#ifdef CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
             if (GetSysConf()->serialSettings.Flags.IsBridgeEnabled)
             {
                 ComposeTopic(topic, idx, EXTERNAL_SERVICE_NAME, DOWNLINK_SUBTOPIC);
-                //Subscribe to the service called "APP"
-                msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
+                // Subscribe to the service called "APP"
+                msg_id = esp_mqtt_client_subscribe(client, (char *)topic, 0);
 #if MQTT_DEBUG_MODE > 0
                 ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
                 ESP_LOGI(TAG, "Subscribe to %s", topic);
 #endif
             }
 #endif
-        break;
+            break;
         case MQTT_EVENT_DISCONNECTED:
 
 #if MQTT_DEBUG_MODE > 0
@@ -330,32 +342,32 @@ msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
             {
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
                 char interface[3];
-    			GetDefaultNetIFName(interface);
-                if(!strcmp((const char*)interface , "pp"))  //Cold reboot modem on can't  connect to ppp
-  					 PPPConnReset();         
-#endif	 
+                GetDefaultNetIFName(interface);
+                if (!strcmp((const char *)interface, "pp")) // Cold reboot modem on can't  connect to ppp
+                    PPPConnReset();
+#endif
                 MQTTReconnectCounter = 0;
-                NextDefaultNetIF();	
+                NextDefaultNetIF();
             }
             mqtt[idx].is_connected = false;
-        break;
+            break;
         case MQTT_EVENT_SUBSCRIBED:
 
 #if MQTT_DEBUG_MODE > 0
             ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
 #endif
-        break;
+            break;
         case MQTT_EVENT_UNSUBSCRIBED:
 
 #if MQTT_DEBUG_MODE > 0
             ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
 #endif
-        break;
+            break;
         case MQTT_EVENT_PUBLISHED:
-            #if MQTT_DEBUG_MODE > 1
+#if MQTT_DEBUG_MODE > 1
             ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
 #endif
-        break;
+            break;
         case MQTT_EVENT_DATA:
 
 #if MQTT_DEBUG_MODE > 1
@@ -363,13 +375,13 @@ msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
 
             ESP_LOGI(TAG, "MQTT client %d data received:%.*s", idx, event->data_len, event->data);
 #endif
-            if (event->data_len == 0 || event->current_data_offset > 0) //possible fragments of long data
+            if (event->data_len == 0 || event->current_data_offset > 0) // possible fragments of long data
                 goto end_of_system_handler;
-            //Check if topic is SYSTEM and pass data to handler
+            // Check if topic is SYSTEM and pass data to handler
             ComposeTopic(topic, idx, SERVICE_NAME, DOWNLINK_SUBTOPIC);
             if (!memcmp(topic, event->topic, event->topic_len))
             {
-                //SystemDataHandler(event->data, event->data_len, idx);  //Old API
+                // SystemDataHandler(event->data, event->data_len, idx);  //Old API
                 char *respbuf = malloc(EXPECTED_MAX_DATA_SIZE);
                 if (respbuf != NULL)
                 {
@@ -382,7 +394,7 @@ msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
                     ServiceDataHandler(&M);
                     SysServiceMQTTSend(M.outputDataBuffer, strlen(M.outputDataBuffer), idx);
                     free(respbuf);
-#if(MQTT_DEBUG_MODE > 1)
+#if (MQTT_DEBUG_MODE > 1)
                     ESP_LOGI(TAG, "SERVICE data handler on client %d", idx);
 #endif
                 }
@@ -390,7 +402,7 @@ msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
                     ESP_LOGE(TAG, "Out of free RAM for MQTT API handle");
             }
 
-#ifdef  CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
+#ifdef CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
             if (GetSysConf()->serialSettings.Flags.IsBridgeEnabled)
             {
                 ComposeTopic(topic, idx, EXTERNAL_SERVICE_NAME, DOWNLINK_SUBTOPIC);
@@ -400,37 +412,31 @@ msg_id = esp_mqtt_client_subscribe(client, (char*) topic, 0);
                 }
             }
 #endif
-        break;
+            break;
         case MQTT_EVENT_ERROR:
             ESP_LOGE(TAG, "MQTT_EVENT_ERROR, client %d", idx);
             if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT)
             {
                 log_error_if_nonzero("reported from esp-tls", event->error_handle->esp_tls_last_esp_err);
                 log_error_if_nonzero("reported from tls stack", event->error_handle->esp_tls_stack_err);
-                log_error_if_nonzero("captured as transport's socket errno",
-                                     event->error_handle->esp_transport_sock_errno);
+                log_error_if_nonzero("captured as transport's socket errno", event->error_handle->esp_transport_sock_errno);
                 ESP_LOGI(TAG, "Last errno string (%s)", strerror(event->error_handle->esp_transport_sock_errno));
             }
-        break;
+            break;
         default:
-            #if MQTT_DEBUG_MODE > 0
+#if MQTT_DEBUG_MODE > 0
             ESP_LOGI(TAG, "Other event id:%d", event->event_id);
 #endif
-        break;
+            break;
     }
 end_of_system_handler:
     xSemaphoreGive(xSemaphoreMQTTHandle);
 }
 
-static void reconnect_MQTT_handler(void *arg, esp_event_base_t event_base,
-                                   int32_t event_id,
-                                   void *event_data)
+static void reconnect_MQTT_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
-    if (event_id == IP_EVENT_ETH_GOT_IP ||
-            event_id == IP_EVENT_STA_GOT_IP ||
-            event_id == IP_EVENT_PPP_GOT_IP)
+    if (event_id == IP_EVENT_ETH_GOT_IP || event_id == IP_EVENT_STA_GOT_IP || event_id == IP_EVENT_PPP_GOT_IP)
     {
-
         for (int i = 0; i < CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM; ++i)
         {
             if (mqtt[i].mqtt && mqtt[i].is_connected)
@@ -475,9 +481,9 @@ void MQTTReconnect(void)
 void MQTTTaskTransmit(void *pvParameter)
 {
     MQTT_DATA_SEND_STRUCT DSS;
-    int idx = *(int*) pvParameter;
+    int idx = *(int *)pvParameter;
     while (!mqtt[idx].mqtt_queue)
-        vTaskDelay(pdMS_TO_TICKS(300)); //wait for MQTT queue ready
+        vTaskDelay(pdMS_TO_TICKS(300)); // wait for MQTT queue ready
     while (1)
     {
         while (!mqtt[idx].is_connected)
@@ -485,15 +491,10 @@ void MQTTTaskTransmit(void *pvParameter)
         xQueueReceive(mqtt[idx].mqtt_queue, &DSS, portMAX_DELAY);
         if (mqtt[idx].mqtt && mqtt[idx].is_connected)
         {
-
 #if MQTT_DEBUG_MODE > 1
             ESP_LOGW(TAG, "MQTT client %d data send:%.*s", idx, DSS.data_length, DSS.raw_data_ptr);
 #endif
-            esp_mqtt_client_publish(mqtt[idx].mqtt,
-                                    (const char*) DSS.topic,
-                                    (const char*) DSS.raw_data_ptr,
-                                    DSS.data_length,
-                                    0, 0);
+            esp_mqtt_client_publish(mqtt[idx].mqtt, (const char *)DSS.topic, (const char *)DSS.raw_data_ptr, DSS.data_length, 0, 0);
         }
         if (!DSS.keep_memory_onfinish)
         {
@@ -530,8 +531,8 @@ static void start_mqtt()
             mqtt_cfg.password = GetSysConf()->mqttStation[i].UserPass;
 #endif
             strcpy(tmp, GetSysConf()->mqttStation[i].ClientID);
-            //strcat(tmp, "-");
-            //strcat(tmp, GetSysConf()->ID);
+            // strcat(tmp, "-");
+            // strcat(tmp, GetSysConf()->ID);
 #if ESP_IDF_VERSION_MAJOR >= 5
             mqtt_cfg.credentials.client_id = tmp;
             mqtt_cfg.network.reconnect_timeout_ms = MQTT_RECONNECT_TIMEOUT * 1000;
@@ -541,14 +542,14 @@ static void start_mqtt()
 #endif
             mqtt[i].is_connected = false;
             mqtt[i].mqtt_index = i;
-            //mqtt_cfg.user_context = (void*) &mqtt[i];
+            // mqtt_cfg.user_context = (void*) &mqtt[i];
             mqtt[i].mqtt = esp_mqtt_client_init(&mqtt_cfg);
             /* The last argument may be used to pass data to the event handler, in this example mqtt_system_event_handler */
             esp_mqtt_client_register_event(mqtt[i].mqtt, ESP_EVENT_ANY_ID, mqtt[i].system_event_handler, &mqtt[i]);
             esp_mqtt_client_register_event(mqtt[i].mqtt, ESP_EVENT_ANY_ID, mqtt[i].user_event_handler, &mqtt[i]);
             esp_event_handler_register(IP_EVENT, ESP_EVENT_ANY_ID, &reconnect_MQTT_handler, &mqtt[i].mqtt);
             esp_mqtt_client_start(mqtt[i].mqtt);
-            xTaskCreate(MQTTTaskTransmit, "MQTTTaskTransmit", 1024 * 4, (void*) &mqtt[i].mqtt_index, 3, NULL);
+            xTaskCreate(MQTTTaskTransmit, "MQTTTaskTransmit", 1024 * 4, (void *)&mqtt[i].mqtt_index, 3, NULL);
         }
     }
 }
@@ -561,18 +562,12 @@ void MQTTRun(void)
     MQTT1MessagesQueueHandle = NULL;
     MQTT2MessagesQueueHandle = NULL;
     if (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled)
-        MQTT1MessagesQueueHandle = xQueueCreateStatic(MQTT_MESSAGE_BUFER_LENTH,
-                                                      sizeof(MQTT_DATA_SEND_STRUCT),
-                                                      MQTT1MessagesQueueStorageArea,
-                                                      &xStaticMQTT1MessagesQueue);
+        MQTT1MessagesQueueHandle = xQueueCreateStatic(MQTT_MESSAGE_BUFER_LENTH, sizeof(MQTT_DATA_SEND_STRUCT), MQTT1MessagesQueueStorageArea, &xStaticMQTT1MessagesQueue);
     mqtt[0].mqtt_queue = MQTT1MessagesQueueHandle;
 
 #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
     if (GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled)
-        MQTT2MessagesQueueHandle = xQueueCreateStatic(MQTT_MESSAGE_BUFER_LENTH,
-                                                      sizeof(MQTT_DATA_SEND_STRUCT),
-                                                      MQTT2MessagesQueueStorageArea,
-                                                      &xStaticMQTT2MessagesQueue);
+        MQTT2MessagesQueueHandle = xQueueCreateStatic(MQTT_MESSAGE_BUFER_LENTH, sizeof(MQTT_DATA_SEND_STRUCT), MQTT2MessagesQueueStorageArea, &xStaticMQTT2MessagesQueue);
     mqtt[1].mqtt_queue = MQTT2MessagesQueueHandle;
 #endif
 
@@ -605,14 +600,14 @@ static void mqtt2_user_event_handler(void *handler_args, esp_event_base_t base, 
 #endif
 
 #define MAX_MQTT_LOG_MESSAGE (1024)
-#define SPIRAL_LOG_TAG "SystemExtendedLog"
-//char data[MAX_MQTT_LOG_MESSAGE];
+#define SPIRAL_LOG_TAG       "SystemExtendedLog"
+// char data[MAX_MQTT_LOG_MESSAGE];
 esp_err_t ExtendedLog(esp_log_level_t level, char *format, ...)
 {
     va_list arg;
     va_start(arg, format);
     va_end(arg);
-    char *data = (char*) malloc(MAX_MQTT_LOG_MESSAGE);
+    char *data = (char *)malloc(MAX_MQTT_LOG_MESSAGE);
     if (data == NULL)
         return ESP_ERR_NO_MEM;
     vsnprintf(data, MAX_MQTT_LOG_MESSAGE, format, arg);
@@ -622,20 +617,20 @@ esp_err_t ExtendedLog(esp_log_level_t level, char *format, ...)
     switch (level)
     {
         case ESP_LOG_INFO:
-            case ESP_LOG_DEBUG:
-            case ESP_LOG_VERBOSE:
-            case ESP_LOG_NONE:
+        case ESP_LOG_DEBUG:
+        case ESP_LOG_VERBOSE:
+        case ESP_LOG_NONE:
             ESP_LOGI(SPIRAL_LOG_TAG, "%s", data);
-        break;
+            break;
         case ESP_LOG_WARN:
             ESP_LOGW(SPIRAL_LOG_TAG, "%s", data);
-        break;
+            break;
         case ESP_LOG_ERROR:
             ESP_LOGE(SPIRAL_LOG_TAG, "%s", data);
-        break;
-#if (ESP_IDF_VERSION_MAJOR == 5	&& ESP_IDF_VERSION_MINOR > 1) 
-		case ESP_LOG_MAX:
-#endif		
+            break;
+#if (ESP_IDF_VERSION_MAJOR == 5 && ESP_IDF_VERSION_MINOR > 1)
+        case ESP_LOG_MAX:
+#endif
     }
 
     for (int idx = 0; idx < 2; idx++)
@@ -644,7 +639,7 @@ esp_err_t ExtendedLog(esp_log_level_t level, char *format, ...)
             continue;
         char time[ISO8601_TIMESTAMP_LENGTH];
         GetISO8601Time(time);
-        char *buf = (char*) malloc(strlen(data) + ISO8601_TIMESTAMP_LENGTH + 2);
+        char *buf = (char *)malloc(strlen(data) + ISO8601_TIMESTAMP_LENGTH + 2);
         if (buf)
         {
             strcpy(buf, time);
@@ -665,4 +660,3 @@ esp_err_t ExtendedLog(esp_log_level_t level, char *format, ...)
     free(data);
     return ESP_OK;
 }
-

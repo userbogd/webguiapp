@@ -468,6 +468,8 @@ const rest_var_t SystemVariables[] =
                 { 0, "mqtt_1_pass", &SysConfig.mqttStation[0].UserPass, VAR_PASS, RW, 3, 31 },
                 { 0, "mqtt_1_stat", &funct_mqtt_1_stat, VAR_FUNCT, R, 0, 0 },
                 { 0, "mqtt_1_test", &funct_mqtt_1_test, VAR_FUNCT, RW, 0, 0 },
+                { 0, "mqtt_1_hartenab", &SysConfig.mqttStation[0].Flags1.bIsHeartbeatEnabled, VAR_BOOL, RW, 0, 1 },
+                { 0, "mqtt_1_hartint", &SysConfig.mqttStation[0].HeartbeatInterval, VAR_INT, RW, 1, 65534 },
 
 #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
                 { 0, "mqtt_2_enab", &SysConfig.mqttStation[1].Flags1.bIsGlobalEnabled, VAR_BOOL, RW, 0, 1 },
@@ -480,6 +482,8 @@ const rest_var_t SystemVariables[] =
                 { 0, "mqtt_2_pass", &SysConfig.mqttStation[1].UserPass, VAR_PASS, RW, 3, 31 },
                 { 0, "mqtt_2_stat", &funct_mqtt_2_stat, VAR_FUNCT, R, 0, 0 },
                 { 0, "mqtt_2_test", &funct_mqtt_2_test, VAR_FUNCT, RW, 0, 0 },
+                { 0, "mqtt_2_hartenab", &SysConfig.mqttStation[1].Flags1.bIsHeartbeatEnabled, VAR_BOOL, RW, 0, 1 },
+                { 0, "mqtt_2_hartint", &SysConfig.mqttStation[1].HeartbeatInterval, VAR_INT, RW, 1, 65534 },
 
 #endif
 #endif

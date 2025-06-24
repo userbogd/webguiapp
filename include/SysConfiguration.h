@@ -121,9 +121,11 @@ typedef struct
             char ClientID[32];
             char UserName[32];
             char UserPass[32];
+            int HeartbeatInterval;
             struct
             {
                 bool bIsGlobalEnabled;
+                bool bIsHeartbeatEnabled;
             } Flags1;
         } mqttStation[CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM];
 #endif

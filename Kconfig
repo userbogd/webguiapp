@@ -1013,6 +1013,15 @@ menu "WebGUIApp"
 	    		string "MQTT user password"
 	    		default "password"	
 	    		
+	    	config WEBGUIAPP_MQTT_HEARTBEAT_ON
+	    		bool "Enable heartbeat"
+	    		default y	
+	    		
+	    	config WEBGUIAPP_MQTT_HEARTBEAT_INTERVAL
+	    		int "Heartbeat interval seconds"
+	    		range 1 65535
+	    		default 300	    		
+	    		
 	    	config WEBGUIAPP_MQTT_DEBUG_LEVEL
 	    		int "MQTT debug log level"
 	    		range 0 5
