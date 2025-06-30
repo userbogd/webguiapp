@@ -19,6 +19,7 @@
  * Description:
  */
 
+#include <stddef.h>
 #include <string.h>
 
 #include "../include/SysConfiguration.h"
@@ -339,7 +340,7 @@ void ModemSendAT(char *cmd, char *resp, int timeout) {
   ESP_LOGI(TAG, "Response:%s", resp);
 }
 
-esp_err_t cmd_cb(uint8_t *data, int len) {
+esp_err_t cmd_cb(uint8_t *data, size_t len) {
   ESP_LOGI(TAG, "Response:%*s", len, data);
   return ESP_OK;
 }
