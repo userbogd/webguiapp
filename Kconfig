@@ -29,8 +29,8 @@ menu "WebGUIApp"
             
 	config DEVICE_MODEL_NAME
     	string "Device model name"
-    	default "DEVICE MODEL NAME"        
-                      
+    	default "DEVICE MODEL NAME"                     
+         
     config WEBGUIAPP_HOSTNAME
     	string "Default host name"
     	default "DEVICE_HOSTNAME"
@@ -957,6 +957,31 @@ menu "WebGUIApp"
 	    		default 502 				            
 	   endif
 	endmenu
+	
+	
+	menu "Modbus settings"
+		config WEBGUIAPP_ARTNET_ENABLED
+			bool "Enabled ArtNet node"
+	        default n
+	        help
+	        	Set enabled ArtNet
+	    
+	    config WEBGUIAPP_ARTNET_DEFAULT_UNIVERSE
+	    		int "ArtNet default universe"
+	    		range 1 32768
+	    		default 1 
+	    
+	  	config WEBGUIAPP_ARTNET_DEFAULT_BASEADDR
+	    		int "ArtNet default base address"
+	    		range 1 512
+	    		default 1
+	    		
+	    config WEBGUIAPP_ARTNET_DEFAULT_PORT
+	    		int "ArtNet default port"
+	    		range 1 65535
+	    		default 6454 				            	  
+	endmenu
+	
 	
 	menu "MQTT settings"
 		config WEBGUIAPP_MQTT_ENABLE

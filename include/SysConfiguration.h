@@ -235,6 +235,19 @@ typedef struct
           } lorawanSettings;
 #endif
 
+#ifdef CONFIG_WEBGUIAPP_ARTNET_ENABLE
+		struct
+		    {
+				bool isArtNetEnabled;
+				
+				
+					
+			
+		     
+		    } ArtNetApplication;
+
+#endif 
+
           struct
           {
             bool IsModbusTCPEnabled;

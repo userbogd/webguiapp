@@ -425,7 +425,7 @@ const rest_var_t SystemVariables[] =
                 { 0, "net_bios_name", &SysConfig.NetBIOSName, VAR_STRING, RW, 3, 31 },
                 { 0, "sys_name", &SysConfig.SysName, VAR_STRING, RW, 3, 31 },
                 { 0, "sys_pass", &SysConfig.SysPass, VAR_PASS, RW, 3, 31 },
-                { 0, "primary_color", CONFIG_WEBGUIAPP_ACCENT_COLOR, VAR_STRING, RW, 3, 31 },
+                { 0, "primary_color", CONFIG_WEBGUIAPP_ACCENT_COLOR, VAR_STRING, R, 3, 31 },
                 { 0, "dark_theme", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
 
                 { 0, "ota_url", &SysConfig.OTAURL, VAR_STRING, RW, 3, 128 },
