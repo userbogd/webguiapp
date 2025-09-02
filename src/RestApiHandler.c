@@ -42,6 +42,23 @@ void SetAppVars(rest_var_t *appvars, int size)
     AppVarsSize = size;
 }
 
+static void funct_ser_num(char *argres, int rw)
+{
+    UINT32_VAL d;
+    GetChipId((uint8_t *)d.v);
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%010u\"", (unsigned int)swap(d.Val));
+}
+
+static void funct_dev_id(char *argres, int rw)
+{
+    char id[4];
+    char id2[9];
+    GetChipId((uint8_t*) id);
+    BytesToStr((unsigned char*) id, (unsigned char*) id2, 4);
+    id2[8] = 0x00;
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", id2);
+}
+
 static void PrintInterfaceState(char *argres, int rw, esp_netif_t *netif)
 {
     snprintf(argres, VAR_MAX_VALUE_LENGTH,
@@ -434,8 +451,11 @@ const rest_var_t SystemVariables[] =
                 { 0, "ota_start", &funct_ota_start, VAR_FUNCT, R, 0, 0 },
                 { 0, "ota_newver", &funct_ota_newver, VAR_FUNCT, R, 0, 0 },
 
-                { 0, "ser_num", &SysConfig.SN, VAR_STRING, RW, 10, 10 },
-                { 0, "dev_id", &SysConfig.ID, VAR_STRING, RW, 8, 8 },
+                //{ 0, "ser_num", &SysConfig.SN, VAR_STRING, RW, 10, 10 },
+                //{ 0, "dev_id", &SysConfig.ID, VAR_STRING, RW, 8, 8 },
+                { 0, "ser_num", &funct_ser_num, VAR_FUNCT, R, 0, 0 },
+                { 0, "dev_id", &funct_dev_id, VAR_FUNCT, R, 0, 0 },
+                
                 { 0, "color_scheme", &SysConfig.ColorSheme, VAR_INT, RW, 1, 2 },
 
                 { 0, "ota_enab", &SysConfig.Flags1.bIsOTAEnabled, VAR_BOOL, RW, 0, 1 },
