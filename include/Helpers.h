@@ -27,6 +27,8 @@
 
 uint32_t crc32(uint32_t crc, uint8_t const *buf, uint32_t len);
 void GetChipId(uint8_t *i);
+esp_err_t GetDeviceSerial(char *serial);
+esp_err_t GetDeviceID(char *chip_id);
 uint32_t swap(uint32_t in);
 void BytesToStr(unsigned char *StrIn, unsigned char *StrOut, uint8_t N);
 bool StrToBytes(unsigned char *StrIn, unsigned char *StrOut);
