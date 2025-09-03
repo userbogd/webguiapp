@@ -232,6 +232,7 @@ void static serial_TX_task(void *arg)
         free(DSS.raw_data_ptr);
         if (uart_wait_tx_done(CONFIG_WEBGUIAPP_UART_PORT_NUM, pdMS_TO_TICKS(1000)) != ESP_OK)
             ESP_LOGE(TAG, "RS485 transmit data failure");
+		vTaskDelay(pdMS_TO_TICKS(50));
     }
 }
 
