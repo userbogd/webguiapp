@@ -368,6 +368,7 @@ const char *EXEC_ERROR[] = {
         "ERROR_OBJECT_NOT_FOUND",
         "ERROR_ACTION_NOT_FOUND",
         "ERROR_HANDLER_NOT_IMPLEMENTED",
+         "ERROR_ARGUMENT_NOT_FOUND",
 };
 
 static void funct_exec(char *argres, int rw)
