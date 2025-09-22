@@ -43,32 +43,6 @@ void SetAppVars(rest_var_t *appvars, int size)
     AppVarsSize = size;
 }
 
-
-static void funct_ser_num(char *argres, int rw)
-{
-    //UINT32_VAL d;
-    //GetChipId((uint8_t *)d.v);
-    //snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%010u\"", (unsigned int)swap(d.Val));
-    char ser[24];
-    GetDeviceSerial(ser);
-    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", ser);
-}
-
-static void funct_dev_id(char *argres, int rw)
-{
-    /*
-    char id[4];
-    char id2[9];
-    GetChipId((uint8_t*) id);
-    BytesToStr((unsigned char*) id, (unsigned char*) id2, 4);
-    id2[8] = 0x00;
-    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", id2);
-    */
-    char id[9];
-    GetDeviceID(id);
-    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", id);
-}
-
 static void PrintInterfaceState(char *argres, int rw, esp_netif_t *netif)
 {
     snprintf(argres, VAR_MAX_VALUE_LENGTH,
@@ -483,8 +457,8 @@ const rest_var_t SystemVariables[] =
 
                 { 0, "lat", &funct_lat, VAR_FUNCT, RW, 0, 0 },
                 { 0, "lon", &funct_lon, VAR_FUNCT, RW, 0, 0 },
-                { 0, "latitude", &SysConfig.sntpClient.latitude, VAR_STRING, RW, 0, 16 },
-                { 0, "longitude", &SysConfig.sntpClient.longitude, VAR_STRING, RW, 0, 16 },
+                { 0, "latitude", &SysConfig.sntpClient.latitude, VAR_STRING, RW, 0, 23 },
+                { 0, "longitude", &SysConfig.sntpClient.longitude, VAR_STRING, RW, 0, 23 },
                 
  				{ 0, "cronrecs_enab", &SysConfig.bIsCRONEnabled, VAR_BOOL, RW, 0, 1 },
  				

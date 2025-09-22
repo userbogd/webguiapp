@@ -106,8 +106,8 @@ typedef struct
             } Flags1;
             float lat;
             float lon;
-            char longitude[16];
-            char latitude[16];
+            char longitude[24];
+            char latitude[24];
 
         } sntpClient;
 
