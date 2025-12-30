@@ -128,4 +128,6 @@ esp_err_t eepr_i2c_read(uint16_t addr, uint8_t *data, int length);
 esp_err_t eepr_i2c_write(uint16_t addr, uint8_t *data, int length);
 #endif
 
+const char *err_to_name(esp_err_t code); //Custom error reports
+
 #endif /* COMPONENTS_WEBGUIAPP_INCLUDE_SYSTEMAPPLICATION_H_ */

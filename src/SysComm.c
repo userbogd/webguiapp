@@ -97,7 +97,7 @@ static sys_error_code PayloadDefaultTypeHandler(data_message_t *MSG)
                         GetConfVar(VarName, VarValue, &tp);
                     else
                     {
-                        strcpy(VarValue, esp_err_to_name(res));
+                        strcpy(VarValue, err_to_name(res));
                         tp = VAR_ERROR;
                     }
                 }
@@ -106,7 +106,7 @@ static sys_error_code PayloadDefaultTypeHandler(data_message_t *MSG)
             { // Read variables
                 res = GetConfVar(VarName, VarValue, &tp);
                 if (res != ESP_OK)
-                    strcpy(VarValue, esp_err_to_name(res));
+                    strcpy(VarValue, err_to_name(res));
             }
             // Response with actual data
             if (tp == VAR_STRING || tp == VAR_IPADDR || tp == VAR_ERROR || tp == VAR_PASS)

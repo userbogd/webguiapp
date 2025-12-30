@@ -10,7 +10,8 @@ menu "WebGUIApp"
         default 39 if IDF_TARGET_ESP32
         default 46 if IDF_TARGET_ESP32S2
         default 19 if IDF_TARGET_ESP32C3
-        default 48 if IDF_TARGET_ESP32S3    
+        default 48 if IDF_TARGET_ESP32S3
+        default 48 if IDF_TARGET_ESP32C6     
     
     config BOARD_HARDWARE_REVISION
 		int "Board hardware revision"
@@ -202,6 +203,7 @@ menu "WebGUIApp"
 	            range GPIO_RANGE_MIN GPIO_RANGE_MAX
 	            default 18 if IDF_TARGET_ESP32
 	            default 36 if IDF_TARGET_ESP32S3
+	            default 8 if IDF_TARGET_ESP32C6
 	            help
 	                Set the GPIO number used by SPI SCLK.
 	
@@ -210,6 +212,7 @@ menu "WebGUIApp"
 	            range GPIO_RANGE_MIN GPIO_RANGE_MAX
 	            default 23 if IDF_TARGET_ESP32
 	            default 35 if IDF_TARGET_ESP32S3
+	            default 9 if IDF_TARGET_ESP32C6
 	            help
 	                Set the GPIO number used by SPI MOSI.
 	
@@ -218,6 +221,7 @@ menu "WebGUIApp"
 	            range GPIO_RANGE_MIN GPIO_RANGE_MAX
 	            default 19 if IDF_TARGET_ESP32
 	            default 37 if IDF_TARGET_ESP32S3
+	            default 12 if IDF_TARGET_ESP32C6
 	            help
 	                Set the GPIO number used by SPI MISO.
 	                
@@ -245,12 +249,14 @@ menu "WebGUIApp"
 	            range GPIO_RANGE_MIN GPIO_RANGE_MAX
 	            default 22 if IDF_TARGET_ESP32
 	            default 15 if IDF_TARGET_ESP32S3
+	            default 14 if IDF_TARGET_ESP32C6
 	            
 	        config I2C_SDA_GPIO
 	            int "I2C SDA GPIO number"
 	            range GPIO_RANGE_MIN GPIO_RANGE_MAX
 	            default 21 if IDF_TARGET_ESP32
-	            default 16 if IDF_TARGET_ESP32S3   
+	            default 16 if IDF_TARGET_ESP32S3
+	            default 15 if IDF_TARGET_ESP32C6   
 	            
 	        config I2C_CLOCK
 	            int "I2C clock"

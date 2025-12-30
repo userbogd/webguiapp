@@ -34,10 +34,12 @@ idf_component_register(
     	  src/SysComm.c
     	  src/SysErr.c
     	  src/EEPROM.c
+    	  src/err.c
     	  ${lora_SRCS}
     	  ${gprs_SRCS}
     	  ${jreadwrite_SRCS}
     	  ${libespfs_SRCS}
+    	  
     	    
     INCLUDE_DIRS  "."
     			  "include"
