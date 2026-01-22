@@ -25,7 +25,7 @@ idf_component_register(
     	 "src/MQTT.c"
     	 "src/CronTimers.c"
     	 "src/SerialPort.c"
-    	  src/PPPoS.c
+    	  src/USB_NCM_interface.c
     	  src/ShiftRegisterSPI.c
     	  src/sdcard.c
     	  src/FileBlockHandler.c

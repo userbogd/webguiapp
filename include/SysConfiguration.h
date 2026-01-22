@@ -202,6 +202,20 @@ typedef struct
         } gsmSettings;
 #endif
 
+#if CONFIG_WEBGUIAPP_USBNET_ENABLE
+        struct
+        {
+            bool bIsUSBNETEnabled;
+            esp_ip4_addr_t IPAddr; // IP address
+            esp_ip4_addr_t Mask; // network mask
+            esp_ip4_addr_t Gateway; // gateway
+            esp_ip4_addr_t DNSAddr1; //
+            esp_ip4_addr_t DNSAddr2; //
+            esp_ip4_addr_t DNSAddr3; //
+            uint8_t MACAddrLocal[6]; // MAC address
+            uint8_t MACAddrRemote[6]; // MAC address
+        } usbnetSettings;
+#endif
 
 #ifdef  CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
         struct

@@ -114,6 +114,7 @@ typedef struct
 void InitSerialPort(void);
 void InitPPPSerial();
 void InitSysSDCard();
+esp_err_t InitUSBnetif(void);
 esp_err_t TransmitSerialPort(char *data, int ln);
 
 esp_err_t GetConfVar(char* name, char* val, rest_var_types *tp);

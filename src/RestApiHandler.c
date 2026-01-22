@@ -176,7 +176,7 @@ static void PrintMACFromInterface(char *argres, int rw, esp_netif_t *netif)
 {
     uint8_t mac_addr[6] = { 0 };
     esp_netif_get_mac(netif, mac_addr);
-    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%02x-%02x-%02x-%02x-%02x-%02x\"",
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%02x:%02x:%02x:%02x:%02x:%02x\"",
              mac_addr[0],
              mac_addr[1],
              mac_addr[2],
@@ -197,6 +197,32 @@ static void funct_wifi_sta_mac(char *argres, int rw)
 static void funct_eth_mac(char *argres, int rw)
 {
     PrintMACFromInterface(argres, rw, GetETHNetifAdapter());
+}
+
+static void funct_usbnet_mac_local(char *argres, int rw)
+{
+       uint8_t mac_addr[6] = { 0 };
+       memcpy(mac_addr, GetSysConf()->usbnetSettings.MACAddrLocal, 6);
+       snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%02x:%02x:%02x:%02x:%02x:%02x\"",
+             mac_addr[0],
+             mac_addr[1],
+             mac_addr[2],
+             mac_addr[3],
+             mac_addr[4],
+             mac_addr[5]);
+}
+
+static void funct_usbnet_mac_remote(char *argres, int rw)
+{
+       uint8_t mac_addr[6] = { 0 };
+       memcpy(mac_addr, GetSysConf()->usbnetSettings.MACAddrRemote, 6);
+       snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%02x:%02x:%02x:%02x:%02x:%02x\"",
+             mac_addr[0],
+             mac_addr[1],
+             mac_addr[2],
+             mac_addr[3],
+             mac_addr[4],
+             mac_addr[5]);
 }
 
 static void funct_wifiscan(char *argres, int rw)
@@ -561,6 +587,21 @@ const rest_var_t SystemVariables[] =
                 #else
                 { 0, "gsm_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
                 #endif
+                
+#if CONFIG_WEBGUIAPP_USBNET_ENABLE
+                { 0, "usbnet_enab", &SysConfig.usbnetSettings.bIsUSBNETEnabled, VAR_BOOL, RW, 0, 1 },
+                { 0, "usbnet_ip", &SysConfig.usbnetSettings.IPAddr, VAR_IPADDR, RW, 0, 0 },
+                { 0, "usbnet_mask", &SysConfig.usbnetSettings.Mask, VAR_IPADDR, RW, 0, 0 },
+                { 0, "usbnet_gw", &SysConfig.usbnetSettings.Gateway, VAR_IPADDR, RW, 0, 0 },
+                { 0, "usbnet_dns1", &SysConfig.usbnetSettings.DNSAddr1, VAR_IPADDR, RW, 0, 0 },
+                { 0, "usbnet_dns2", &SysConfig.usbnetSettings.DNSAddr2, VAR_IPADDR, RW, 0, 0 },
+                { 0, "usbnet_dns3", &SysConfig.usbnetSettings.DNSAddr3, VAR_IPADDR, RW, 0, 0 },
+                { 0, "usbnet_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
+                { 0, "usbnet_mac_local", &funct_usbnet_mac_local, VAR_FUNCT, R, 0, 0 },
+                { 0, "usbnet_mac_remote", &funct_usbnet_mac_remote, VAR_FUNCT, R, 0, 0 },
+                #else
+                { 0, "eth_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
+                #endif                
 
 #ifdef CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
                 { 0, "serial_enab", &SysConfig.serialSettings.Flags.IsSerialEnabled, VAR_BOOL, RW, 0, 1 },

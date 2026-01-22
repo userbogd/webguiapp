@@ -16,8 +16,8 @@
  *    \version 1.0
  * 		 \date 2022-08-13
  *     \author Bogdan Pilyugin
- * 	    \brief    
- *    \details 
+ * 	    \brief
+ *    \details
  *	\copyright Apache License, Version 2.0
  */
 
@@ -25,6 +25,7 @@
 
 #include "ShiftRegisterSPI.h"
 #include "SystemApplication.h"
+#include <stdint.h>
 #include <webguiapp.h>
 #include "stdlib.h"
 #include "string.h"
@@ -44,7 +45,7 @@
 #include "esp_rom_gpio.h"
 
 #define STORAGE_NAMESPACE "storage"
-#define TAG "SystemConfiguration"
+#define TAG               "SystemConfiguration"
 
 #ifdef CONFIG_RESET_MODE_ENABLE
 #define MANUAL_RESET 1
@@ -74,13 +75,10 @@ static void InitSysIO(void);
 static void InitSysSPI(void);
 static void InitSysI2C(void);
 
-
-esp_err_t spi_device_polling_transmit_synchronized(spi_device_handle_t handle,
-                                                   spi_transaction_t *trans_desc)
+esp_err_t spi_device_polling_transmit_synchronized(spi_device_handle_t handle, spi_transaction_t *trans_desc)
 {
     esp_err_t res;
-    if (xSemaphoreTake(xSemaphoreSPIHandle, pdMS_TO_TICKS(SPI_LOCK_TIMEOUT_MS))
-            == pdTRUE)
+    if (xSemaphoreTake(xSemaphoreSPIHandle, pdMS_TO_TICKS(SPI_LOCK_TIMEOUT_MS)) == pdTRUE)
     {
         res = spi_device_polling_transmit(handle, trans_desc);
         xSemaphoreGive(xSemaphoreSPIHandle);
@@ -101,7 +99,7 @@ esp_err_t WebGuiAppInit(void)
 #endif
 
 #ifdef CONFIG_WEBGUIAPP_SR_ENABLE
-	ShiftRegInit();
+    ShiftRegInit();
 #endif
 
 #if CONFIG_WEBGUIAPP_I2C_ENABLE
@@ -114,13 +112,11 @@ esp_err_t WebGuiAppInit(void)
     esp_err_t err = nvs_flash_init();
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
-    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND
-            ||
-            MANUAL_RESET == 1
-                    #if (MAIN_FUNCTIONAL_BUTTON_GPIO >= 0)
-            || gpio_get_level(MAIN_FUNCTIONAL_BUTTON_GPIO) == 0
-                    #endif
-                    )
+    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND || MANUAL_RESET == 1
+#if (MAIN_FUNCTIONAL_BUTTON_GPIO >= 0)
+        || gpio_get_level(MAIN_FUNCTIONAL_BUTTON_GPIO) == 0
+#endif
+    )
     {
         // 1.OTA app partition table has a smaller NVS partition size than the non-OTA
         // partition table. This size mismatch may cause NVS initialization to fail.
@@ -133,7 +129,7 @@ esp_err_t WebGuiAppInit(void)
     }
     ESP_ERROR_CHECK(InitSysConfig());
 
-    //init  file systems
+    // init  file systems
     init_rom_fs("/espfs");
     init_spi_fs("/data");
 
@@ -165,17 +161,26 @@ esp_err_t WebGuiAppInit(void)
     }
 #endif
 
+#if CONFIG_WEBGUIAPP_USBNET_ENABLE
+    /*Start USBNET connection*/
+    if (GetSysConf()->usbnetSettings.bIsUSBNETEnabled)
+    {
+         InitUSBnetif();
+    }
+#endif
+
+   
+
     /*Start services depends on client connection*/
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE || CONFIG_WEBGUIAPP_ETHERNET_ENABLE || CONFIG_WEBGUIAPP_WIFI_ENABLE
     ESP_ERROR_CHECK(start_file_server());
     if (GetSysConf()->sntpClient.Flags1.bIsGlobalEnabled)
         StartTimeGet();
-    //regTimeSyncCallback(&TimeObtainHandler);
-    //mDNSServiceStart();
+    // regTimeSyncCallback(&TimeObtainHandler);
+    // mDNSServiceStart();
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
-    if (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled
-            || GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled)
+    if (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled || GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled)
     {
         MQTTRun();
     }
@@ -183,14 +188,14 @@ esp_err_t WebGuiAppInit(void)
 #endif
 
 #if CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
-    if(GetSysConf()->serialSettings.Flags.IsSerialEnabled)
-    	InitSerialPort();
+    if (GetSysConf()->serialSettings.Flags.IsSerialEnabled)
+        InitSerialPort();
 #endif
 
-#ifdef CONFIG_WEBGUIAPP_PPPOS_ENABLE	
-	InitPPPSerial();
+#ifdef CONFIG_WEBGUIAPP_PPPOS_ENABLE
+    InitPPPSerial();
 #endif
-	
+
     return ESP_OK;
 }
 
@@ -204,22 +209,21 @@ static void InitSysIO(void)
 #endif
 
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
-#if  CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN >= 0
-gpio_set_direction(CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN, GPIO_MODE_OUTPUT);
-gpio_set_level(CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN, 0);
+#if CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN >= 0
+    gpio_set_direction(CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(CONFIG_MODEM_DEVICE_POWER_CONTROL_PIN, 0);
 #endif
 #endif
 
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
-#if CONFIG_ETH_SPI_PHY_RST0_GPIO >=0
-gpio_set_direction(CONFIG_ETH_SPI_PHY_RST0_GPIO, GPIO_MODE_OUTPUT);
-gpio_set_level(CONFIG_ETH_SPI_PHY_RST0_GPIO, 0);
+#if CONFIG_ETH_SPI_PHY_RST0_GPIO >= 0
+    gpio_set_direction(CONFIG_ETH_SPI_PHY_RST0_GPIO, GPIO_MODE_OUTPUT);
+    gpio_set_level(CONFIG_ETH_SPI_PHY_RST0_GPIO, 0);
 #endif
 #endif
 
     ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_IRAM));
     ESP_LOGI(TAG, "System GPIO's initialized OK");
-
 }
 
 static void InitSysSPI(void)
@@ -227,12 +231,14 @@ static void InitSysSPI(void)
 #ifdef CONFIG_WEBGUIAPP_SPI_ENABLE
     xSemaphoreSPIHandle = xSemaphoreCreateBinaryStatic(&xSemaphoreSPIBuf);
     xSemaphoreGive(xSemaphoreSPIHandle);
-    spi_bus_config_t buscfg = { .miso_io_num = CONFIG_SPI_MISO_GPIO,
-            .mosi_io_num = CONFIG_SPI_MOSI_GPIO, .sclk_io_num =
-            CONFIG_SPI_SCLK_GPIO, .quadwp_io_num = -1, .quadhd_io_num =
-                    -1, };
-    ESP_ERROR_CHECK(
-                    spi_bus_initialize(CONFIG_SPI_HOST, &buscfg, SPI_DMA_CH_AUTO));
+    spi_bus_config_t buscfg = {
+        .miso_io_num = CONFIG_SPI_MISO_GPIO,
+        .mosi_io_num = CONFIG_SPI_MOSI_GPIO,
+        .sclk_io_num = CONFIG_SPI_SCLK_GPIO,
+        .quadwp_io_num = -1,
+        .quadhd_io_num = -1,
+    };
+    ESP_ERROR_CHECK(spi_bus_initialize(CONFIG_SPI_HOST, &buscfg, SPI_DMA_CH_AUTO));
     ESP_LOGI(TAG, "SPI BUS initialize OK");
 #else
     ESP_LOGI(TAG, "SPI BUS disabeled in config");
@@ -242,10 +248,12 @@ static void InitSysSPI(void)
 static void InitSysI2C(void)
 {
 #ifdef CONFIG_WEBGUIAPP_I2C_ENABLE
-    i2c_config_t i2c_config = { .mode = I2C_MODE_MASTER, .sda_io_num =
-    CONFIG_I2C_SDA_GPIO, .scl_io_num = CONFIG_I2C_SCL_GPIO,
-            .sda_pullup_en = GPIO_PULLUP_ENABLE, .scl_pullup_en =
-                    GPIO_PULLUP_ENABLE, .master.clk_speed = CONFIG_I2C_CLOCK };
+    i2c_config_t i2c_config = { .mode = I2C_MODE_MASTER,
+        .sda_io_num = CONFIG_I2C_SDA_GPIO,
+        .scl_io_num = CONFIG_I2C_SCL_GPIO,
+        .sda_pullup_en = GPIO_PULLUP_ENABLE,
+        .scl_pullup_en = GPIO_PULLUP_ENABLE,
+        .master.clk_speed = CONFIG_I2C_CLOCK };
     ESP_ERROR_CHECK(i2c_param_config(I2C_NUM_0, &i2c_config));
     ESP_ERROR_CHECK(i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0));
     ESP_LOGI(TAG, "I2C initialized OK");
@@ -258,23 +266,20 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
 {
     char id[4];
     char id2[9];
-    GetChipId((uint8_t*) id);
-    BytesToStr((unsigned char*) id, (unsigned char*) id2, 4);
+    GetChipId((uint8_t *)id);
+    BytesToStr((unsigned char *)id, (unsigned char *)id2, 4);
     id2[8] = 0x00;
     memcpy(Conf->ID, id2, 9);
 
     UINT32_VAL d;
-    GetChipId((uint8_t*) d.v);
-    snprintf(Conf->SN, 11, "%010u", (unsigned int) swap(d.Val));
+    GetChipId((uint8_t *)d.v);
+    snprintf(Conf->SN, 11, "%010u", (unsigned int)swap(d.Val));
 
     Conf->ColorSheme = CONFIG_WEBGUIAPP_DEFAULT_COLOR_SCHEME;
 
-    memcpy(Conf->NetBIOSName, CONFIG_WEBGUIAPP_HOSTNAME,
-           sizeof(CONFIG_WEBGUIAPP_HOSTNAME));
-    memcpy(Conf->SysName, CONFIG_WEBGUIAPP_USERNAME,
-           sizeof(CONFIG_WEBGUIAPP_USERNAME));
-    memcpy(Conf->SysPass, CONFIG_WEBGUIAPP_USERPASS,
-           sizeof(CONFIG_WEBGUIAPP_USERPASS));
+    memcpy(Conf->NetBIOSName, CONFIG_WEBGUIAPP_HOSTNAME, sizeof(CONFIG_WEBGUIAPP_HOSTNAME));
+    memcpy(Conf->SysName, CONFIG_WEBGUIAPP_USERNAME, sizeof(CONFIG_WEBGUIAPP_USERNAME));
+    memcpy(Conf->SysPass, CONFIG_WEBGUIAPP_USERPASS, sizeof(CONFIG_WEBGUIAPP_USERPASS));
 
     memcpy(Conf->OTAURL, CONFIG_WEBGUIAPP_OTA_HOST, sizeof(CONFIG_WEBGUIAPP_OTA_HOST));
     Conf->OTAAutoInt = CONFIG_WEBGUIAPP_OTA_AUTOUPDATE_PERIOD;
@@ -285,7 +290,7 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
     Conf->Flags1.bIsOTAEnabled = false;
 #endif
 
-#if   CONFIG_WEBGUIAPP_OTA_RESET_ENABLE
+#if CONFIG_WEBGUIAPP_OTA_RESET_ENABLE
     Conf->Flags1.bIsResetOTAEnabled = true;
 #else
     Conf->Flags1.bIsResetOTAEnabled = false;
@@ -293,75 +298,81 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
 
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
     Conf->wifiSettings.Flags1.bIsWiFiEnabled = CONFIG_WEBGUIAPP_WIFI_ON;
-    memcpy(Conf->wifiSettings.ApSSID, CONFIG_WEBGUIAPP_WIFI_SSID_AP,
-           sizeof(CONFIG_WEBGUIAPP_WIFI_SSID_AP));
+    memcpy(Conf->wifiSettings.ApSSID, CONFIG_WEBGUIAPP_WIFI_SSID_AP, sizeof(CONFIG_WEBGUIAPP_WIFI_SSID_AP));
     strcat(Conf->wifiSettings.ApSSID, "_");
     strcat(Conf->wifiSettings.ApSSID, Conf->ID);
 
-    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_WIFI_IP_STA,
-                         (esp_ip4_addr_t*) &Conf->wifiSettings.InfIPAddr);
-    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_WIFI_MASK_STA,
-                         (esp_ip4_addr_t*) &Conf->wifiSettings.InfMask);
-    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_WIFI_GATEWAY_STA,
-                         (esp_ip4_addr_t*) &Conf->wifiSettings.InfGateway);
-    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_WIFI_IP_AP,
-                         (esp_ip4_addr_t*) &Conf->wifiSettings.ApIPAddr);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_WIFI_IP_STA, (esp_ip4_addr_t *)&Conf->wifiSettings.InfIPAddr);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_WIFI_MASK_STA, (esp_ip4_addr_t *)&Conf->wifiSettings.InfMask);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_WIFI_GATEWAY_STA, (esp_ip4_addr_t *)&Conf->wifiSettings.InfGateway);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_WIFI_IP_AP, (esp_ip4_addr_t *)&Conf->wifiSettings.ApIPAddr);
 
-    Conf->wifiSettings.WiFiMode = 3; //AP+STA mode
-    memcpy(Conf->wifiSettings.ApSecurityKey, CONFIG_WEBGUIAPP_WIFI_KEY_AP,
-           sizeof(CONFIG_WEBGUIAPP_WIFI_KEY_AP));
-    memcpy(Conf->wifiSettings.InfSSID, CONFIG_WEBGUIAPP_WIFI_SSID_STA,
-           sizeof(CONFIG_WEBGUIAPP_WIFI_SSID_STA));
-    memcpy(Conf->wifiSettings.InfSecurityKey, CONFIG_WEBGUIAPP_WIFI_KEY_STA,
-           sizeof(CONFIG_WEBGUIAPP_WIFI_KEY_STA));
+    Conf->wifiSettings.WiFiMode = 3; // AP+STA mode
+    memcpy(Conf->wifiSettings.ApSecurityKey, CONFIG_WEBGUIAPP_WIFI_KEY_AP, sizeof(CONFIG_WEBGUIAPP_WIFI_KEY_AP));
+    memcpy(Conf->wifiSettings.InfSSID, CONFIG_WEBGUIAPP_WIFI_SSID_STA, sizeof(CONFIG_WEBGUIAPP_WIFI_SSID_STA));
+    memcpy(Conf->wifiSettings.InfSecurityKey, CONFIG_WEBGUIAPP_WIFI_KEY_STA, sizeof(CONFIG_WEBGUIAPP_WIFI_KEY_STA));
 
     Conf->wifiSettings.Flags1.bIsDHCPEnabled = false;
 #if CONFIG_WEBGUIAPP_WIFI_DHCP_ON
     Conf->wifiSettings.Flags1.bIsDHCPEnabled = true;
 #endif
-    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS1_ADDRESS_DEFAULT,
-                         (esp_ip4_addr_t*) &Conf->wifiSettings.DNSAddr1);
-    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS2_ADDRESS_DEFAULT,
-                         (esp_ip4_addr_t*) &Conf->wifiSettings.DNSAddr2);
-    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT,
-                         (esp_ip4_addr_t*) &Conf->wifiSettings.DNSAddr3);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS1_ADDRESS_DEFAULT, (esp_ip4_addr_t *)&Conf->wifiSettings.DNSAddr1);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS2_ADDRESS_DEFAULT, (esp_ip4_addr_t *)&Conf->wifiSettings.DNSAddr2);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t *)&Conf->wifiSettings.DNSAddr3);
     Conf->wifiSettings.MaxPower = 80;
     Conf->wifiSettings.AP_disab_time = 10;
 #endif
 
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
-Conf->ethSettings.Flags1.bIsETHEnabled = false;
+    Conf->ethSettings.Flags1.bIsETHEnabled = false;
 #if CONFIG_WEBGUIAPP_ETHERNET_ON
-Conf->ethSettings.Flags1.bIsETHEnabled = true;
+    Conf->ethSettings.Flags1.bIsETHEnabled = true;
 #endif
-esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_ETH_IP_DEFAULT, (esp_ip4_addr_t*) &Conf->ethSettings.IPAddr);
-esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_ETH_MASK_DEFAULT, (esp_ip4_addr_t*) &Conf->ethSettings.Mask);
-esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_ETH_GATEWAY_DEFAULT, (esp_ip4_addr_t*) &Conf->ethSettings.Gateway);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_ETH_IP_DEFAULT, (esp_ip4_addr_t *)&Conf->ethSettings.IPAddr);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_ETH_MASK_DEFAULT, (esp_ip4_addr_t *)&Conf->ethSettings.Mask);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_ETH_GATEWAY_DEFAULT, (esp_ip4_addr_t *)&Conf->ethSettings.Gateway);
 
-Conf->ethSettings.Flags1.bIsDHCPEnabled = false;
+    Conf->ethSettings.Flags1.bIsDHCPEnabled = false;
 #if CONFIG_WEBGUIAPP_ETHERNET_DHCP_DEFAULT
-Conf->ethSettings.Flags1.bIsDHCPEnabled = true;
+    Conf->ethSettings.Flags1.bIsDHCPEnabled = true;
 #endif
 
-
-esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS1_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &Conf->ethSettings.DNSAddr1);
-esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS2_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &Conf->ethSettings.DNSAddr2);
-esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &Conf->ethSettings.DNSAddr3);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS1_ADDRESS_DEFAULT, (esp_ip4_addr_t *)&Conf->ethSettings.DNSAddr1);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS2_ADDRESS_DEFAULT, (esp_ip4_addr_t *)&Conf->ethSettings.DNSAddr2);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t *)&Conf->ethSettings.DNSAddr3);
 #endif
 
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
-Conf->gsmSettings.Flags1.bIsGSMEnabled = false;
+    Conf->gsmSettings.Flags1.bIsGSMEnabled = false;
 #if CONFIG_WEBGUIAPP_GPRS_ON
-Conf->gsmSettings.Flags1.bIsGSMEnabled = true;
+    Conf->gsmSettings.Flags1.bIsGSMEnabled = true;
 #endif
-memcpy(Conf->gsmSettings.APN, CONFIG_MODEM_PPP_APN,sizeof(CONFIG_MODEM_PPP_APN));
-memcpy(Conf->gsmSettings.login, CONFIG_MODEM_PPP_APN,sizeof(CONFIG_MODEM_PPP_APN));
-memcpy(Conf->gsmSettings.password, CONFIG_MODEM_PPP_APN,sizeof(CONFIG_MODEM_PPP_APN));
+    memcpy(Conf->gsmSettings.APN, CONFIG_MODEM_PPP_APN, sizeof(CONFIG_MODEM_PPP_APN));
+    memcpy(Conf->gsmSettings.login, CONFIG_MODEM_PPP_APN, sizeof(CONFIG_MODEM_PPP_APN));
+    memcpy(Conf->gsmSettings.password, CONFIG_MODEM_PPP_APN, sizeof(CONFIG_MODEM_PPP_APN));
 
-esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS1_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &Conf->gsmSettings.DNSAddr1);
-esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS2_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &Conf->gsmSettings.DNSAddr2);
-esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &Conf->gsmSettings.DNSAddr3);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS1_ADDRESS_DEFAULT, (esp_ip4_addr_t *)&Conf->gsmSettings.DNSAddr1);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS2_ADDRESS_DEFAULT, (esp_ip4_addr_t *)&Conf->gsmSettings.DNSAddr2);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t *)&Conf->gsmSettings.DNSAddr3);
 
+#endif
+
+#if CONFIG_WEBGUIAPP_USBNET_ENABLE
+    Conf->usbnetSettings.bIsUSBNETEnabled = true;
+    const uint8_t local_mac[] = { 0x02, 0x02, 0x11, 0x22, 0x33, 0x01 };
+	const uint8_t remote_mac[] = { 0x02, 0x02, 0x11, 0x22, 0x33, 0x02 };
+    
+    
+    memcpy(&Conf->usbnetSettings.MACAddrLocal, local_mac, 6);
+    memcpy(&Conf->usbnetSettings.MACAddrRemote, remote_mac, 6);
+
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_USBNET_IP_DEFAULT, (esp_ip4_addr_t *)&Conf->usbnetSettings.IPAddr);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_USBNET_MASK_DEFAULT, (esp_ip4_addr_t *)&Conf->usbnetSettings.Mask);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_USBNET_GATEWAY_DEFAULT, (esp_ip4_addr_t *)&Conf->usbnetSettings.Gateway);
+
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS1_ADDRESS_DEFAULT, (esp_ip4_addr_t *)&Conf->usbnetSettings.DNSAddr1);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS2_ADDRESS_DEFAULT, (esp_ip4_addr_t *)&Conf->usbnetSettings.DNSAddr2);
+    esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t *)&Conf->usbnetSettings.DNSAddr3);
 #endif
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
@@ -369,37 +380,30 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
 #if CONFIG_WEBGUIAPP_MQTT_ON
     Conf->mqttStation[0].Flags1.bIsGlobalEnabled = true;
 #endif
-    memcpy(Conf->mqttStation[0].ServerAddr, CONFIG_WEBGUIAPP_MQTT_SERVER_URL,
-           sizeof(CONFIG_WEBGUIAPP_MQTT_SERVER_URL));
+    memcpy(Conf->mqttStation[0].ServerAddr, CONFIG_WEBGUIAPP_MQTT_SERVER_URL, sizeof(CONFIG_WEBGUIAPP_MQTT_SERVER_URL));
     Conf->mqttStation[0].ServerPort = CONFIG_WEBGUIAPP_MQTT_SERVER_PORT;
 
-    memcpy(Conf->mqttStation[0].SystemName, CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME,
-           sizeof(CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME));
-    memcpy(Conf->mqttStation[0].GroupName, CONFIG_WEBGUIAPP_MQTT_GROUP_NAME,
-           sizeof(CONFIG_WEBGUIAPP_MQTT_GROUP_NAME));
+    memcpy(Conf->mqttStation[0].SystemName, CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME, sizeof(CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME));
+    memcpy(Conf->mqttStation[0].GroupName, CONFIG_WEBGUIAPP_MQTT_GROUP_NAME, sizeof(CONFIG_WEBGUIAPP_MQTT_GROUP_NAME));
 
     Conf->mqttStation[0].ClientID[0] = 0x00;
     strcat(Conf->mqttStation[0].ClientID, CONFIG_WEBGUIAPP_MQTT_CLIENT_ID_1);
     strcat(Conf->mqttStation[0].ClientID, "-");
     strcat(Conf->mqttStation[0].ClientID, Conf->ID);
 
-    memcpy(Conf->mqttStation[0].UserName, CONFIG_WEBGUIAPP_MQTT_USERNAME,
-           sizeof(CONFIG_WEBGUIAPP_MQTT_USERNAME));
-    memcpy(Conf->mqttStation[0].UserPass, CONFIG_WEBGUIAPP_MQTT_PASSWORD,
-           sizeof(CONFIG_WEBGUIAPP_MQTT_PASSWORD));
-   	Conf->mqttStation[0].Flags1.bIsHeartbeatEnabled = false;
+    memcpy(Conf->mqttStation[0].UserName, CONFIG_WEBGUIAPP_MQTT_USERNAME, sizeof(CONFIG_WEBGUIAPP_MQTT_USERNAME));
+    memcpy(Conf->mqttStation[0].UserPass, CONFIG_WEBGUIAPP_MQTT_PASSWORD, sizeof(CONFIG_WEBGUIAPP_MQTT_PASSWORD));
+    Conf->mqttStation[0].Flags1.bIsHeartbeatEnabled = false;
 #ifdef CONFIG_WEBGUIAPP_MQTT_HEARTBEAT_ON
-	Conf->mqttStation[0].Flags1.bIsHeartbeatEnabled = true;
-#endif   	   
-   Conf->mqttStation[0].HeartbeatInterval = CONFIG_WEBGUIAPP_MQTT_HEARTBEAT_INTERVAL;	           
-           
-           
+    Conf->mqttStation[0].Flags1.bIsHeartbeatEnabled = true;
+#endif
+    Conf->mqttStation[0].HeartbeatInterval = CONFIG_WEBGUIAPP_MQTT_HEARTBEAT_INTERVAL;
+
 #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
     Conf->mqttStation[1].Flags1.bIsGlobalEnabled = false;
     memcpy(Conf->mqttStation[1].ServerAddr, CONFIG_WEBGUIAPP_MQTT_SERVER_URL, sizeof(CONFIG_WEBGUIAPP_MQTT_SERVER_URL));
     Conf->mqttStation[1].ServerPort = CONFIG_WEBGUIAPP_MQTT_SERVER_PORT;
-    memcpy(Conf->mqttStation[1].SystemName, CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME,
-           sizeof(CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME));
+    memcpy(Conf->mqttStation[1].SystemName, CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME, sizeof(CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME));
     memcpy(Conf->mqttStation[1].GroupName, CONFIG_WEBGUIAPP_MQTT_GROUP_NAME, sizeof(CONFIG_WEBGUIAPP_MQTT_GROUP_NAME));
 
     Conf->mqttStation[1].ClientID[0] = 0x00;
@@ -409,21 +413,18 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
 
     memcpy(Conf->mqttStation[1].UserName, CONFIG_WEBGUIAPP_MQTT_USERNAME, sizeof(CONFIG_WEBGUIAPP_MQTT_USERNAME));
     memcpy(Conf->mqttStation[1].UserPass, CONFIG_WEBGUIAPP_MQTT_PASSWORD, sizeof(CONFIG_WEBGUIAPP_MQTT_PASSWORD));
-    
+
     Conf->mqttStation[1].Flags1.bIsHeartbeatEnabled = false;
 #ifdef CONFIG_WEBGUIAPP_MQTT_HEARTBEAT_ON
-	Conf->mqttStation[1].Flags1.bIsHeartbeatEnabled = true;
-#endif   	   
+    Conf->mqttStation[1].Flags1.bIsHeartbeatEnabled = true;
+#endif
     Conf->mqttStation[1].HeartbeatInterval = CONFIG_WEBGUIAPP_MQTT_HEARTBEAT_INTERVAL;
-    
+
 #endif
 #endif
-    memcpy(Conf->sntpClient.SntpServerAdr, CONFIG_WEBGUIAPP_SNTP_HOST_1,
-           sizeof(CONFIG_WEBGUIAPP_SNTP_HOST_1));
-    memcpy(Conf->sntpClient.SntpServer2Adr, CONFIG_WEBGUIAPP_SNTP_HOST_2,
-           sizeof(CONFIG_WEBGUIAPP_SNTP_HOST_2));
-    memcpy(Conf->sntpClient.SntpServer3Adr, CONFIG_WEBGUIAPP_SNTP_HOST_3,
-           sizeof(CONFIG_WEBGUIAPP_SNTP_HOST_3));
+    memcpy(Conf->sntpClient.SntpServerAdr, CONFIG_WEBGUIAPP_SNTP_HOST_1, sizeof(CONFIG_WEBGUIAPP_SNTP_HOST_1));
+    memcpy(Conf->sntpClient.SntpServer2Adr, CONFIG_WEBGUIAPP_SNTP_HOST_2, sizeof(CONFIG_WEBGUIAPP_SNTP_HOST_2));
+    memcpy(Conf->sntpClient.SntpServer3Adr, CONFIG_WEBGUIAPP_SNTP_HOST_3, sizeof(CONFIG_WEBGUIAPP_SNTP_HOST_3));
     Conf->sntpClient.Flags1.bIsGlobalEnabled = CONFIG_WEBGUIAPP_SNTP_AUTOUPDATE_ENABLE;
     Conf->sntpClient.TimeZone = CONFIG_WEBGUIAPP_SNTP_TIMEZONE;
     Conf->sntpClient.lat = 0.0;
@@ -435,11 +436,11 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
     Conf->lorawanSettings.Flags1.bIsLoRaWANEnabled = true;
     Conf->Flags1.bIsLoRaConfirm = false;
     unsigned char temp[16] = { 0 };
-    GetChipId((uint8_t*) temp + 4);
+    GetChipId((uint8_t *)temp + 4);
     memcpy(Conf->lorawanSettings.DevEui, temp, 8);
-    StrToBytes((unsigned char*) CONFIG_LORA_APP_KEY, temp);
+    StrToBytes((unsigned char *)CONFIG_LORA_APP_KEY, temp);
     memcpy(Conf->lorawanSettings.AppKey, temp, 16);
-    StrToBytes((unsigned char*) CONFIG_LORA_APP_ID, temp);
+    StrToBytes((unsigned char *)CONFIG_LORA_APP_ID, temp);
     memcpy(Conf->lorawanSettings.AppEui, temp, 8);
 #endif
 
@@ -478,7 +479,6 @@ esp_netif_str_to_ip4(CONFIG_WEBGUIAPP_DNS3_ADDRESS_DEFAULT, (esp_ip4_addr_t*) &C
         strcpy(Conf->Timers[i].name, "Timer Name");
         strcpy(Conf->Timers[i].cron, "* * * * * *");
         strcpy(Conf->Timers[i].exec, "OBJECT,ACTION,ARGUMENTS");
-
     }
     Conf->bIsCRONEnabled = true;
 
@@ -495,8 +495,8 @@ esp_err_t ReadNVSSysConfig(SYS_CONFIG *SysConf)
     if (err != ESP_OK)
         return err;
 
-// obtain required memory space to store blob being read from NVS
-    size_t L = (size_t) sizeof(SYS_CONFIG);
+    // obtain required memory space to store blob being read from NVS
+    size_t L = (size_t)sizeof(SYS_CONFIG);
     ESP_LOGI(TAG, "Size of structure to read is %d", L);
     err = nvs_get_blob(my_handle, "sys_conf", SysConf, &L);
     if (err != ESP_OK)
@@ -511,7 +511,7 @@ esp_err_t ReadNVSSysConfig(SYS_CONFIG *SysConf)
     if (err != ESP_OK)
         goto nvs_operation_err;
 
-    SHA256Hash((unsigned char*) SysConf, sizeof(SYS_CONFIG), sha256_calculated);
+    SHA256Hash((unsigned char *)SysConf, sizeof(SYS_CONFIG), sha256_calculated);
     BytesToStr(sha256_saved, sha_print, 32);
     ESP_LOGI(TAG, "Saved hash of structure is %s", sha_print);
     BytesToStr(sha256_calculated, sha_print, 32);
@@ -535,12 +535,12 @@ esp_err_t WriteNVSSysConfig(SYS_CONFIG *SysConf)
 {
     nvs_handle_t my_handle;
     esp_err_t err;
-// Open
+    // Open
     err = nvs_open(STORAGE_NAMESPACE, NVS_READWRITE, &my_handle);
     if (err != ESP_OK)
         return err;
 
-    size_t L = (size_t) sizeof(SYS_CONFIG);
+    size_t L = (size_t)sizeof(SYS_CONFIG);
     ESP_LOGI(TAG, "Size of structure to write is %d", L);
     err = nvs_set_blob(my_handle, "sys_conf", SysConf, L);
     if (err != ESP_OK)
@@ -549,7 +549,7 @@ esp_err_t WriteNVSSysConfig(SYS_CONFIG *SysConf)
     unsigned char sha256[32];
     unsigned char sha_print[32 * 2 + 1];
 
-    SHA256Hash((unsigned char*) SysConf, sizeof(SYS_CONFIG), sha256);
+    SHA256Hash((unsigned char *)SysConf, sizeof(SYS_CONFIG), sha256);
     BytesToStr(sha256, sha_print, 32);
     sha_print[32 * 2] = 0x00;
     ESP_LOGI(TAG, "SHA256 of structure to write is %s", sha_print);
@@ -558,7 +558,7 @@ esp_err_t WriteNVSSysConfig(SYS_CONFIG *SysConf)
     if (err != ESP_OK)
         goto nvs_wr_oper_err;
 
-// Commit
+    // Commit
     err = nvs_commit(my_handle);
     if (err != ESP_OK)
         goto nvs_wr_oper_err;
@@ -569,10 +569,9 @@ esp_err_t WriteNVSSysConfig(SYS_CONFIG *SysConf)
 nvs_wr_oper_err:
     nvs_close(my_handle);
     return err;
-
 }
 
-SYS_CONFIG* GetSysConf(void)
+SYS_CONFIG *GetSysConf(void)
 {
     return &SysConfig;
 }
@@ -611,8 +610,7 @@ void DelayedRestartTask(void *pvParameter)
 }
 void DelayedRestart(void)
 {
-    xTaskCreate(DelayedRestartTask, "RestartTask", 1024 * 4, (void*) 0, 3,
-    NULL);
+    xTaskCreate(DelayedRestartTask, "RestartTask", 1024 * 4, (void *)0, 3, NULL);
 }
 
 bool GetUserAppNeedReset(void)
@@ -625,10 +623,10 @@ void SetUserAppNeedReset(bool res)
     isUserAppNeedReset = res;
 }
 
-#define LOG_MAX_CHUNK_SIZE CONFIG_WEBGUIAPP_SYSLOG_CHUNK_SIZE
-#define LOG_MAX_CHUNKS CONFIG_WEBGUIAPP_SYSLOG_MAX_CHUNKS
+#define LOG_MAX_CHUNK_SIZE    CONFIG_WEBGUIAPP_SYSLOG_CHUNK_SIZE
+#define LOG_MAX_CHUNKS        CONFIG_WEBGUIAPP_SYSLOG_MAX_CHUNKS
 #define DEFAULT_LOG_FILE_NAME "syslog"
-#define LOG_PARTITION "/data/"
+#define LOG_PARTITION         "/data/"
 
 static void ComposeLogFilename(int chunk, char *filename)
 {
@@ -649,7 +647,7 @@ void SysLog(char *format, ...)
     FILE *f;
     ComposeLogFilename(cur_chunk, filename);
 
-    //If first call after reboot, try to find not full chunk
+    // If first call after reboot, try to find not full chunk
     if (isstart)
     {
         while (file_stat.st_size > LOG_MAX_CHUNK_SIZE * 1024 && cur_chunk <= LOG_MAX_CHUNKS - 1)
@@ -660,7 +658,7 @@ void SysLog(char *format, ...)
         isstart = 0;
     }
     stat(filename, &file_stat);
-    //next if full, else append to current
+    // next if full, else append to current
     if (file_stat.st_size > LOG_MAX_CHUNK_SIZE * 1024)
     {
         if (++cur_chunk > LOG_MAX_CHUNKS - 1)
@@ -714,4 +712,3 @@ void LogFile(char *fname, char *format, ...)
     fclose(f);
     ESP_LOGI(TAG, "File written to %s", filename);
 }
-

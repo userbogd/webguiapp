@@ -818,10 +818,25 @@ menu "WebGUIApp"
 	   endif
 	endmenu
 	
-	menu "PPPoS configuration"
-	    config WEBGUIAPP_PPPOS_ENABLE
-	        bool "Enabled PPPoS transport"
-	        default n
+	menu "USBNET configuration"
+	    config WEBGUIAPP_USBNET_ENABLE
+	        bool "Enabled network adapter on USB transport"
+	        default n   
+	        
+	    if WEBGUIAPP_USBNET_ENABLE
+	        config WEBGUIAPP_USBNET_IP_DEFAULT
+			    string "Default IP address"
+			    default "192.168.70.1"
+			
+			config WEBGUIAPP_USBNET_MASK_DEFAULT
+			    string "Default network mask"
+			    default "255.255.255.0"    
+			    
+			config WEBGUIAPP_USBNET_GATEWAY_DEFAULT
+			    string "Default gateway"
+			    default "192.168.70.2" 
+ 	 				            
+	   endif	             
 	endmenu
 	
 	menu "SR IO extender configuration"
