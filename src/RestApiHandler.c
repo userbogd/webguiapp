@@ -209,6 +209,7 @@ static void MACOperations(char *argres, int rw, uint8_t *confdata)
     snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%02x-%02x-%02x-%02x-%02x-%02x\"", mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
 }
 
+#if CONFIG_WEBGUIAPP_USBNET_ENABLE
 static void funct_usbnet_mac_local(char *argres, int rw)
 {
 	return MACOperations(argres, rw, GetSysConf()->usbnetSettings.MACAddrLocal);
@@ -218,7 +219,7 @@ static void funct_usbnet_mac_remote(char *argres, int rw)
 {
 	return MACOperations(argres, rw, GetSysConf()->usbnetSettings.MACAddrRemote);
 }
-
+#endif
 static void funct_wifiscan(char *argres, int rw)
 {
     if (atoi(argres))

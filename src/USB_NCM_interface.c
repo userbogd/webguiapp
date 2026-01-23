@@ -20,10 +20,13 @@
  *    \details
  *	\copyright Apache License, Version 2.0
  */
+ 
 
+#include "esp_err.h"
+#if CONFIG_WEBGUIAPP_USBNET_ENABLE
 #include <stdio.h>
 #include "SysConfiguration.h"
-#include "esp_err.h"
+
 #include "esp_log.h"
 #include "esp_netif.h"
 #include "esp_netif_types.h"
@@ -106,11 +109,6 @@ esp_err_t InitUSBnetif(void)
         ESP_LOGE(TAG, "Cannot initialize USB Net device");
         return ret;
     }
-
-    // with OUI range MAC to create a virtual netif running http server
-    // this needs to be different to usb_interface_mac (==client)
-    uint8_t lwip_addr[6] = { 0x02, 0x02, 0x11, 0x22, 0x33, 0x02 };
-
     esp_netif_ip_info_t _g_esp_netif_usb_ip;
     //    = { .ip = { .addr = ESP_IP4TOADDR(192, 168, 70, 1) }, .gw = { .addr = ESP_IP4TOADDR(192, 168, 70, 2) }, .netmask = { .addr = ESP_IP4TOADDR(255, 255, 255, 0) } };
 
@@ -161,3 +159,10 @@ esp_err_t InitUSBnetif(void)
     esp_netif_action_start(s_netif, 0, 0, 0);
     return ESP_OK;
 }
+
+#else
+esp_err_t InitUSBnetif(void)
+{
+return ESP_ERR_NOT_FOUND;
+}
+#endif
