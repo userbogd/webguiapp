@@ -16,8 +16,8 @@
  *    \version 1.0
  * 		 \date 2023-07-26
  *     \author Bogdan Pilyugin
- * 	    \brief    
- *    \details 
+ * 	    \brief
+ *    \details
  *	\copyright Apache License, Version 2.0
  */
 
@@ -45,8 +45,7 @@ void SetAppVars(rest_var_t *appvars, int size)
 
 static void PrintInterfaceState(char *argres, int rw, esp_netif_t *netif)
 {
-    snprintf(argres, VAR_MAX_VALUE_LENGTH,
-             (netif != NULL && esp_netif_is_netif_up(netif)) ? "\"CONNECTED\"" : "\"DISCONNECTED\"");
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, (netif != NULL && esp_netif_is_netif_up(netif)) ? "\"CONNECTED\"" : "\"DISCONNECTED\"");
 }
 
 static void funct_wifi_stat(char *argres, int rw)
@@ -83,16 +82,13 @@ static void funct_mqtt_1_test(char *argres, int rw)
 {
     if (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled)
         PublicTestMQTT(0);
-    snprintf(argres, VAR_MAX_VALUE_LENGTH,
-             (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled) ? "\"OK\"" : "\"NOT_AVAIL\"");
-
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled) ? "\"OK\"" : "\"NOT_AVAIL\"");
 }
 static void funct_mqtt_2_test(char *argres, int rw)
 {
     if (GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled)
         PublicTestMQTT(1);
-    snprintf(argres, VAR_MAX_VALUE_LENGTH,
-             (GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled) ? "\"OK\"" : "\"NOT_AVAIL\"");
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, (GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled) ? "\"OK\"" : "\"NOT_AVAIL\"");
 }
 
 static void funct_def_interface(char *argres, int rw)
@@ -106,7 +102,7 @@ static void funct_time(char *argres, int rw)
 {
     time_t now;
     time(&now);
-    snprintf(argres, VAR_MAX_VALUE_LENGTH, "%d", (int) now);
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "%d", (int)now);
 }
 
 static void funct_time_set(char *argres, int rw)
@@ -125,7 +121,7 @@ static void funct_time_set(char *argres, int rw)
 
 static void funct_uptime(char *argres, int rw)
 {
-    snprintf(argres, VAR_MAX_VALUE_LENGTH, "%d", (int) GetUpTime());
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "%d", (int)GetUpTime());
 }
 static void funct_wifi_level(char *argres, int rw)
 {
@@ -138,11 +134,11 @@ static void funct_wifi_level(char *argres, int rw)
 
 static void funct_fram(char *argres, int rw)
 {
-    snprintf(argres, VAR_MAX_VALUE_LENGTH, "%d", (int) esp_get_free_heap_size());
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "%d", (int)esp_get_free_heap_size());
 }
 static void funct_fram_min(char *argres, int rw)
 {
-    snprintf(argres, VAR_MAX_VALUE_LENGTH, "%d", (int) esp_get_minimum_free_heap_size());
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "%d", (int)esp_get_minimum_free_heap_size());
 }
 
 static void funct_idf_ver(char *argres, int rw)
@@ -176,13 +172,7 @@ static void PrintMACFromInterface(char *argres, int rw, esp_netif_t *netif)
 {
     uint8_t mac_addr[6] = { 0 };
     esp_netif_get_mac(netif, mac_addr);
-    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%02x:%02x:%02x:%02x:%02x:%02x\"",
-             mac_addr[0],
-             mac_addr[1],
-             mac_addr[2],
-             mac_addr[3],
-             mac_addr[4],
-             mac_addr[5]);
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%02x-%02x-%02x-%02x-%02x-%02x\"", mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
 }
 
 static void funct_wifi_ap_mac(char *argres, int rw)
@@ -199,30 +189,34 @@ static void funct_eth_mac(char *argres, int rw)
     PrintMACFromInterface(argres, rw, GetETHNetifAdapter());
 }
 
+static void MACOperations(char *argres, int rw, uint8_t *confdata)
+{
+    uint8_t mac_addr[6] = { 0 };
+    if (rw)
+    {
+        int count;
+        unsigned int mac[6] = { 0 };
+        count = sscanf(argres, "%x-%x-%x-%x-%x-%x", &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]);
+        if (count == 6)
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                confdata[i] = (uint8_t)mac[i];
+            }
+        }
+    }
+    memcpy(mac_addr, confdata, 6);
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%02x-%02x-%02x-%02x-%02x-%02x\"", mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
+}
+
 static void funct_usbnet_mac_local(char *argres, int rw)
 {
-       uint8_t mac_addr[6] = { 0 };
-       memcpy(mac_addr, GetSysConf()->usbnetSettings.MACAddrLocal, 6);
-       snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%02x:%02x:%02x:%02x:%02x:%02x\"",
-             mac_addr[0],
-             mac_addr[1],
-             mac_addr[2],
-             mac_addr[3],
-             mac_addr[4],
-             mac_addr[5]);
+	return MACOperations(argres, rw, GetSysConf()->usbnetSettings.MACAddrLocal);
 }
 
 static void funct_usbnet_mac_remote(char *argres, int rw)
 {
-       uint8_t mac_addr[6] = { 0 };
-       memcpy(mac_addr, GetSysConf()->usbnetSettings.MACAddrRemote, 6);
-       snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%02x:%02x:%02x:%02x:%02x:%02x\"",
-             mac_addr[0],
-             mac_addr[1],
-             mac_addr[2],
-             mac_addr[3],
-             mac_addr[4],
-             mac_addr[5]);
+	return MACOperations(argres, rw, GetSysConf()->usbnetSettings.MACAddrRemote);
 }
 
 static void funct_wifiscan(char *argres, int rw)
@@ -240,10 +234,10 @@ static void funct_wifiscanres(char *argres, int rw)
     for (int i = 0; i < arg; i++)
     {
         Rec = GetWiFiAPRecord(i);
-        if (Rec && strlen((const char*) Rec->ssid) > 0)
+        if (Rec && strlen((const char *)Rec->ssid) > 0)
         {
             jwArr_object(&jwc);
-            jwObj_string(&jwc, "ssid", (char*) Rec->ssid);
+            jwObj_string(&jwc, "ssid", (char *)Rec->ssid);
             jwObj_int(&jwc, "rssi", Rec->rssi);
             jwObj_int(&jwc, "ch", Rec->primary);
             jwEnd(&jwc);
@@ -282,7 +276,6 @@ void funct_gsm_at(char *argres, int rw)
     resp[0] = 0x00;
     ModemSendAT(argres, resp, 1000);
     snprintf(argres, VAR_MAX_VALUE_LENGTH, "%s", resp);
-
 }
 void funct_gsm_at_timeout(char *argres, int rw)
 {
@@ -299,26 +292,25 @@ void funct_gsm_rssi(char *argres, int rw)
 #ifdef CONFIG_WEBGUIAPP_LORAWAN_ENABLE
 void funct_lora_stat(char *argres, int rw)
 {
-    snprintf(argres, VAR_MAX_VALUE_LENGTH,
-                 (isLORAConnected()) ? "\"CONNECTED\"" : "\"DISCONNECTED\"");
+    snprintf(argres, VAR_MAX_VALUE_LENGTH, (isLORAConnected()) ? "\"CONNECTED\"" : "\"DISCONNECTED\"");
 }
 void funct_lora_devid(char *argres, int rw)
 {
     uint8_t temp[16];
-    BytesToStr((unsigned char*) &GetSysConf()->lorawanSettings.DevEui, temp, 8);
+    BytesToStr((unsigned char *)&GetSysConf()->lorawanSettings.DevEui, temp, 8);
     snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", temp);
 }
 
 void funct_lora_appid(char *argres, int rw)
 {
     uint8_t temp[16];
-    BytesToStr((unsigned char*) &GetSysConf()->lorawanSettings.AppEui, temp, 8);
+    BytesToStr((unsigned char *)&GetSysConf()->lorawanSettings.AppEui, temp, 8);
     snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", temp);
 }
 void funct_lora_appkey(char *argres, int rw)
 {
     uint8_t temp[32];
-    BytesToStr((unsigned char*) &GetSysConf()->lorawanSettings.AppKey, temp, 16);
+    BytesToStr((unsigned char *)&GetSysConf()->lorawanSettings.AppKey, temp, 16);
     snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", temp);
 }
 #endif
@@ -337,22 +329,20 @@ static void funct_ota_newver(char *argres, int rw)
     snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"%s\"", GetAvailVersion());
 }
 
-//CRON implementation BEGIN
+// CRON implementation BEGIN
 static void funct_cronrecs(char *argres, int rw)
 {
     CronRecordsInterface(argres, rw);
 }
-//CRON implementation END
+// CRON implementation END
 
 static void funct_serial_mode(char *argres, int rw)
 {
-
 #ifdef CONFIG_WEBGUIAPP_UART_MODE_UART
     snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"UART\"");
-#elif  CONFIG_WEBGUIAPP_UART_MODE_RS485
+#elif CONFIG_WEBGUIAPP_UART_MODE_RS485
     snprintf(argres, VAR_MAX_VALUE_LENGTH, "\"RS485\"");
 #endif
-
 }
 
 static void funct_objsinfo(char *argres, int rw)
@@ -361,14 +351,14 @@ static void funct_objsinfo(char *argres, int rw)
 }
 
 const char *EXEC_ERROR[] = {
-        "EXECUTED_OK",
-        "ERROR_TOO_LONG_COMMAND",
-        "ERROR_OBJECT_NOT_PARSED",
-        "ERROR_ACTION_NOT_PARSED",
-        "ERROR_OBJECT_NOT_FOUND",
-        "ERROR_ACTION_NOT_FOUND",
-        "ERROR_HANDLER_NOT_IMPLEMENTED",
-         "ERROR_ARGUMENT_NOT_FOUND",
+    "EXECUTED_OK",
+    "ERROR_TOO_LONG_COMMAND",
+    "ERROR_OBJECT_NOT_PARSED",
+    "ERROR_ACTION_NOT_PARSED",
+    "ERROR_OBJECT_NOT_FOUND",
+    "ERROR_ACTION_NOT_FOUND",
+    "ERROR_HANDLER_NOT_IMPLEMENTED",
+    "ERROR_ARGUMENT_NOT_FOUND",
 };
 
 static void funct_exec(char *argres, int rw)
@@ -413,7 +403,6 @@ static void funct_lat(char *argres, int rw)
     {
         GetSysConf()->sntpClient.lat = atof(argres);
         strcpy(GetSysConf()->sntpClient.latitude, argres);
-        
     }
     snprintf(argres, VAR_MAX_VALUE_LENGTH, "%f", GetSysConf()->sntpClient.lat);
 }
@@ -432,247 +421,167 @@ const int hw_rev = CONFIG_BOARD_HARDWARE_REVISION;
 const bool VAR_TRUE = true;
 const bool VAR_FALSE = false;
 
-const rest_var_t SystemVariables[] =
-        {
+const rest_var_t SystemVariables[] = {
 
-        { 0, "exec", &funct_exec, VAR_FUNCT, RW, 0, 0 },
-                { 0, "time", &funct_time, VAR_FUNCT, R, 0, 0 },
-                { 0, "time_set", &funct_time_set, VAR_FUNCT, RW, 0, 0 },
-                { 0, "uptime", &funct_uptime, VAR_FUNCT, R, 0, 0 },
-                { 0, "free_ram", &funct_fram, VAR_FUNCT, R, 0, 0 },
-                { 0, "free_ram_min", &funct_fram_min, VAR_FUNCT, R, 0, 0 },
-                { 0, "def_interface", &funct_def_interface, VAR_FUNCT, R, 0, 0 },
-                { 0, "fw_rev", &funct_fw_ver, VAR_FUNCT, R, 0, 0 },
-                { 0, "idf_rev", &funct_idf_ver, VAR_FUNCT, R, 0, 0 },
-                { 0, "build_date", &funct_build_date, VAR_FUNCT, R, 0, 0 },
+    { 0, "exec", &funct_exec, VAR_FUNCT, RW, 0, 0 }, { 0, "time", &funct_time, VAR_FUNCT, R, 0, 0 }, { 0, "time_set", &funct_time_set, VAR_FUNCT, RW, 0, 0 },
+    { 0, "uptime", &funct_uptime, VAR_FUNCT, R, 0, 0 }, { 0, "free_ram", &funct_fram, VAR_FUNCT, R, 0, 0 }, { 0, "free_ram_min", &funct_fram_min, VAR_FUNCT, R, 0, 0 },
+    { 0, "def_interface", &funct_def_interface, VAR_FUNCT, R, 0, 0 }, { 0, "fw_rev", &funct_fw_ver, VAR_FUNCT, R, 0, 0 }, { 0, "idf_rev", &funct_idf_ver, VAR_FUNCT, R, 0, 0 },
+    { 0, "build_date", &funct_build_date, VAR_FUNCT, R, 0, 0 },
 
-                { 0, "model_name", CONFIG_DEVICE_MODEL_NAME, VAR_STRING, R, 1, 64 },
-                { 0, "hw_rev", ((int*) &hw_rev), VAR_INT, R, 1, 1024 },
-                { 0, "hw_opt", CONFIG_BOARD_HARDWARE_OPTION, VAR_STRING, R, 1, 256 },
+    { 0, "model_name", CONFIG_DEVICE_MODEL_NAME, VAR_STRING, R, 1, 64 }, { 0, "hw_rev", ((int *)&hw_rev), VAR_INT, R, 1, 1024 }, { 0, "hw_opt", CONFIG_BOARD_HARDWARE_OPTION, VAR_STRING, R, 1, 256 },
 
-                { 0, "net_bios_name", &SysConfig.NetBIOSName, VAR_STRING, RW, 3, 31 },
-                { 0, "sys_name", &SysConfig.SysName, VAR_STRING, RW, 3, 31 },
-                { 0, "sys_pass", &SysConfig.SysPass, VAR_PASS, RW, 3, 31 },
-                { 0, "primary_color", CONFIG_WEBGUIAPP_ACCENT_COLOR, VAR_STRING, R, 3, 31 },
-                { 0, "dark_theme", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
+    { 0, "net_bios_name", &SysConfig.NetBIOSName, VAR_STRING, RW, 3, 31 }, { 0, "sys_name", &SysConfig.SysName, VAR_STRING, RW, 3, 31 }, { 0, "sys_pass", &SysConfig.SysPass, VAR_PASS, RW, 3, 31 },
+    { 0, "primary_color", CONFIG_WEBGUIAPP_ACCENT_COLOR, VAR_STRING, R, 3, 31 }, { 0, "dark_theme", (bool *)(&VAR_TRUE), VAR_BOOL, R, 0, 1 },
 
-                { 0, "ota_url", &SysConfig.OTAURL, VAR_STRING, RW, 3, 128 },
-                { 0, "ota_auto_int", &SysConfig.OTAAutoInt, VAR_INT, RW, 0, 65535 },
-                { 0, "ota_state", &funct_ota_state, VAR_FUNCT, R, 0, 0 },
-                { 0, "ota_start", &funct_ota_start, VAR_FUNCT, R, 0, 0 },
-                { 0, "ota_newver", &funct_ota_newver, VAR_FUNCT, R, 0, 0 },
+    { 0, "ota_url", &SysConfig.OTAURL, VAR_STRING, RW, 3, 128 }, { 0, "ota_auto_int", &SysConfig.OTAAutoInt, VAR_INT, RW, 0, 65535 }, { 0, "ota_state", &funct_ota_state, VAR_FUNCT, R, 0, 0 },
+    { 0, "ota_start", &funct_ota_start, VAR_FUNCT, R, 0, 0 }, { 0, "ota_newver", &funct_ota_newver, VAR_FUNCT, R, 0, 0 },
 
-                { 0, "ser_num", &SysConfig.SN, VAR_STRING, R, 10, 10 },
-                { 0, "dev_id", &SysConfig.ID, VAR_STRING, R, 8, 8 },
-                //{ 0, "ser_num", &funct_ser_num, VAR_FUNCT, R, 0, 0 },
-                //{ 0, "dev_id", &funct_dev_id, VAR_FUNCT, R, 0, 0 },
-                
-                { 0, "color_scheme", &SysConfig.ColorSheme, VAR_INT, RW, 1, 2 },
+    { 0, "ser_num", &SysConfig.SN, VAR_STRING, R, 10, 10 }, { 0, "dev_id", &SysConfig.ID, VAR_STRING, R, 8, 8 },
+    //{ 0, "ser_num", &funct_ser_num, VAR_FUNCT, R, 0, 0 },
+    //{ 0, "dev_id", &funct_dev_id, VAR_FUNCT, R, 0, 0 },
 
-                { 0, "ota_enab", &SysConfig.Flags1.bIsOTAEnabled, VAR_BOOL, RW, 0, 1 },
-                { 0, "res_ota_enab", &SysConfig.Flags1.bIsResetOTAEnabled, VAR_BOOL, RW, 0, 1 },
-                { 0, "led_enab", &SysConfig.Flags1.bIsLedsEnabled, VAR_BOOL, RW, 0, 1 },
-                { 0, "lora_confirm", &SysConfig.Flags1.bIsLoRaConfirm, VAR_BOOL, RW, 0, 1 },
-                { 0, "tcp_confirm", &SysConfig.Flags1.bIsTCPConfirm, VAR_BOOL, RW, 0, 1 },
+    { 0, "color_scheme", &SysConfig.ColorSheme, VAR_INT, RW, 1, 2 },
 
-                { 0, "sntp_timezone", &SysConfig.sntpClient.TimeZone, VAR_INT, RW, 0, 23 },
-                { 0, "sntp_serv1", &SysConfig.sntpClient.SntpServerAdr, VAR_STRING, RW, 3, 32 },
-                { 0, "sntp_serv2", &SysConfig.sntpClient.SntpServer2Adr, VAR_STRING, RW, 3, 32 },
-                { 0, "sntp_serv3", &SysConfig.sntpClient.SntpServer3Adr, VAR_STRING, RW, 3, 32 },
-                { 0, "sntp_enab", &SysConfig.sntpClient.Flags1.bIsGlobalEnabled, VAR_BOOL, RW, 0, 1 },
+    { 0, "ota_enab", &SysConfig.Flags1.bIsOTAEnabled, VAR_BOOL, RW, 0, 1 }, { 0, "res_ota_enab", &SysConfig.Flags1.bIsResetOTAEnabled, VAR_BOOL, RW, 0, 1 },
+    { 0, "led_enab", &SysConfig.Flags1.bIsLedsEnabled, VAR_BOOL, RW, 0, 1 }, { 0, "lora_confirm", &SysConfig.Flags1.bIsLoRaConfirm, VAR_BOOL, RW, 0, 1 },
+    { 0, "tcp_confirm", &SysConfig.Flags1.bIsTCPConfirm, VAR_BOOL, RW, 0, 1 },
 
-                { 0, "lat", &funct_lat, VAR_FUNCT, RW, 0, 0 },
-                { 0, "lon", &funct_lon, VAR_FUNCT, RW, 0, 0 },
-                { 0, "latitude", &SysConfig.sntpClient.latitude, VAR_STRING, RW, 0, 23 },
-                { 0, "longitude", &SysConfig.sntpClient.longitude, VAR_STRING, RW, 0, 23 },
-                
- 				{ 0, "cronrecs_enab", &SysConfig.bIsCRONEnabled, VAR_BOOL, RW, 0, 1 },
- 				
+    { 0, "sntp_timezone", &SysConfig.sntpClient.TimeZone, VAR_INT, RW, 0, 23 }, { 0, "sntp_serv1", &SysConfig.sntpClient.SntpServerAdr, VAR_STRING, RW, 3, 32 },
+    { 0, "sntp_serv2", &SysConfig.sntpClient.SntpServer2Adr, VAR_STRING, RW, 3, 32 }, { 0, "sntp_serv3", &SysConfig.sntpClient.SntpServer3Adr, VAR_STRING, RW, 3, 32 },
+    { 0, "sntp_enab", &SysConfig.sntpClient.Flags1.bIsGlobalEnabled, VAR_BOOL, RW, 0, 1 },
+
+    { 0, "lat", &funct_lat, VAR_FUNCT, RW, 0, 0 }, { 0, "lon", &funct_lon, VAR_FUNCT, RW, 0, 0 }, { 0, "latitude", &SysConfig.sntpClient.latitude, VAR_STRING, RW, 0, 23 },
+    { 0, "longitude", &SysConfig.sntpClient.longitude, VAR_STRING, RW, 0, 23 },
+
+    { 0, "cronrecs_enab", &SysConfig.bIsCRONEnabled, VAR_BOOL, RW, 0, 1 },
+
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
-                { 0, "mqtt_1_enab", &SysConfig.mqttStation[0].Flags1.bIsGlobalEnabled, VAR_BOOL, RW, 0, 1 },
-                { 0, "mqtt_1_serv", &SysConfig.mqttStation[0].ServerAddr, VAR_STRING, RW, 3, 63 },
-                { 0, "mqtt_1_port", &SysConfig.mqttStation[0].ServerPort, VAR_INT, RW, 1, 65534 },
-                { 0, "mqtt_1_syst", &SysConfig.mqttStation[0].SystemName, VAR_STRING, RW, 3, 31 },
-                { 0, "mqtt_1_group", &SysConfig.mqttStation[0].GroupName, VAR_STRING, RW, 3, 31 },
-                { 0, "mqtt_1_clid", &SysConfig.mqttStation[0].ClientID, VAR_STRING, RW, 3, 31 },
-                { 0, "mqtt_1_uname", &SysConfig.mqttStation[0].UserName, VAR_STRING, RW, 3, 31 },
-                { 0, "mqtt_1_pass", &SysConfig.mqttStation[0].UserPass, VAR_PASS, RW, 3, 31 },
-                { 0, "mqtt_1_stat", &funct_mqtt_1_stat, VAR_FUNCT, R, 0, 0 },
-                { 0, "mqtt_1_test", &funct_mqtt_1_test, VAR_FUNCT, RW, 0, 0 },
-                { 0, "mqtt_1_hartenab", &SysConfig.mqttStation[0].Flags1.bIsHeartbeatEnabled, VAR_BOOL, RW, 0, 1 },
-                { 0, "mqtt_1_hartint", &SysConfig.mqttStation[0].HeartbeatInterval, VAR_INT, RW, 1, 65534 },
+    { 0, "mqtt_1_enab", &SysConfig.mqttStation[0].Flags1.bIsGlobalEnabled, VAR_BOOL, RW, 0, 1 }, { 0, "mqtt_1_serv", &SysConfig.mqttStation[0].ServerAddr, VAR_STRING, RW, 3, 63 },
+    { 0, "mqtt_1_port", &SysConfig.mqttStation[0].ServerPort, VAR_INT, RW, 1, 65534 }, { 0, "mqtt_1_syst", &SysConfig.mqttStation[0].SystemName, VAR_STRING, RW, 3, 31 },
+    { 0, "mqtt_1_group", &SysConfig.mqttStation[0].GroupName, VAR_STRING, RW, 3, 31 }, { 0, "mqtt_1_clid", &SysConfig.mqttStation[0].ClientID, VAR_STRING, RW, 3, 31 },
+    { 0, "mqtt_1_uname", &SysConfig.mqttStation[0].UserName, VAR_STRING, RW, 3, 31 }, { 0, "mqtt_1_pass", &SysConfig.mqttStation[0].UserPass, VAR_PASS, RW, 3, 31 },
+    { 0, "mqtt_1_stat", &funct_mqtt_1_stat, VAR_FUNCT, R, 0, 0 }, { 0, "mqtt_1_test", &funct_mqtt_1_test, VAR_FUNCT, RW, 0, 0 },
+    { 0, "mqtt_1_hartenab", &SysConfig.mqttStation[0].Flags1.bIsHeartbeatEnabled, VAR_BOOL, RW, 0, 1 }, { 0, "mqtt_1_hartint", &SysConfig.mqttStation[0].HeartbeatInterval, VAR_INT, RW, 1, 65534 },
 
 #if CONFIG_WEBGUIAPP_MQTT_CLIENTS_NUM == 2
-                { 0, "mqtt_2_enab", &SysConfig.mqttStation[1].Flags1.bIsGlobalEnabled, VAR_BOOL, RW, 0, 1 },
-                { 0, "mqtt_2_serv", &SysConfig.mqttStation[1].ServerAddr, VAR_STRING, RW, 3, 63 },
-                { 0, "mqtt_2_port", &SysConfig.mqttStation[1].ServerPort, VAR_INT, RW, 1, 65534 },
-                { 0, "mqtt_2_syst", &SysConfig.mqttStation[1].SystemName, VAR_STRING, RW, 3, 31 },
-                { 0, "mqtt_2_group", &SysConfig.mqttStation[1].GroupName, VAR_STRING, RW, 3, 31 },
-                { 0, "mqtt_2_clid", &SysConfig.mqttStation[1].ClientID, VAR_STRING, RW, 3, 31 },
-                { 0, "mqtt_2_uname", &SysConfig.mqttStation[1].UserName, VAR_STRING, RW, 3, 31 },
-                { 0, "mqtt_2_pass", &SysConfig.mqttStation[1].UserPass, VAR_PASS, RW, 3, 31 },
-                { 0, "mqtt_2_stat", &funct_mqtt_2_stat, VAR_FUNCT, R, 0, 0 },
-                { 0, "mqtt_2_test", &funct_mqtt_2_test, VAR_FUNCT, RW, 0, 0 },
-                { 0, "mqtt_2_hartenab", &SysConfig.mqttStation[1].Flags1.bIsHeartbeatEnabled, VAR_BOOL, RW, 0, 1 },
-                { 0, "mqtt_2_hartint", &SysConfig.mqttStation[1].HeartbeatInterval, VAR_INT, RW, 1, 65534 },
+    { 0, "mqtt_2_enab", &SysConfig.mqttStation[1].Flags1.bIsGlobalEnabled, VAR_BOOL, RW, 0, 1 }, { 0, "mqtt_2_serv", &SysConfig.mqttStation[1].ServerAddr, VAR_STRING, RW, 3, 63 },
+    { 0, "mqtt_2_port", &SysConfig.mqttStation[1].ServerPort, VAR_INT, RW, 1, 65534 }, { 0, "mqtt_2_syst", &SysConfig.mqttStation[1].SystemName, VAR_STRING, RW, 3, 31 },
+    { 0, "mqtt_2_group", &SysConfig.mqttStation[1].GroupName, VAR_STRING, RW, 3, 31 }, { 0, "mqtt_2_clid", &SysConfig.mqttStation[1].ClientID, VAR_STRING, RW, 3, 31 },
+    { 0, "mqtt_2_uname", &SysConfig.mqttStation[1].UserName, VAR_STRING, RW, 3, 31 }, { 0, "mqtt_2_pass", &SysConfig.mqttStation[1].UserPass, VAR_PASS, RW, 3, 31 },
+    { 0, "mqtt_2_stat", &funct_mqtt_2_stat, VAR_FUNCT, R, 0, 0 }, { 0, "mqtt_2_test", &funct_mqtt_2_test, VAR_FUNCT, RW, 0, 0 },
+    { 0, "mqtt_2_hartenab", &SysConfig.mqttStation[1].Flags1.bIsHeartbeatEnabled, VAR_BOOL, RW, 0, 1 }, { 0, "mqtt_2_hartint", &SysConfig.mqttStation[1].HeartbeatInterval, VAR_INT, RW, 1, 65534 },
 
 #endif
 #endif
 
 #if CONFIG_WEBGUIAPP_ETHERNET_ENABLE
-                { 0, "eth_enab", &SysConfig.ethSettings.Flags1.bIsETHEnabled, VAR_BOOL, RW, 0, 1 },
-                { 0, "eth_isdhcp", &SysConfig.ethSettings.Flags1.bIsDHCPEnabled, VAR_BOOL, RW, 0, 1 },
-                { 0, "eth_ip", &SysConfig.ethSettings.IPAddr, VAR_IPADDR, RW, 0, 0 },
-                { 0, "eth_mask", &SysConfig.ethSettings.Mask, VAR_IPADDR, RW, 0, 0 },
-                { 0, "eth_gw", &SysConfig.ethSettings.Gateway, VAR_IPADDR, RW, 0, 0 },
-                { 0, "eth_dns1", &SysConfig.ethSettings.DNSAddr1, VAR_IPADDR, RW, 0, 0 },
-                { 0, "eth_dns2", &SysConfig.ethSettings.DNSAddr2, VAR_IPADDR, RW, 0, 0 },
-                { 0, "eth_dns3", &SysConfig.ethSettings.DNSAddr3, VAR_IPADDR, RW, 0, 0 },
-                { 0, "eth_stat", &funct_eth_stat, VAR_FUNCT, R, 0, 0 },
-                { 0, "eth_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
-                { 0, "eth_mac", &funct_eth_mac, VAR_FUNCT, R, 0, 0 },
-                #else
+    { 0, "eth_enab", &SysConfig.ethSettings.Flags1.bIsETHEnabled, VAR_BOOL, RW, 0, 1 }, { 0, "eth_isdhcp", &SysConfig.ethSettings.Flags1.bIsDHCPEnabled, VAR_BOOL, RW, 0, 1 },
+    { 0, "eth_ip", &SysConfig.ethSettings.IPAddr, VAR_IPADDR, RW, 0, 0 }, { 0, "eth_mask", &SysConfig.ethSettings.Mask, VAR_IPADDR, RW, 0, 0 },
+    { 0, "eth_gw", &SysConfig.ethSettings.Gateway, VAR_IPADDR, RW, 0, 0 }, { 0, "eth_dns1", &SysConfig.ethSettings.DNSAddr1, VAR_IPADDR, RW, 0, 0 },
+    { 0, "eth_dns2", &SysConfig.ethSettings.DNSAddr2, VAR_IPADDR, RW, 0, 0 }, { 0, "eth_dns3", &SysConfig.ethSettings.DNSAddr3, VAR_IPADDR, RW, 0, 0 },
+    { 0, "eth_stat", &funct_eth_stat, VAR_FUNCT, R, 0, 0 }, { 0, "eth_visible", (bool *)(&VAR_TRUE), VAR_BOOL, R, 0, 1 }, { 0, "eth_mac", &funct_eth_mac, VAR_FUNCT, R, 0, 0 },
+#else
                 { 0, "eth_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
-                #endif
+#endif
 
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
-                { 0, "wifi_mode", &SysConfig.wifiSettings.WiFiMode, VAR_INT, RW, 1, 3 },
-                { 0, "wifi_sta_ip", &SysConfig.wifiSettings.InfIPAddr, VAR_IPADDR, RW, 0, 0 },
-                { 0, "wifi_sta_mask", &SysConfig.wifiSettings.InfMask, VAR_IPADDR, RW, 0, 0 },
-                { 0, "wifi_sta_gw", &SysConfig.wifiSettings.InfGateway, VAR_IPADDR, RW, 0, 0 },
-                { 0, "wifi_ap_ip", &SysConfig.wifiSettings.ApIPAddr, VAR_IPADDR, RW, 0, 0 },
-                { 0, "wifi_dns1", &SysConfig.wifiSettings.DNSAddr1, VAR_IPADDR, RW, 0, 0 },
-                { 0, "wifi_dns2", &SysConfig.wifiSettings.DNSAddr2, VAR_IPADDR, RW, 0, 0 },
-                { 0, "wifi_dns3", &SysConfig.wifiSettings.DNSAddr3, VAR_IPADDR, RW, 0, 0 },
-                { 0, "wifi_sta_ssid", &SysConfig.wifiSettings.InfSSID, VAR_STRING, RW, 3, 31 },
-                { 0, "wifi_sta_key", &SysConfig.wifiSettings.InfSecurityKey, VAR_PASS, RW, 8, 31 },
-                { 0, "wifi_ap_ssid", &SysConfig.wifiSettings.ApSSID, VAR_STRING, RW, 3, 31 },
-                { 0, "wifi_ap_key", &SysConfig.wifiSettings.ApSecurityKey, VAR_PASS, RW, 8, 31 },
+    { 0, "wifi_mode", &SysConfig.wifiSettings.WiFiMode, VAR_INT, RW, 1, 3 }, { 0, "wifi_sta_ip", &SysConfig.wifiSettings.InfIPAddr, VAR_IPADDR, RW, 0, 0 },
+    { 0, "wifi_sta_mask", &SysConfig.wifiSettings.InfMask, VAR_IPADDR, RW, 0, 0 }, { 0, "wifi_sta_gw", &SysConfig.wifiSettings.InfGateway, VAR_IPADDR, RW, 0, 0 },
+    { 0, "wifi_ap_ip", &SysConfig.wifiSettings.ApIPAddr, VAR_IPADDR, RW, 0, 0 }, { 0, "wifi_dns1", &SysConfig.wifiSettings.DNSAddr1, VAR_IPADDR, RW, 0, 0 },
+    { 0, "wifi_dns2", &SysConfig.wifiSettings.DNSAddr2, VAR_IPADDR, RW, 0, 0 }, { 0, "wifi_dns3", &SysConfig.wifiSettings.DNSAddr3, VAR_IPADDR, RW, 0, 0 },
+    { 0, "wifi_sta_ssid", &SysConfig.wifiSettings.InfSSID, VAR_STRING, RW, 3, 31 }, { 0, "wifi_sta_key", &SysConfig.wifiSettings.InfSecurityKey, VAR_PASS, RW, 8, 31 },
+    { 0, "wifi_ap_ssid", &SysConfig.wifiSettings.ApSSID, VAR_STRING, RW, 3, 31 }, { 0, "wifi_ap_key", &SysConfig.wifiSettings.ApSecurityKey, VAR_PASS, RW, 8, 31 },
 
-                { 0, "wifi_enab", &SysConfig.wifiSettings.Flags1.bIsWiFiEnabled, VAR_BOOL, RW, 0, 1 },
-                { 0, "wifi_isdhcp", &SysConfig.wifiSettings.Flags1.bIsDHCPEnabled, VAR_BOOL, RW, 0, 1 },
-                { 0, "wifi_power", &SysConfig.wifiSettings.MaxPower, VAR_INT, RW, 0, 80 },
-                { 0, "wifi_disab_time", &SysConfig.wifiSettings.AP_disab_time, VAR_INT, RW, 0, 60 },
-                { 0, "wifi_sta_mac", &funct_wifi_sta_mac, VAR_FUNCT, R, 0, 0 },
-                { 0, "wifi_ap_mac", &funct_wifi_ap_mac, VAR_FUNCT, R, 0, 0 },
-                { 0, "wifi_stat", &funct_wifi_stat, VAR_FUNCT, R, 0, 0 },
-                { 0, "wifi_scan", &funct_wifiscan, VAR_FUNCT, R, 0, 0 },
-                { 0, "wifi_scan_res", &funct_wifiscanres, VAR_FUNCT, R, 0, 0 },
-                { 0, "wifi_level", &funct_wifi_level, VAR_FUNCT, R, 0, 0 },
+    { 0, "wifi_enab", &SysConfig.wifiSettings.Flags1.bIsWiFiEnabled, VAR_BOOL, RW, 0, 1 }, { 0, "wifi_isdhcp", &SysConfig.wifiSettings.Flags1.bIsDHCPEnabled, VAR_BOOL, RW, 0, 1 },
+    { 0, "wifi_power", &SysConfig.wifiSettings.MaxPower, VAR_INT, RW, 0, 80 }, { 0, "wifi_disab_time", &SysConfig.wifiSettings.AP_disab_time, VAR_INT, RW, 0, 60 },
+    { 0, "wifi_sta_mac", &funct_wifi_sta_mac, VAR_FUNCT, R, 0, 0 }, { 0, "wifi_ap_mac", &funct_wifi_ap_mac, VAR_FUNCT, R, 0, 0 }, { 0, "wifi_stat", &funct_wifi_stat, VAR_FUNCT, R, 0, 0 },
+    { 0, "wifi_scan", &funct_wifiscan, VAR_FUNCT, R, 0, 0 }, { 0, "wifi_scan_res", &funct_wifiscanres, VAR_FUNCT, R, 0, 0 }, { 0, "wifi_level", &funct_wifi_level, VAR_FUNCT, R, 0, 0 },
 
 #endif
 
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE
-                { 0, "gsm_enab", &SysConfig.gsmSettings.Flags1.bIsGSMEnabled, VAR_BOOL, RW, 0, 1 },
-                { 0, "gsm_apn", &SysConfig.gsmSettings.APN, VAR_STRING, RW, 3, 31 },
-                { 0, "gsm_apn_login", &SysConfig.gsmSettings.login, VAR_STRING, RW, 3, 31 },
-                { 0, "gsm_apn_password", &SysConfig.gsmSettings.password, VAR_STRING, RW, 3, 31 },
-                { 0, "gsm_module", &funct_gsm_module, VAR_FUNCT, R, 0, 0 },
-                { 0, "gsm_operator", &funct_gsm_operator, VAR_FUNCT, R, 0, 0 },
-                { 0, "gsm_imei", &funct_gsm_imei, VAR_FUNCT, R, 0, 0 },
-                { 0, "gsm_imsi", &funct_gsm_imsi, VAR_FUNCT, R, 0, 0 },
-                { 0, "gsm_ip", &SysConfig.gsmSettings.IPAddr, VAR_IPADDR, RW, 0, 0 },
-                { 0, "gsm_mask", &SysConfig.gsmSettings.Mask, VAR_IPADDR, RW, 0, 0 },
-                { 0, "gsm_gw", &SysConfig.gsmSettings.Gateway, VAR_IPADDR, RW, 0, 0 },
-                { 0, "gsm_dns1", &SysConfig.gsmSettings.DNSAddr1, VAR_IPADDR, RW, 0, 0 },
-                { 0, "gsm_dns2", &SysConfig.gsmSettings.DNSAddr2, VAR_IPADDR, RW, 0, 0 },
-                { 0, "gsm_dns3", &SysConfig.gsmSettings.DNSAddr3, VAR_IPADDR, RW, 0, 0 },
-                { 0, "gsm_stat", &funct_gsm_stat, VAR_FUNCT, R, 0, 0 },
-                #ifdef CONFIG_WEBGUIAPP_MODEM_AT_ACCESS
-                { 0, "gsm_at_timeout", &funct_gsm_at_timeout, VAR_FUNCT, R, 0, 0 },
-                { 0, "gsm_at", &funct_gsm_at, VAR_FUNCT, R, 0, 0 },
+    { 0, "gsm_enab", &SysConfig.gsmSettings.Flags1.bIsGSMEnabled, VAR_BOOL, RW, 0, 1 }, { 0, "gsm_apn", &SysConfig.gsmSettings.APN, VAR_STRING, RW, 3, 31 },
+    { 0, "gsm_apn_login", &SysConfig.gsmSettings.login, VAR_STRING, RW, 3, 31 }, { 0, "gsm_apn_password", &SysConfig.gsmSettings.password, VAR_STRING, RW, 3, 31 },
+    { 0, "gsm_module", &funct_gsm_module, VAR_FUNCT, R, 0, 0 }, { 0, "gsm_operator", &funct_gsm_operator, VAR_FUNCT, R, 0, 0 }, { 0, "gsm_imei", &funct_gsm_imei, VAR_FUNCT, R, 0, 0 },
+    { 0, "gsm_imsi", &funct_gsm_imsi, VAR_FUNCT, R, 0, 0 }, { 0, "gsm_ip", &SysConfig.gsmSettings.IPAddr, VAR_IPADDR, RW, 0, 0 }, { 0, "gsm_mask", &SysConfig.gsmSettings.Mask, VAR_IPADDR, RW, 0, 0 },
+    { 0, "gsm_gw", &SysConfig.gsmSettings.Gateway, VAR_IPADDR, RW, 0, 0 }, { 0, "gsm_dns1", &SysConfig.gsmSettings.DNSAddr1, VAR_IPADDR, RW, 0, 0 },
+    { 0, "gsm_dns2", &SysConfig.gsmSettings.DNSAddr2, VAR_IPADDR, RW, 0, 0 }, { 0, "gsm_dns3", &SysConfig.gsmSettings.DNSAddr3, VAR_IPADDR, RW, 0, 0 },
+    { 0, "gsm_stat", &funct_gsm_stat, VAR_FUNCT, R, 0, 0 },
+#ifdef CONFIG_WEBGUIAPP_MODEM_AT_ACCESS
+    { 0, "gsm_at_timeout", &funct_gsm_at_timeout, VAR_FUNCT, R, 0, 0 }, { 0, "gsm_at", &funct_gsm_at, VAR_FUNCT, R, 0, 0 },
 #endif
-                { 0, "gsm_rssi", &funct_gsm_rssi, VAR_FUNCT, R, 0, 0 },
-                { 0, "gsm_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
-                #else
+    { 0, "gsm_rssi", &funct_gsm_rssi, VAR_FUNCT, R, 0, 0 }, { 0, "gsm_visible", (bool *)(&VAR_TRUE), VAR_BOOL, R, 0, 1 },
+#else
                 { 0, "gsm_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
-                #endif
-                
+#endif
+
 #if CONFIG_WEBGUIAPP_USBNET_ENABLE
-                { 0, "usbnet_enab", &SysConfig.usbnetSettings.bIsUSBNETEnabled, VAR_BOOL, RW, 0, 1 },
-                { 0, "usbnet_ip", &SysConfig.usbnetSettings.IPAddr, VAR_IPADDR, RW, 0, 0 },
-                { 0, "usbnet_mask", &SysConfig.usbnetSettings.Mask, VAR_IPADDR, RW, 0, 0 },
-                { 0, "usbnet_gw", &SysConfig.usbnetSettings.Gateway, VAR_IPADDR, RW, 0, 0 },
-                { 0, "usbnet_dns1", &SysConfig.usbnetSettings.DNSAddr1, VAR_IPADDR, RW, 0, 0 },
-                { 0, "usbnet_dns2", &SysConfig.usbnetSettings.DNSAddr2, VAR_IPADDR, RW, 0, 0 },
-                { 0, "usbnet_dns3", &SysConfig.usbnetSettings.DNSAddr3, VAR_IPADDR, RW, 0, 0 },
-                { 0, "usbnet_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
-                { 0, "usbnet_mac_local", &funct_usbnet_mac_local, VAR_FUNCT, R, 0, 0 },
-                { 0, "usbnet_mac_remote", &funct_usbnet_mac_remote, VAR_FUNCT, R, 0, 0 },
-                #else
+    { 0, "usbnet_enab", &SysConfig.usbnetSettings.bIsUSBNETEnabled, VAR_BOOL, RW, 0, 1 }, { 0, "usbnet_ip", &SysConfig.usbnetSettings.IPAddr, VAR_IPADDR, RW, 0, 0 },
+    { 0, "usbnet_mask", &SysConfig.usbnetSettings.Mask, VAR_IPADDR, RW, 0, 0 }, { 0, "usbnet_gw", &SysConfig.usbnetSettings.Gateway, VAR_IPADDR, RW, 0, 0 },
+    { 0, "usbnet_dns1", &SysConfig.usbnetSettings.DNSAddr1, VAR_IPADDR, RW, 0, 0 }, { 0, "usbnet_dns2", &SysConfig.usbnetSettings.DNSAddr2, VAR_IPADDR, RW, 0, 0 },
+    { 0, "usbnet_dns3", &SysConfig.usbnetSettings.DNSAddr3, VAR_IPADDR, RW, 0, 0 }, { 0, "usbnet_visible", (bool *)(&VAR_TRUE), VAR_BOOL, R, 0, 1 },
+    { 0, "usbnet_mac_local", &funct_usbnet_mac_local, VAR_FUNCT, RW, 0, 0 }, { 0, "usbnet_mac_remote", &funct_usbnet_mac_remote, VAR_FUNCT, RW, 0, 0 },
+#else
                 { 0, "eth_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
-                #endif                
+#endif
 
 #ifdef CONFIG_WEBGUIAPP_UART_TRANSPORT_ENABLE
-                { 0, "serial_enab", &SysConfig.serialSettings.Flags.IsSerialEnabled, VAR_BOOL, RW, 0, 1 },
-                { 0, "serial_bridge", &SysConfig.serialSettings.Flags.IsBridgeEnabled, VAR_BOOL, RW, 0, 1 },
-                { 0, "serial_mode", &funct_serial_mode, VAR_FUNCT, R, 1, 2 },
-                { 0, "serial_baud", &SysConfig.serialSettings.BaudRate, VAR_INT, RW, 1200, 8192000 },
+    { 0, "serial_enab", &SysConfig.serialSettings.Flags.IsSerialEnabled, VAR_BOOL, RW, 0, 1 }, { 0, "serial_bridge", &SysConfig.serialSettings.Flags.IsBridgeEnabled, VAR_BOOL, RW, 0, 1 },
+    { 0, "serial_mode", &funct_serial_mode, VAR_FUNCT, R, 1, 2 }, { 0, "serial_baud", &SysConfig.serialSettings.BaudRate, VAR_INT, RW, 1200, 8192000 },
 
-                { 0, "serial_bits", &SysConfig.serialSettings.DataBits, VAR_INT, RW, 0, 3 },
-                { 0, "serial_parity", &SysConfig.serialSettings.Parity, VAR_INT, RW, 0, 3 },
-                { 0, "serial_stop", &SysConfig.serialSettings.StopBits, VAR_INT, RW, 1, 3 },
+    { 0, "serial_bits", &SysConfig.serialSettings.DataBits, VAR_INT, RW, 0, 3 }, { 0, "serial_parity", &SysConfig.serialSettings.Parity, VAR_INT, RW, 0, 3 },
+    { 0, "serial_stop", &SysConfig.serialSettings.StopBits, VAR_INT, RW, 1, 3 },
 
-                { 0, "serial_break", &SysConfig.serialSettings.InputBrake, VAR_INT, RW, 1, 50 },
-                { 0, "serial_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
-                #else
+    { 0, "serial_break", &SysConfig.serialSettings.InputBrake, VAR_INT, RW, 1, 50 }, { 0, "serial_visible", (bool *)(&VAR_TRUE), VAR_BOOL, R, 0, 1 },
+#else
                 { 0, "serial_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
-                #endif
+#endif
 
 #ifdef CONFIG_WEBGUIAPP_LORAWAN_ENABLE
-                { 0, "lora_enab", &SysConfig.lorawanSettings.Flags1.bIsLoRaWANEnabled, VAR_BOOL, RW, 0, 1 },
-                { 0, "lora_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
-                { 0, "lora_devid", &funct_lora_devid, VAR_FUNCT, RW, 0, 0 },
-                { 0, "lora_appid", &funct_lora_appid, VAR_FUNCT, RW, 0, 0 },
-                { 0, "lora_appkey", &funct_lora_appkey, VAR_FUNCT, R, 0, 0 },
-
+    { 0, "lora_enab", &SysConfig.lorawanSettings.Flags1.bIsLoRaWANEnabled, VAR_BOOL, RW, 0, 1 }, { 0, "lora_visible", (bool *)(&VAR_TRUE), VAR_BOOL, R, 0, 1 },
+    { 0, "lora_devid", &funct_lora_devid, VAR_FUNCT, RW, 0, 0 }, { 0, "lora_appid", &funct_lora_appid, VAR_FUNCT, RW, 0, 0 }, { 0, "lora_appkey", &funct_lora_appkey, VAR_FUNCT, R, 0, 0 },
 
 #else
                 { 0, "lora_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
-                #endif
+#endif
 
 #ifdef CONFIG_WEBGUIAPP_MBTCP_ENABLED
-                { 0, "mbtcp_enab", &SysConfig.modbusSettings.IsModbusTCPEnabled, VAR_BOOL, RW, 0, 1 },
-                { 0, "mbtcp_port", &SysConfig.modbusSettings.ModbusTCPPort, VAR_INT, RW, 1, 65534 },
-                { 0, "mbtcp_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 },
+    { 0, "mbtcp_enab", &SysConfig.modbusSettings.IsModbusTCPEnabled, VAR_BOOL, RW, 0, 1 }, { 0, "mbtcp_port", &SysConfig.modbusSettings.ModbusTCPPort, VAR_INT, RW, 1, 65534 },
+    { 0, "mbtcp_visible", (bool *)(&VAR_TRUE), VAR_BOOL, R, 0, 1 },
 #else
                 { 0, "mbtcp_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
-                #endif
-                { 0, "cronrecs", &funct_cronrecs, VAR_FUNCT, RW, 0, 0 },
-                { 0, "objsinfo", &funct_objsinfo, VAR_FUNCT, R, 0, 0 },
+#endif
+    { 0, "cronrecs", &funct_cronrecs, VAR_FUNCT, RW, 0, 0 }, { 0, "objsinfo", &funct_objsinfo, VAR_FUNCT, R, 0, 0 },
 
-                { 0, "file_list", &funct_file_list, VAR_FUNCT, R, 0, 0 },
-                { 0, "file_block", &funct_file_block, VAR_FUNCT, R, 0, 0 },
-                #if CONFIG_SDCARD_ENABLE
-                { 0, "sd_list", &funct_sd_list, VAR_FUNCT, R, 0, 0 },
-                { 0, "sd_block", &funct_sd_block, VAR_FUNCT, R, 0, 0 },
-                { 0, "sd_visible", (bool*) (&VAR_TRUE), VAR_BOOL, R, 0, 1 }
+    { 0, "file_list", &funct_file_list, VAR_FUNCT, R, 0, 0 }, { 0, "file_block", &funct_file_block, VAR_FUNCT, R, 0, 0 },
+#if CONFIG_SDCARD_ENABLE
+    { 0, "sd_list", &funct_sd_list, VAR_FUNCT, R, 0, 0 }, { 0, "sd_block", &funct_sd_block, VAR_FUNCT, R, 0, 0 }, { 0, "sd_visible", (bool *)(&VAR_TRUE), VAR_BOOL, R, 0, 1 }
 #else
                 { 0, "sd_visible", (bool*) (&VAR_FALSE), VAR_BOOL, R, 0, 1 },
-        #endif
+#endif
 
-        };
+};
 
 esp_err_t SetConfVar(char *name, char *val, rest_var_types *tp)
 {
     rest_var_t *V = NULL;
-    //Search for system variables
+    // Search for system variables
     for (int i = 0; i < sizeof(SystemVariables) / sizeof(rest_var_t); ++i)
     {
         if (!strcmp(SystemVariables[i].alias, name))
         {
-            V = (rest_var_t*) (&SystemVariables[i]);
+            V = (rest_var_t *)(&SystemVariables[i]);
             break;
         }
     }
-    //Search for user variables
+    // Search for user variables
     if (AppVars)
     {
         for (int i = 0; i < AppVarsSize; ++i)
         {
             if (!strcmp(AppVars[i].alias, name))
             {
-                V = (rest_var_t*) (&AppVars[i]);
+                V = (rest_var_t *)(&AppVars[i]);
                 break;
             }
         }
@@ -688,30 +597,30 @@ esp_err_t SetConfVar(char *name, char *val, rest_var_types *tp)
     {
         case VAR_BOOL:
             if (!strcmp(val, "true") || !strcmp(val, "1"))
-                *((bool*) V->ref) = true;
+                *((bool *)V->ref) = true;
             else if (!strcmp(val, "false") || !strcmp(val, "0"))
-                *((bool*) V->ref) = 0;
+                *((bool *)V->ref) = 0;
             else
                 return ESP_ERR_INVALID_ARG;
-        break;
+            break;
         case VAR_CHAR:
             constr = atoi(val);
             if (constr < V->minlen || constr > V->maxlen)
                 return ESP_ERR_INVALID_ARG;
-            *((uint8_t*) V->ref) = constr;
-        break;
+            *((uint8_t *)V->ref) = constr;
+            break;
         case VAR_INT:
             constr = atoi(val);
             if (constr < V->minlen || constr > V->maxlen)
                 return ESP_ERR_INVALID_ARG;
-            *((int*) V->ref) = constr;
-        break;
+            *((int *)V->ref) = constr;
+            break;
         case VAR_STRING:
             constr = strlen(val);
             if (constr < V->minlen || constr > V->maxlen)
                 return ESP_ERR_INVALID_ARG;
             strcpy(V->ref, val);
-        break;
+            break;
         case VAR_PASS:
             if (val[0] != '*')
             {
@@ -720,17 +629,16 @@ esp_err_t SetConfVar(char *name, char *val, rest_var_types *tp)
                     return ESP_ERR_INVALID_ARG;
                 strcpy(V->ref, val);
             }
-        break;
-
-        case VAR_IPADDR:
-            esp_netif_str_to_ip4(val, (esp_ip4_addr_t*) (V->ref));
-        break;
-        case VAR_FUNCT:
-            ((void (*)(char*, int)) (V->ref))(val, 1);
-        break;
-        case VAR_ERROR:
             break;
 
+        case VAR_IPADDR:
+            esp_netif_str_to_ip4(val, (esp_ip4_addr_t *)(V->ref));
+            break;
+        case VAR_FUNCT:
+            ((void (*)(char *, int))(V->ref))(val, 1);
+            break;
+        case VAR_ERROR:
+            break;
     }
     return ESP_OK;
 }
@@ -742,18 +650,18 @@ esp_err_t GetConfVar(char *name, char *val, rest_var_types *tp)
     {
         if (!strcmp(SystemVariables[i].alias, name))
         {
-            V = (rest_var_t*) (&SystemVariables[i]);
+            V = (rest_var_t *)(&SystemVariables[i]);
             break;
         }
     }
-    //Search for user variables
+    // Search for user variables
     if (AppVars)
     {
         for (int i = 0; i < AppVarsSize; ++i)
         {
             if (!strcmp(AppVars[i].alias, name))
             {
-                V = (rest_var_t*) (&AppVars[i]);
+                V = (rest_var_t *)(&AppVars[i]);
                 break;
             }
         }
@@ -764,31 +672,30 @@ esp_err_t GetConfVar(char *name, char *val, rest_var_types *tp)
     switch (V->vartype)
     {
         case VAR_BOOL:
-            strcpy(val, *((bool*) V->ref) ? "true" : "false");
-        break;
+            strcpy(val, *((bool *)V->ref) ? "true" : "false");
+            break;
         case VAR_INT:
-            itoa(*((int*) V->ref), val, 10);
-        break;
+            itoa(*((int *)V->ref), val, 10);
+            break;
         case VAR_CHAR:
-            itoa(*((uint8_t*) V->ref), val, 10);
-        break;
+            itoa(*((uint8_t *)V->ref), val, 10);
+            break;
         case VAR_STRING:
-            strcpy(val, (char*) V->ref);
-        break;
+            strcpy(val, (char *)V->ref);
+            break;
         case VAR_PASS:
             strcpy(val, "******");
-        break;
+            break;
         case VAR_IPADDR:
-            esp_ip4addr_ntoa((const esp_ip4_addr_t*) V->ref, val, 16);
-        break;
+            esp_ip4addr_ntoa((const esp_ip4_addr_t *)V->ref, val, 16);
+            break;
         case VAR_FUNCT:
-            ((void (*)(char*, int)) (V->ref))(val, 0);
-        break;
+            ((void (*)(char *, int))(V->ref))(val, 0);
+            break;
         case VAR_ERROR:
             break;
     }
 
-    //val = V->ref;
+    // val = V->ref;
     return ESP_OK;
 }
-
