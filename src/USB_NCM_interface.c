@@ -26,7 +26,6 @@
 #if CONFIG_WEBGUIAPP_USBNET_ENABLE
 #include <stdio.h>
 #include "SysConfiguration.h"
-
 #include "esp_log.h"
 #include "esp_netif.h"
 #include "esp_netif_types.h"
@@ -34,7 +33,6 @@
 #include "tinyusb_default_config.h"
 #include "tinyusb_net.h"
 #include <esp_mac.h>
-
 #include "lwip/esp_netif_net_stack.h"
 #include <webguiapp.h>
 
@@ -75,30 +73,11 @@ static esp_err_t netif_recv_callback(void *buffer, uint16_t len, void *ctx)
     return ESP_OK;
 }
 
-/**
- *  In this scenario of configuring WiFi, we setup USB-Ethernet to create a virtual network and run DHCP server,
- *  so it could assign an IP address to the PC
- *
- *           ESP32               PC
- *      |    lwip MAC=...01   |                        eth NIC MAC=...02
- *      | <DHCP server>   usb | <->  [ USB-NCM device acting as eth-NIC ]
- *      | <HTTP server>       |
- *      | (wifi-provisioning) |
- *
- *  From the PC's NIC perspective the board acts as a separate network with it's own IP and MAC address,
- *  but the virtual ethernet NIC has also it's own IP and MAC address (configured via tinyusb_net_init()).
- *  That's why we need to create the virtual network with *different* MAC address.
- *  Here, we use two different OUI range MAC addresses.
- */
 esp_err_t InitUSBnetif(void)
 {
     const tinyusb_config_t tusb_cfg = TINYUSB_DEFAULT_CONFIG();
     ESP_ERROR_CHECK(tinyusb_driver_install(&tusb_cfg));
-
     tinyusb_net_config_t net_config = {
-        // locally administrated address for the ncm device as it's going to be used internally
-        // for configuration only
-        //.mac_addr = { 0x02, 0x02, 0x11, 0x22, 0x33, 0x01 },
         .on_recv_callback = netif_recv_callback,
     };
     memcpy(net_config.mac_addr, GetSysConf()->usbnetSettings.MACAddrRemote, 6);
@@ -110,8 +89,6 @@ esp_err_t InitUSBnetif(void)
         return ret;
     }
     esp_netif_ip_info_t _g_esp_netif_usb_ip;
-    //    = { .ip = { .addr = ESP_IP4TOADDR(192, 168, 70, 1) }, .gw = { .addr = ESP_IP4TOADDR(192, 168, 70, 2) }, .netmask = { .addr = ESP_IP4TOADDR(255, 255, 255, 0) } };
-
     memcpy(&_g_esp_netif_usb_ip.ip, &GetSysConf()->usbnetSettings.IPAddr, 4);
     memcpy(&_g_esp_netif_usb_ip.gw, &GetSysConf()->usbnetSettings.Gateway, 4);
     memcpy(&_g_esp_netif_usb_ip.netmask, &GetSysConf()->usbnetSettings.Mask, 4);
@@ -132,11 +109,7 @@ esp_err_t InitUSBnetif(void)
 
     // 3) USB-NCM is an Ethernet netif from lwip perspective, we already have IO definitions for that:
     struct esp_netif_netstack_config lwip_netif_config = { .lwip = { .init_fn = ethernetif_init, .input_fn = ethernetif_input } };
-
     // Config the esp-netif with:
-    //   1) inherent config (behavioural settings of an interface)
-    //   2) driver's config (connection to IO functions -- usb)
-    //   3) stack config (using lwip IO functions -- derive from eth)
     esp_netif_config_t cfg = { .base = &base_cfg, .driver = &driver_cfg, .stack = &lwip_netif_config };
 
     s_netif = esp_netif_new(&cfg);
@@ -144,18 +117,10 @@ esp_err_t InitUSBnetif(void)
     {
         return ESP_FAIL;
     }
-    //esp_netif_set_mac(s_netif, lwip_addr);
 	esp_netif_set_mac(s_netif, GetSysConf()->usbnetSettings.MACAddrLocal);
-
     esp_netif_dns_info_t dns_info;
-    memcpy(&dns_info, &GetSysConf()->wifiSettings.DNSAddr1, 4);
+    memcpy(&dns_info, &GetSysConf()->usbnetSettings.DNSAddr1, 4);
     esp_netif_set_dns_info(s_netif, ESP_NETIF_DNS_MAIN, &dns_info);
-
-    // set the minimum lease time
-    // uint32_t lease_opt = 1;
-    // esp_netif_dhcps_option(s_netif, ESP_NETIF_OP_SET, IP_ADDRESS_LEASE_TIME, &lease_opt, sizeof(lease_opt));
-
-    // start the interface manually (as the driver has been started already)
     esp_netif_action_start(s_netif, 0, 0, 0);
     return ESP_OK;
 }

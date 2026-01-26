@@ -843,36 +843,36 @@ menu "WebGUIApp"
 	    config WEBGUIAPP_SR_ENABLE
 	        bool "Enabled SR IO extender"
 	        default n
-        
-        config WEBGUIAPP_SR_CLOCK_MHZ
-            int "SR extender clock speed (MHz)"
-            range 1 20
-            default 10 if IDF_TARGET_ESP32 || IDF_TARGET_ESP32C3
-            default 30 if IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
-            help
-                Set the clock speed (MHz) of SPI interface.
-
-        config WEBGUIAPP_SR_CS
-            int "SR SC signal GPIO"
-            range  GPIO_RANGE_MIN GPIO_RANGE_MAX
-            default 12
-            help
-                Set GPIO for chip select signal.   
-                
-        config WEBGUIAPP_SR_OUTPUTS
-            int "SR outputs number"
-            range 0 64
-            default 8
-            help
-                Set the number of outputs (must be a multiple of 8).     
-        
-        config WEBGUIAPP_SR_INPUTS
-            int "SR inputs number"
-            range 0 64
-            default 8
-            help
-                Set the number of inputs (must be a multiple of 8).                            
-                	        
+		if WEBGUIAPP_SR_ENABLE
+	        config WEBGUIAPP_SR_CLOCK_MHZ
+	            int "SR extender clock speed (MHz)"
+	            range 1 20
+	            default 10 if IDF_TARGET_ESP32 || IDF_TARGET_ESP32C3
+	            default 30 if IDF_TARGET_ESP32S2 || IDF_TARGET_ESP32S3
+	            help
+	                Set the clock speed (MHz) of SPI interface.
+	
+	        config WEBGUIAPP_SR_CS
+	            int "SR SC signal GPIO"
+	            range  GPIO_RANGE_MIN GPIO_RANGE_MAX
+	            default 12
+	            help
+	                Set GPIO for chip select signal.   
+	                
+	        config WEBGUIAPP_SR_OUTPUTS
+	            int "SR outputs number"
+	            range 0 64
+	            default 8
+	            help
+	                Set the number of outputs (must be a multiple of 8).     
+	        
+	        config WEBGUIAPP_SR_INPUTS
+	            int "SR inputs number"
+	            range 0 64
+	            default 8
+	            help
+	                Set the number of inputs (must be a multiple of 8).                            
+		endif                 	        
 	endmenu
 	
 	menu "Serial port configuration"
@@ -986,21 +986,22 @@ menu "WebGUIApp"
 	        default n
 	        help
 	        	Set enabled ArtNet
-	    
-	    config WEBGUIAPP_ARTNET_DEFAULT_UNIVERSE
-	    		int "ArtNet default universe"
-	    		range 1 32768
-	    		default 1 
-	    
-	  	config WEBGUIAPP_ARTNET_DEFAULT_BASEADDR
-	    		int "ArtNet default base address"
-	    		range 1 512
-	    		default 1
-	    		
-	    config WEBGUIAPP_ARTNET_DEFAULT_PORT
-	    		int "ArtNet default port"
-	    		range 1 65535
-	    		default 6454 				            	  
+	    if WEBGUIAPP_ARTNET_ENABLED
+		    config WEBGUIAPP_ARTNET_DEFAULT_UNIVERSE
+		    		int "ArtNet default universe"
+		    		range 1 32768
+		    		default 1 
+		    
+		  	config WEBGUIAPP_ARTNET_DEFAULT_BASEADDR
+		    		int "ArtNet default base address"
+		    		range 1 512
+		    		default 1
+		    		
+		    config WEBGUIAPP_ARTNET_DEFAULT_PORT
+		    		int "ArtNet default port"
+		    		range 1 65535 
+					default 6454 
+		endif						            	  
 	endmenu
 	
 	
