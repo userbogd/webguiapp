@@ -35,14 +35,6 @@
 
 extern SYS_CONFIG SysConfig;
 
-rest_var_t *AppVars = NULL;
-int AppVarsSize = 0;
-void SetAppVars(rest_var_t *appvars, int size)
-{
-    AppVars = appvars;
-    AppVarsSize = size;
-}
-
 static void PrintInterfaceState(char *argres, int rw, esp_netif_t *netif)
 {
     snprintf(argres, VAR_MAX_VALUE_LENGTH,
@@ -639,127 +631,7 @@ const rest_var_t SystemVariables[] = {
 
 };
 
-esp_err_t SetConfVar(char *name, char *val, rest_var_types *tp)
+void RegSysVariables(void)
 {
-    rest_var_t *V = NULL;
-    // Search for system variables
-    for (int i = 0; i < sizeof(SystemVariables) / sizeof(rest_var_t); ++i) {
-        if (!strcmp(SystemVariables[i].alias, name)) {
-            V = (rest_var_t *)(&SystemVariables[i]);
-            break;
-        }
-    }
-    // Search for user variables
-    if (AppVars) {
-        for (int i = 0; i < AppVarsSize; ++i) {
-            if (!strcmp(AppVars[i].alias, name)) {
-                V = (rest_var_t *)(&AppVars[i]);
-                break;
-            }
-        }
-    }
-
-    if (!V)
-        return ESP_ERR_NOT_FOUND;
-    if (V->varattr == R)
-        return ESP_OK;
-    int constr;
-    *tp = V->vartype;
-    switch (V->vartype) {
-    case VAR_BOOL:
-        if (!strcmp(val, "true") || !strcmp(val, "1"))
-            *((bool *)V->ref) = true;
-        else if (!strcmp(val, "false") || !strcmp(val, "0"))
-            *((bool *)V->ref) = 0;
-        else
-            return ESP_ERR_INVALID_ARG;
-        break;
-    case VAR_CHAR:
-        constr = atoi(val);
-        if (constr < V->minlen || constr > V->maxlen)
-            return ESP_ERR_INVALID_ARG;
-        *((uint8_t *)V->ref) = constr;
-        break;
-    case VAR_INT:
-        constr = atoi(val);
-        if (constr < V->minlen || constr > V->maxlen)
-            return ESP_ERR_INVALID_ARG;
-        *((int *)V->ref) = constr;
-        break;
-    case VAR_STRING:
-        constr = strlen(val);
-        if (constr < V->minlen || constr > V->maxlen)
-            return ESP_ERR_INVALID_ARG;
-        strcpy(V->ref, val);
-        break;
-    case VAR_PASS:
-        if (val[0] != '*') {
-            constr = strlen(val);
-            if (constr < V->minlen || constr > V->maxlen)
-                return ESP_ERR_INVALID_ARG;
-            strcpy(V->ref, val);
-        }
-        break;
-
-    case VAR_IPADDR:
-        esp_netif_str_to_ip4(val, (esp_ip4_addr_t *)(V->ref));
-        break;
-    case VAR_FUNCT:
-        ((void (*)(char *, int))(V->ref))(val, 1);
-        break;
-    case VAR_ERROR:
-        break;
-    }
-    return ESP_OK;
-}
-
-esp_err_t GetConfVar(char *name, char *val, rest_var_types *tp)
-{
-    rest_var_t *V = NULL;
-    for (int i = 0; i < sizeof(SystemVariables) / sizeof(rest_var_t); ++i) {
-        if (!strcmp(SystemVariables[i].alias, name)) {
-            V = (rest_var_t *)(&SystemVariables[i]);
-            break;
-        }
-    }
-    // Search for user variables
-    if (AppVars) {
-        for (int i = 0; i < AppVarsSize; ++i) {
-            if (!strcmp(AppVars[i].alias, name)) {
-                V = (rest_var_t *)(&AppVars[i]);
-                break;
-            }
-        }
-    }
-    if (!V)
-        return ESP_ERR_NOT_FOUND;
-    *tp = V->vartype;
-    switch (V->vartype) {
-    case VAR_BOOL:
-        strcpy(val, *((bool *)V->ref) ? "true" : "false");
-        break;
-    case VAR_INT:
-        itoa(*((int *)V->ref), val, 10);
-        break;
-    case VAR_CHAR:
-        itoa(*((uint8_t *)V->ref), val, 10);
-        break;
-    case VAR_STRING:
-        strcpy(val, (char *)V->ref);
-        break;
-    case VAR_PASS:
-        strcpy(val, "******");
-        break;
-    case VAR_IPADDR:
-        esp_ip4addr_ntoa((const esp_ip4_addr_t *)V->ref, val, 16);
-        break;
-    case VAR_FUNCT:
-        ((void (*)(char *, int))(V->ref))(val, 0);
-        break;
-    case VAR_ERROR:
-        break;
-    }
-
-    // val = V->ref;
-    return ESP_OK;
+    SetAppVars((rest_var_t *)SystemVariables, sizeof(SystemVariables) / sizeof(rest_var_t));
 }

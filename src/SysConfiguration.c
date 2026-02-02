@@ -25,27 +25,28 @@
 
 #include "ShiftRegisterSPI.h"
 #include "SystemApplication.h"
-#include <stdint.h>
-#include <webguiapp.h>
+#include "UserCallbacks.h"
+#include "nvs.h"
+#include "nvs_flash.h"
 #include "stdlib.h"
 #include "string.h"
-#include "nvs_flash.h"
-#include "nvs.h"
+#include <stdint.h>
+#include <webguiapp.h>
 
-#include "driver/gpio.h"
-#include "driver/adc.h"
-#include "driver/i2c.h"
 #include <driver/uart.h>
+#include "driver/adc.h"
+#include "driver/gpio.h"
+#include "driver/i2c.h"
 
+#include "HTTPServer.h"
+#include "Helpers.h"
+#include "NetTransport.h"
+#include "esp_rom_gpio.h"
 #include "romfs.h"
 #include "spifs.h"
-#include "NetTransport.h"
-#include "Helpers.h"
-#include "HTTPServer.h"
-#include "esp_rom_gpio.h"
 
 #define STORAGE_NAMESPACE "storage"
-#define TAG               "SystemConfiguration"
+#define TAG "SystemConfiguration"
 
 #ifdef CONFIG_RESET_MODE_ENABLE
 #define MANUAL_RESET 1
@@ -78,13 +79,10 @@ static void InitSysI2C(void);
 esp_err_t spi_device_polling_transmit_synchronized(spi_device_handle_t handle, spi_transaction_t *trans_desc)
 {
     esp_err_t res;
-    if (xSemaphoreTake(xSemaphoreSPIHandle, pdMS_TO_TICKS(SPI_LOCK_TIMEOUT_MS)) == pdTRUE)
-    {
+    if (xSemaphoreTake(xSemaphoreSPIHandle, pdMS_TO_TICKS(SPI_LOCK_TIMEOUT_MS)) == pdTRUE) {
         res = spi_device_polling_transmit(handle, trans_desc);
         xSemaphoreGive(xSemaphoreSPIHandle);
-    }
-    else
-    {
+    } else {
         res = ESP_ERR_TIMEOUT;
     }
     return res;
@@ -116,8 +114,7 @@ esp_err_t WebGuiAppInit(void)
 #if (MAIN_FUNCTIONAL_BUTTON_GPIO >= 0)
         || gpio_get_level(MAIN_FUNCTIONAL_BUTTON_GPIO) == 0
 #endif
-    )
-    {
+    ) {
         // 1.OTA app partition table has a smaller NVS partition size than the non-OTA
         // partition table. This size mismatch may cause NVS initialization to fail.
         // 2.NVS partition contains data in new format and cannot be recognized by this version of code.
@@ -128,6 +125,7 @@ esp_err_t WebGuiAppInit(void)
         ESP_ERROR_CHECK(ResetInitSysConfig());
     }
     ESP_ERROR_CHECK(InitSysConfig());
+    RegSysVariables();
 
     // init  file systems
     init_rom_fs("/espfs");
@@ -141,8 +139,7 @@ esp_err_t WebGuiAppInit(void)
 
     /*LoRaWAN start if enabled*/
 #if CONFIG_WEBGUIAPP_LORAWAN_ENABLE
-    if (GetSysConf()->lorawanSettings.Flags1.bIsLoRaWANEnabled)
-    {
+    if (GetSysConf()->lorawanSettings.Flags1.bIsLoRaWANEnabled) {
         LoRaWANStart();
     }
 #endif
@@ -155,21 +152,17 @@ esp_err_t WebGuiAppInit(void)
 
 #if CONFIG_WEBGUIAPP_WIFI_ENABLE
     /*Start WiFi connection*/
-    if (GetSysConf()->wifiSettings.Flags1.bIsWiFiEnabled)
-    {
+    if (GetSysConf()->wifiSettings.Flags1.bIsWiFiEnabled) {
         WiFiStart();
     }
 #endif
 
 #if CONFIG_WEBGUIAPP_USBNET_ENABLE
     /*Start USBNET connection*/
-    if (GetSysConf()->usbnetSettings.bIsUSBNETEnabled)
-    {
-         InitUSBnetif();
+    if (GetSysConf()->usbnetSettings.bIsUSBNETEnabled) {
+        InitUSBnetif();
     }
 #endif
-
-   
 
     /*Start services depends on client connection*/
 #if CONFIG_WEBGUIAPP_GPRS_ENABLE || CONFIG_WEBGUIAPP_ETHERNET_ENABLE || CONFIG_WEBGUIAPP_WIFI_ENABLE
@@ -180,8 +173,7 @@ esp_err_t WebGuiAppInit(void)
     // mDNSServiceStart();
 
 #if CONFIG_WEBGUIAPP_MQTT_ENABLE
-    if (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled || GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled)
-    {
+    if (GetSysConf()->mqttStation[0].Flags1.bIsGlobalEnabled || GetSysConf()->mqttStation[1].Flags1.bIsGlobalEnabled) {
         MQTTRun();
     }
 #endif
@@ -195,7 +187,6 @@ esp_err_t WebGuiAppInit(void)
 #ifdef CONFIG_WEBGUIAPP_PPPOS_ENABLE
     InitPPPSerial();
 #endif
-
     return ESP_OK;
 }
 
@@ -248,12 +239,12 @@ static void InitSysSPI(void)
 static void InitSysI2C(void)
 {
 #ifdef CONFIG_WEBGUIAPP_I2C_ENABLE
-    i2c_config_t i2c_config = { .mode = I2C_MODE_MASTER,
-        .sda_io_num = CONFIG_I2C_SDA_GPIO,
-        .scl_io_num = CONFIG_I2C_SCL_GPIO,
-        .sda_pullup_en = GPIO_PULLUP_ENABLE,
-        .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .master.clk_speed = CONFIG_I2C_CLOCK };
+    i2c_config_t i2c_config = {.mode = I2C_MODE_MASTER,
+                               .sda_io_num = CONFIG_I2C_SDA_GPIO,
+                               .scl_io_num = CONFIG_I2C_SCL_GPIO,
+                               .sda_pullup_en = GPIO_PULLUP_ENABLE,
+                               .scl_pullup_en = GPIO_PULLUP_ENABLE,
+                               .master.clk_speed = CONFIG_I2C_CLOCK};
     ESP_ERROR_CHECK(i2c_param_config(I2C_NUM_0, &i2c_config));
     ESP_ERROR_CHECK(i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0));
     ESP_LOGI(TAG, "I2C initialized OK");
@@ -359,10 +350,9 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
 
 #if CONFIG_WEBGUIAPP_USBNET_ENABLE
     Conf->usbnetSettings.bIsUSBNETEnabled = true;
-    const uint8_t local_mac[] = { 0x02, 0x02, 0x11, 0x22, 0x33, 0x01 };
-	const uint8_t remote_mac[] = { 0x02, 0x02, 0x11, 0x22, 0x33, 0x02 };
-    
-    
+    const uint8_t local_mac[] = {0x02, 0x02, 0x11, 0x22, 0x33, 0x01};
+    const uint8_t remote_mac[] = {0x02, 0x02, 0x11, 0x22, 0x33, 0x02};
+
     memcpy(&Conf->usbnetSettings.MACAddrLocal, local_mac, 6);
     memcpy(&Conf->usbnetSettings.MACAddrRemote, remote_mac, 6);
 
@@ -383,7 +373,8 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
     memcpy(Conf->mqttStation[0].ServerAddr, CONFIG_WEBGUIAPP_MQTT_SERVER_URL, sizeof(CONFIG_WEBGUIAPP_MQTT_SERVER_URL));
     Conf->mqttStation[0].ServerPort = CONFIG_WEBGUIAPP_MQTT_SERVER_PORT;
 
-    memcpy(Conf->mqttStation[0].SystemName, CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME, sizeof(CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME));
+    memcpy(Conf->mqttStation[0].SystemName, CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME,
+           sizeof(CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME));
     memcpy(Conf->mqttStation[0].GroupName, CONFIG_WEBGUIAPP_MQTT_GROUP_NAME, sizeof(CONFIG_WEBGUIAPP_MQTT_GROUP_NAME));
 
     Conf->mqttStation[0].ClientID[0] = 0x00;
@@ -403,7 +394,8 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
     Conf->mqttStation[1].Flags1.bIsGlobalEnabled = false;
     memcpy(Conf->mqttStation[1].ServerAddr, CONFIG_WEBGUIAPP_MQTT_SERVER_URL, sizeof(CONFIG_WEBGUIAPP_MQTT_SERVER_URL));
     Conf->mqttStation[1].ServerPort = CONFIG_WEBGUIAPP_MQTT_SERVER_PORT;
-    memcpy(Conf->mqttStation[1].SystemName, CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME, sizeof(CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME));
+    memcpy(Conf->mqttStation[1].SystemName, CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME,
+           sizeof(CONFIG_WEBGUIAPP_MQTT_SYSTEM_NAME));
     memcpy(Conf->mqttStation[1].GroupName, CONFIG_WEBGUIAPP_MQTT_GROUP_NAME, sizeof(CONFIG_WEBGUIAPP_MQTT_GROUP_NAME));
 
     Conf->mqttStation[1].ClientID[0] = 0x00;
@@ -435,7 +427,7 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
 #ifdef CONFIG_WEBGUIAPP_LORAWAN_ENABLE
     Conf->lorawanSettings.Flags1.bIsLoRaWANEnabled = true;
     Conf->Flags1.bIsLoRaConfirm = false;
-    unsigned char temp[16] = { 0 };
+    unsigned char temp[16] = {0};
     GetChipId((uint8_t *)temp + 4);
     memcpy(Conf->lorawanSettings.DevEui, temp, 8);
     StrToBytes((unsigned char *)CONFIG_LORA_APP_KEY, temp);
@@ -468,8 +460,7 @@ static void ResetSysConfig(SYS_CONFIG *Conf)
 #endif
     Conf->modbusSettings.ModbusTCPPort = CONFIG_WEBGUIAPP_MBTCP_SERVER_PORT;
 #endif
-    for (int i = 0; i < CONFIG_WEBGUIAPP_CRON_NUMBER; i++)
-    {
+    for (int i = 0; i < CONFIG_WEBGUIAPP_CRON_NUMBER; i++) {
         Conf->Timers[i].num = i + 1;
         Conf->Timers[i].del = true;
         Conf->Timers[i].enab = false;
@@ -517,8 +508,7 @@ esp_err_t ReadNVSSysConfig(SYS_CONFIG *SysConf)
     BytesToStr(sha256_calculated, sha_print, 32);
     ESP_LOGI(TAG, "Calculated hash of structure is %s", sha_print);
 
-    if (memcmp(sha256_calculated, sha256_saved, L))
-    {
+    if (memcmp(sha256_calculated, sha256_saved, L)) {
         err = ESP_ERR_INVALID_CRC;
         goto nvs_operation_err;
     }
@@ -580,18 +570,14 @@ esp_err_t InitSysConfig(void)
 {
     esp_err_t err;
     err = ReadNVSSysConfig(&SysConfig);
-    if (err == ESP_ERR_INVALID_CRC || err == ESP_ERR_NVS_NOT_FOUND)
-    {
+    if (err == ESP_ERR_INVALID_CRC || err == ESP_ERR_NVS_NOT_FOUND) {
         ESP_LOGW(TAG, "Reset and write default system configuration");
         ResetSysConfig(&SysConfig);
         err = WriteNVSSysConfig(&SysConfig);
         return err;
-    }
-    else if (err == ESP_OK)
-    {
+    } else if (err == ESP_OK) {
         ESP_LOGI(TAG, "Read system configuration OK");
-    }
-    else
+    } else
         ESP_LOGW(TAG, "Error reading NVS configuration:%s", esp_err_to_name(err));
     return err;
 }
@@ -623,10 +609,10 @@ void SetUserAppNeedReset(bool res)
     isUserAppNeedReset = res;
 }
 
-#define LOG_MAX_CHUNK_SIZE    CONFIG_WEBGUIAPP_SYSLOG_CHUNK_SIZE
-#define LOG_MAX_CHUNKS        CONFIG_WEBGUIAPP_SYSLOG_MAX_CHUNKS
+#define LOG_MAX_CHUNK_SIZE CONFIG_WEBGUIAPP_SYSLOG_CHUNK_SIZE
+#define LOG_MAX_CHUNKS CONFIG_WEBGUIAPP_SYSLOG_MAX_CHUNKS
 #define DEFAULT_LOG_FILE_NAME "syslog"
-#define LOG_PARTITION         "/data/"
+#define LOG_PARTITION "/data/"
 
 static void ComposeLogFilename(int chunk, char *filename)
 {
@@ -648,10 +634,8 @@ void SysLog(char *format, ...)
     ComposeLogFilename(cur_chunk, filename);
 
     // If first call after reboot, try to find not full chunk
-    if (isstart)
-    {
-        while (file_stat.st_size > LOG_MAX_CHUNK_SIZE * 1024 && cur_chunk <= LOG_MAX_CHUNKS - 1)
-        {
+    if (isstart) {
+        while (file_stat.st_size > LOG_MAX_CHUNK_SIZE * 1024 && cur_chunk <= LOG_MAX_CHUNKS - 1) {
             cur_chunk++;
             ComposeLogFilename(cur_chunk, filename);
         }
@@ -659,18 +643,15 @@ void SysLog(char *format, ...)
     }
     stat(filename, &file_stat);
     // next if full, else append to current
-    if (file_stat.st_size > LOG_MAX_CHUNK_SIZE * 1024)
-    {
+    if (file_stat.st_size > LOG_MAX_CHUNK_SIZE * 1024) {
         if (++cur_chunk > LOG_MAX_CHUNKS - 1)
             cur_chunk = 0;
         ComposeLogFilename(cur_chunk, filename);
         f = fopen(filename, "w");
-    }
-    else
+    } else
         f = fopen(filename, "a");
 
-    if (f == NULL)
-    {
+    if (f == NULL) {
         ESP_LOGE(TAG, "Failed to open file %s for writing", filename);
         return;
     }
@@ -694,8 +675,7 @@ void LogFile(char *fname, char *format, ...)
     strcpy(filename, "/data/");
     strcat(filename, fname);
     FILE *f = fopen(filename, "a");
-    if (f == NULL)
-    {
+    if (f == NULL) {
         ESP_LOGE(TAG, "Failed to open file %s for writing", filename);
         return;
     }

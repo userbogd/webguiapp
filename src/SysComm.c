@@ -21,12 +21,38 @@
  *	\copyright Apache License, Version 2.0
  */
 
-#include "webguiapp.h"
 #include "SystemApplication.h"
-#include "mbedtls/md.h"
+#include "webguiapp.h"
 #include <string.h>
+#include "mbedtls/md.h"
 
 #define TAG "SysComm"
+
+#define MAX_EXT_VAR_COLLECTIONS 8
+
+typedef struct {
+    rest_var_t *AppVars;
+    int AppVarsSize;
+    bool isActive;
+} rest_vars_collection;
+
+static uint8_t ExtCollectionsCount = 0;
+rest_vars_collection ExtAppVars[MAX_EXT_VAR_COLLECTIONS] = {0};
+
+void SetAppVars(rest_var_t *appvars, int size)
+{
+    for (int i = 0; i < MAX_EXT_VAR_COLLECTIONS; i++) {
+        if (!ExtAppVars[i].isActive) {
+            ExtAppVars[i].AppVars = appvars;
+            ExtAppVars[i].AppVarsSize = size;
+            ExtAppVars[i].isActive = true;
+            if (i >= ExtCollectionsCount)
+                ExtCollectionsCount = i + 1;
+            ESP_LOGI("SYS_API", "Registered API with %d variables", size);
+            return;
+        }
+    }
+}
 
 #define MAX_JSON_DATA_SIZE 1024
 sys_error_code (*CustomPayloadTypeHandler)(data_message_t *MSG);
@@ -66,15 +92,13 @@ static sys_error_code PayloadDefaultTypeHandler(data_message_t *MSG)
     jwObj_object(&jwc, "variables");
 
     jRead(MSG->inputDataBuffer, "{'data'{'payload'{'variables'", &result);
-    if (result.dataType == JREAD_OBJECT)
-    { // Write variables
+    if (result.dataType == JREAD_OBJECT) { // Write variables
         char VarName[VAR_MAX_NAME_LENGTH];
         char *VarValue = malloc(VAR_MAX_VALUE_LENGTH);
         if (!VarValue)
             return SYS_ERROR_NO_MEMORY;
 
-        for (int i = 0; i < result.elements; ++i)
-        {
+        for (int i = 0; i < result.elements; ++i) {
             jRead_string(MSG->inputDataBuffer, "{'data'{'payload'{'variables'{*", VarName, VAR_MAX_NAME_LENGTH, &i);
             const char parsevar[] = "{'data'{'payload'{'variables'{'";
             char expr[sizeof(parsevar) + VAR_MAX_NAME_LENGTH];
@@ -88,22 +112,17 @@ static sys_error_code PayloadDefaultTypeHandler(data_message_t *MSG)
 #endif
             esp_err_t res = ESP_ERR_INVALID_ARG;
             rest_var_types tp = VAR_ERROR;
-            if (MSG->parsedData.msgType == DATA_MESSAGE_TYPE_COMMAND)
-            { // Write variables
+            if (MSG->parsedData.msgType == DATA_MESSAGE_TYPE_COMMAND) { // Write variables
                 res = SetConfVar(VarName, VarValue, &tp);
-                if (tp != VAR_FUNCT)
-                {
+                if (tp != VAR_FUNCT) {
                     if (res == ESP_OK)
                         GetConfVar(VarName, VarValue, &tp);
-                    else
-                    {
+                    else {
                         strcpy(VarValue, err_to_name(res));
                         tp = VAR_ERROR;
                     }
                 }
-            }
-            else
-            { // Read variables
+            } else { // Read variables
                 res = GetConfVar(VarName, VarValue, &tp);
                 if (res != ESP_OK)
                     strcpy(VarValue, err_to_name(res));
@@ -115,22 +134,21 @@ static sys_error_code PayloadDefaultTypeHandler(data_message_t *MSG)
                 jwObj_raw(&jwc, VarName, VarValue);
         }
         free(VarValue);
-    }
-    else
+    } else
         return SYS_ERROR_PARSE_VARIABLES;
 
     jwEnd(&jwc);
     jwEnd(&jwc);
-    //GetSysErrorDetales((sys_error_code)MSG->err_code, &err_br, &err_desc);
-    //jwObj_string(&jwc, "error", (char *)err_br);
-    //jwObj_string(&jwc, "error_descr", (char *)err_desc);
+    // GetSysErrorDetales((sys_error_code)MSG->err_code, &err_br, &err_desc);
+    // jwObj_string(&jwc, "error", (char *)err_br);
+    // jwObj_string(&jwc, "error_descr", (char *)err_desc);
     jwEnd(&jwc);
 
     char *datap = strstr(MSG->outputDataBuffer, "\"data\":");
-    if (datap)
-    {
+    if (datap) {
         datap += sizeof("\"data\":") - 1;
-        SHA256hmacHash((unsigned char *)datap, strlen(datap), (unsigned char *)"mykey", sizeof("mykey"), MSG->parsedData.sha256);
+        SHA256hmacHash((unsigned char *)datap, strlen(datap), (unsigned char *)"mykey", sizeof("mykey"),
+                       MSG->parsedData.sha256);
         unsigned char sha_print[32 * 2 + 1];
         BytesToStr(MSG->parsedData.sha256, sha_print, 32);
         sha_print[32 * 2] = 0x00;
@@ -138,37 +156,32 @@ static sys_error_code PayloadDefaultTypeHandler(data_message_t *MSG)
         ESP_LOGI(TAG, "SHA256 of DATA object is %s", sha_print);
 #endif
         jwObj_string(&jwc, "signature", (char *)sha_print);
-    }
-    else
+    } else
         return SYS_ERROR_SHA256_DATA;
     jwEnd(&jwc);
     jwClose(&jwc);
 
     jRead(MSG->inputDataBuffer, "{'data'{'payload'{'applytype'", &result);
-    if (result.elements == 1)
-    {
+    if (result.elements == 1) {
         int atype = atoi((char *)result.pValue);
-        switch (atype)
-        {
-            case 0:
-                break;
-            case 1:
-                WriteNVSSysConfig(GetSysConf());
-                if (CustomSaveConf != NULL)
-                    CustomSaveConf();
-                break;
-            case 2:
-                WriteNVSSysConfig(GetSysConf());
-                if (CustomSaveConf != NULL)
-                    CustomSaveConf();
-                DelayedRestart();
-                break;
-            default:
-                return SYS_ERROR_PARSE_APPLYTYPE;
+        switch (atype) {
+        case 0:
+            break;
+        case 1:
+            WriteNVSSysConfig(GetSysConf());
+            if (CustomSaveConf != NULL)
+                CustomSaveConf();
+            break;
+        case 2:
+            WriteNVSSysConfig(GetSysConf());
+            if (CustomSaveConf != NULL)
+                CustomSaveConf();
+            DelayedRestart();
+            break;
+        default:
+            return SYS_ERROR_PARSE_APPLYTYPE;
         }
-    }
-    else
-    {
+    } else {
         if (MSG->parsedData.msgType == DATA_MESSAGE_TYPE_COMMAND)
             return SYS_ERROR_PARSE_APPLYTYPE;
     }
@@ -188,9 +201,9 @@ static sys_error_code DataHeaderParser(data_message_t *MSG)
     if (hashbuf == NULL)
         return SYS_ERROR_NO_MEMORY;
     jRead_string(MSG->inputDataBuffer, "{'data'", hashbuf, MSG->inputDataLength, 0);
-    if (strlen(hashbuf) > 0)
-    {
-        SHA256hmacHash((unsigned char *)hashbuf, strlen(hashbuf), (unsigned char *)"mykey", sizeof("mykey"), MSG->parsedData.sha256);
+    if (strlen(hashbuf) > 0) {
+        SHA256hmacHash((unsigned char *)hashbuf, strlen(hashbuf), (unsigned char *)"mykey", sizeof("mykey"),
+                       MSG->parsedData.sha256);
         unsigned char sha_print[32 * 2 + 1];
         BytesToStr(MSG->parsedData.sha256, sha_print, 32);
         sha_print[32 * 2] = 0x00;
@@ -198,88 +211,71 @@ static sys_error_code DataHeaderParser(data_message_t *MSG)
         ESP_LOGI(TAG, "SHA256 of DATA object is %s", sha_print);
 #endif
         free(hashbuf);
-    }
-    else
-    {
+    } else {
         free(hashbuf);
         return SYS_ERROR_PARSE_DATA;
     }
 
     jRead(MSG->inputDataBuffer, "{'signature'", &result);
-    if (result.elements == 1)
-    {
+    if (result.elements == 1) {
 #if REAST_API_DEBUG_MODE
         ESP_LOGI(TAG, "Signature is %.*s", 64, (char *)result.pValue);
 #endif
 
         // Here compare calculated and received signature;
-    }
-    else
+    } else
         return SYS_ERROR_PARSE_SIGNATURE;
 
     // Extract 'messidx' or throw exception
     jRead(MSG->inputDataBuffer, "{'data'{'msgid'", &result);
-    if (result.elements == 1)
-    {
+    if (result.elements == 1) {
         MSG->parsedData.msgID = jRead_long(MSG->inputDataBuffer, "{'data'{'msgid'", 0);
         if (MSG->parsedData.msgID == 0)
             return SYS_ERROR_PARSE_MESSAGEID;
-    }
-    else
+    } else
         return SYS_ERROR_PARSE_MESSAGEID;
 
     jRead(MSG->inputDataBuffer, "{'data'{'srcid'", &result);
-    if (result.elements == 1)
-    {
+    if (result.elements == 1) {
         jRead_string(MSG->inputDataBuffer, "{'data'{'srcid'", MSG->parsedData.srcID, 9, 0);
-    }
-    else
+    } else
         strcpy(MSG->parsedData.srcID, "FFFFFFFF");
 
     jRead(MSG->inputDataBuffer, "{'data'{'dstid'", &result);
-    if (result.elements == 1)
-    {
+    if (result.elements == 1) {
         jRead_string(MSG->inputDataBuffer, "{'data'{'dstid'", MSG->parsedData.dstID, 9, 0);
-    }
-    else
+    } else
         strcpy(MSG->parsedData.dstID, "FFFFFFFF");
 
     // Extract 'msgtype' or throw exception
     jRead(MSG->inputDataBuffer, "{'data'{'msgtype'", &result);
-    if (result.elements == 1)
-    {
+    if (result.elements == 1) {
         MSG->parsedData.msgType = atoi((char *)result.pValue);
         if (MSG->parsedData.msgType > DATA_MESSAGE_TYPE_RESPONSE || MSG->parsedData.msgType < DATA_MESSAGE_TYPE_COMMAND)
             return SYS_ERROR_PARSE_MSGTYPE;
         if (MSG->parsedData.msgType == DATA_MESSAGE_TYPE_RESPONSE)
             return SYS_GOT_RESPONSE_MESSAGE;
-    }
-    else
+    } else
         return SYS_ERROR_PARSE_MSGTYPE;
 
     // Extract 'payloadtype' or throw exception
     jRead(MSG->inputDataBuffer, "{'data'{'payloadtype'", &result);
-    if (result.elements == 1)
-    {
+    if (result.elements == 1) {
         MSG->parsedData.payloadType = atoi((char *)result.pValue);
-    }
-    else
+    } else
         return SYS_ERROR_PARSE_PAYLOADTYPE;
 
     jRead(MSG->inputDataBuffer, "{'data'{'payloadname'", &result);
-    if (result.elements == 1)
-    {
+    if (result.elements == 1) {
         jRead_string(MSG->inputDataBuffer, "{'data'{'payloadname'", MSG->parsedData.payloadName, 31, 0);
-    }
-    else
+    } else
         strcpy(MSG->parsedData.payloadName, "notset");
 
     sys_error_code err = SYS_ERROR_HANDLER_NOT_SET;
-    switch (MSG->parsedData.payloadType)
-    {
-        case PAYLOAD_DEFAULT:
-            err = PayloadDefaultTypeHandler(MSG);
-            break;
+    switch (MSG->parsedData.payloadType) {
+    case PAYLOAD_DEFAULT:
+        err = PayloadDefaultTypeHandler(MSG);
+        break;
     }
     if (err != SYS_ERROR_HANDLER_NOT_SET)
         return err;
@@ -294,26 +290,21 @@ static sys_error_code DataHeaderParser(data_message_t *MSG)
 
 esp_err_t ServiceDataHandler(data_message_t *MSG)
 {
-    if (MSG == NULL)
-    {
+    if (MSG == NULL) {
         ESP_LOGE(TAG, "MSG object is NULL");
         return ESP_ERR_INVALID_ARG;
     }
 
-    if (MSG->inputDataLength == 0)
-    {
+    if (MSG->inputDataLength == 0) {
         ESP_LOGE(TAG, "Data for parser is 0 length");
         if (MSG != NULL)
             MSG->err_code = SYS_ERROR_UNKNOWN;
-    }
-    else
-    {
+    } else {
         int er = DataHeaderParser(MSG);
         MSG->err_code = er;
     }
 
-    if (MSG->err_code == SYS_GOT_RESPONSE_MESSAGE)
-    {
+    if (MSG->err_code == SYS_GOT_RESPONSE_MESSAGE) {
         // ToDo Here handler of received data
 #if REAST_API_DEBUG_MODE
         ESP_LOGI(TAG, "Got response message with msgid=%d", (int)MSG->parsedData.msgID);
@@ -323,8 +314,7 @@ esp_err_t ServiceDataHandler(data_message_t *MSG)
         return ESP_OK;
     }
 
-    if (MSG->err_code)
-    {
+    if (MSG->err_code) {
         struct jWriteControl jwc;
         jwOpen(&jwc, MSG->outputDataBuffer, MSG->outputDataLength, JW_OBJECT, JW_PRETTY);
         jwObj_int(&jwc, "msgid", MSG->parsedData.msgID);
@@ -343,5 +333,120 @@ esp_err_t ServiceDataHandler(data_message_t *MSG)
         jwClose(&jwc);
     }
 
+    return ESP_OK;
+}
+
+esp_err_t SetConfVar(char *name, char *val, rest_var_types *tp)
+{
+    rest_var_t *V = NULL;
+    for (int k = 0; k < ExtCollectionsCount; k++) {
+        if (ExtAppVars[k].AppVars && ExtAppVars[k].isActive) {
+            for (int i = 0; i < ExtAppVars[k].AppVarsSize; ++i) {
+                if (!strcmp(ExtAppVars[k].AppVars[i].alias, name)) {
+                    V = (rest_var_t *)(&ExtAppVars[k].AppVars[i]);
+                    break;
+                }
+            }
+        }
+    }
+
+    if (!V)
+        return ESP_ERR_NOT_FOUND;
+    if (V->varattr == R)
+        return ESP_OK;
+    int constr;
+    *tp = V->vartype;
+    switch (V->vartype) {
+    case VAR_BOOL:
+        if (!strcmp(val, "true") || !strcmp(val, "1"))
+            *((bool *)V->ref) = true;
+        else if (!strcmp(val, "false") || !strcmp(val, "0"))
+            *((bool *)V->ref) = 0;
+        else
+            return ESP_ERR_INVALID_ARG;
+        break;
+    case VAR_CHAR:
+        constr = atoi(val);
+        if (constr < V->minlen || constr > V->maxlen)
+            return ESP_ERR_INVALID_ARG;
+        *((uint8_t *)V->ref) = constr;
+        break;
+    case VAR_INT:
+        constr = atoi(val);
+        if (constr < V->minlen || constr > V->maxlen)
+            return ESP_ERR_INVALID_ARG;
+        *((int *)V->ref) = constr;
+        break;
+    case VAR_STRING:
+        constr = strlen(val);
+        if (constr < V->minlen || constr > V->maxlen)
+            return ESP_ERR_INVALID_ARG;
+        strcpy(V->ref, val);
+        break;
+    case VAR_PASS:
+        if (val[0] != '*') {
+            constr = strlen(val);
+            if (constr < V->minlen || constr > V->maxlen)
+                return ESP_ERR_INVALID_ARG;
+            strcpy(V->ref, val);
+        }
+        break;
+
+    case VAR_IPADDR:
+        esp_netif_str_to_ip4(val, (esp_ip4_addr_t *)(V->ref));
+        break;
+    case VAR_FUNCT:
+        ((void (*)(char *, int))(V->ref))(val, 1);
+        break;
+    case VAR_ERROR:
+        break;
+    }
+    return ESP_OK;
+}
+
+esp_err_t GetConfVar(char *name, char *val, rest_var_types *tp)
+{
+    rest_var_t *V = NULL;
+    for (int k = 0; k < ExtCollectionsCount; k++) {
+        if (ExtAppVars[k].AppVars && ExtAppVars[k].isActive) {
+            for (int i = 0; i < ExtAppVars[k].AppVarsSize; ++i) {
+                if (!strcmp(ExtAppVars[k].AppVars[i].alias, name)) {
+                    V = (rest_var_t *)(&ExtAppVars[k].AppVars[i]);
+                    break;
+                }
+            }
+        }
+    }
+
+    if (!V)
+        return ESP_ERR_NOT_FOUND;
+    *tp = V->vartype;
+    switch (V->vartype) {
+    case VAR_BOOL:
+        strcpy(val, *((bool *)V->ref) ? "true" : "false");
+        break;
+    case VAR_INT:
+        itoa(*((int *)V->ref), val, 10);
+        break;
+    case VAR_CHAR:
+        itoa(*((uint8_t *)V->ref), val, 10);
+        break;
+    case VAR_STRING:
+        strcpy(val, (char *)V->ref);
+        break;
+    case VAR_PASS:
+        strcpy(val, "******");
+        break;
+    case VAR_IPADDR:
+        esp_ip4addr_ntoa((const esp_ip4_addr_t *)V->ref, val, 16);
+        break;
+    case VAR_FUNCT:
+        ((void (*)(char *, int))(V->ref))(val, 0);
+        break;
+    case VAR_ERROR:
+        break;
+    }
+
+    // val = V->ref;
     return ESP_OK;
 }
