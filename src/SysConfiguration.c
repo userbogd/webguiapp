@@ -25,7 +25,6 @@
 
 #include "ShiftRegisterSPI.h"
 #include "SystemApplication.h"
-#include "UserCallbacks.h"
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "stdlib.h"

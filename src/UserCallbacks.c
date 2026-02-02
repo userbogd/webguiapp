@@ -21,58 +21,38 @@
  *	\copyright Apache License, Version 2.0
  */
 
-#include "UserCallbacks.h"
+#include "webguiapp.h"
 #define MAX_CALLBACKS 0xF
 
-typedef void (*callback_func_t)(void* context);
-
+#define MAX_SNTP_CALLBACKS 8
+typedef void (*time_sync_notify)(struct timeval *tv);
 typedef struct {
-    callback_func_t callbacks[MAX_CALLBACKS];
-    void* contexts[MAX_CALLBACKS];
-    int active[MAX_CALLBACKS];  // 1 if active, 0 if inactive
-    int count;
-} callback_manager_t;
+    time_sync_notify callback;
+    bool active;
+} time_sync_notify_cb_t;
 
-callback_manager_t test1_cb_manager;
-callback_manager_t test2_cb_manager;
-callback_manager_t test3_cb_manager;
+static int TimeNotifyCallbackCounter = 0;
+time_sync_notify_cb_t TimeSyncNotifyCallbacks[MAX_SNTP_CALLBACKS] = {0};
 
-static void initCallbacksManager(callback_manager_t *mgr)
+void regTimeSyncCallback(void (*time_sync)(struct timeval *tv))
 {
-    for (int i = 0; i < MAX_CALLBACKS; i++) {
-        mgr->callbacks[i] = NULL;
-        mgr->contexts[i] = NULL;
-        mgr->active[i] = 0;
-    }
-    mgr->count = 0;
-}
-
-int register_callback(callback_manager_t *mgr, callback_func_t func, void *context)
-{
-    for (int i = 0; i < MAX_CALLBACKS; i++) {
-        if (!mgr->active[i]) {
-            mgr->callbacks[i] = func;
-            mgr->contexts[i] = context;
-            mgr->active[i] = 1;
-            if (i >= mgr->count)
-                mgr->count = i + 1;
-            return i;
-        }
-    }
-    return -1; // Full
-}
-
-void TriggerCallbacks(callback_manager_t *mgr)
-{
-    for (int i = 0; i < mgr->count; i++) {
-        if (mgr->active[i] && mgr->callbacks[i]) {
-            mgr->callbacks[i](mgr->contexts[i]);
+    for (int i = 0; i < MAX_SNTP_CALLBACKS; i++) {
+        if (!TimeSyncNotifyCallbacks[i].active) {
+            TimeSyncNotifyCallbacks[i].callback = time_sync;
+            TimeSyncNotifyCallbacks[i].active = true;
+            if (i >= TimeNotifyCallbackCounter)
+                TimeNotifyCallbackCounter = i + 1;
+            ESP_LOGI("SNTP", "Registered TIME SYNC NOTIFY with index %d", i);
+            return;
         }
     }
 }
 
-
-void RegisterTest1Callback(void (*funct)(int time))
+void CallTimeSyncCallbacks(struct timeval *tm)
 {
-	register_callback(&test1_cb_manager, funct , )
+    for (int i = 0; i < TimeNotifyCallbackCounter; i++) {
+        if (TimeSyncNotifyCallbacks[i].active && TimeSyncNotifyCallbacks[i].callback) {
+            TimeSyncNotifyCallbacks[i].callback(tm);
+        }
+    }
 }

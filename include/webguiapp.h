@@ -33,10 +33,8 @@
 #include "esp_netif.h"
 
 #include "SystemApplication.h"
-#include "UserCallbacks.h"
 #include "CommandProcSys.h"
 #include "ShiftRegisterSPI.h"
-
 
 esp_err_t spi_device_polling_transmit_synchronized(spi_device_handle_t handle, spi_transaction_t *trans_desc);
 void SetAppVars( rest_var_t* appvars, int size);
@@ -44,5 +42,25 @@ bool GetUserAppNeedReset(void);
 void SetUserAppNeedReset(bool res);
 void LogFile(char *fname, char *format, ...);
 void SysLog(char *format, ...);
+
+//Callback for current time obtain notification
+void regTimeSyncCallback(void (*time_sync)(struct timeval *tv));
+
+//Callback called just before OTA, aimed user can finish all job must finished on update and reboot
+void regHookBeforeUpdate(void (*before_update)(void));
+
+//MQTT incoming data callback
+void regUserEventHandler(void (*event_handler)(int idx, void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data), void* user_arg);
+
+//User App POST GET handlers register and set URL for this handlers
+void regHTTPUserAppHandlers(char *url,
+                            esp_err_t (*get)(httpd_req_t *req),
+                            esp_err_t (*post)(httpd_req_t *req));
+
+//User handler for various payload types
+void regCustomPayloadTypeHandler(sys_error_code (*payload_handler)(data_message_t *MSG));
+
+//User handler for save App configuration
+void regCustomSaveConf(void (*custom_saveconf)(void));
 
 #endif /* COMPONENTS_WEBGUIAPPCOMPONENT_INCLUDE_WEBGUIAPP_H_ */

@@ -26,7 +26,7 @@
 #include "Helpers.h"
 #include "NetTransport.h"
 #include "MQTT.h"
-#include "UserCallbacks.h"
+
 #if (ESP_IDF_VERSION_MAJOR == 5 && ESP_IDF_VERSION_MINOR > 1)
 #include "esp_log_level.h"
 #endif

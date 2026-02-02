@@ -16,37 +16,26 @@
  *     Project: ChargePointMainboard
  *  Created on: 2022-07-21
  *      Author: Bogdan Pilyugin
- * Description:	
+ * Description:
  */
 
-#include "esp_sntp.h"
-#include "esp_timer.h"
-#include "NetTransport.h"
-#include "UserCallbacks.h"
 #include "CronTimers.h"
 #include "MQTT.h"
+#include "NetTransport.h"
+#include "SystemApplication.h"
+#include "esp_sntp.h"
+#include "esp_timer.h"
+#include <HTTPServer.h>
 
-#define YEAR_BASE (1900) //tm structure base year
+#define YEAR_BASE (1900) // tm structure base year
 
 static uint32_t UpTime = 0;
-
-
-//Pointer to extend user on time got callback
-static void (*time_sync_notif)(struct timeval *tv) = NULL;
-
-void regTimeSyncCallback(void (*time_sync)(struct timeval *tv))
-{
-    time_sync_notif = time_sync;
-}
 
 static void initialize_sntp(void);
 
 void SecondTickSystem(void *arg);
 esp_timer_handle_t system_seconds_timer;
-const esp_timer_create_args_t system_seconds_timer_args = {
-        .callback = &SecondTickSystem,
-        .name = "secondsTimer"
-};
+const esp_timer_create_args_t system_seconds_timer_args = {.callback = &SecondTickSystem, .name = "secondsTimer"};
 
 static void obtain_time(void *pvParameter)
 {
@@ -55,8 +44,7 @@ static void obtain_time(void *pvParameter)
     // wait for time to be set
     int retry = 0;
     const int retry_count = 10;
-    while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count)
-    {
+    while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count) {
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
@@ -64,24 +52,23 @@ static void obtain_time(void *pvParameter)
 
 static void time_sync_notification_cb(struct timeval *tv)
 {
-    if (time_sync_notif)
-        time_sync_notif(tv);
+    
     TimeObtainHandler(tv);
+    CallTimeSyncCallbacks(tv);
 }
 
 static void initialize_sntp(void)
 {
-
 #if ESP_IDF_VERSION_MAJOR >= 5
     esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
     esp_sntp_setservername(0, GetSysConf()->sntpClient.SntpServerAdr);
     esp_sntp_setservername(1, GetSysConf()->sntpClient.SntpServerAdr);
     esp_sntp_setservername(2, GetSysConf()->sntpClient.SntpServerAdr);
 #else
-  sntp_setoperatingmode(SNTP_OPMODE_POLL);
-  sntp_setservername(0, GetSysConf()->sntpClient.SntpServerAdr);
-  sntp_setservername(1, GetSysConf()->sntpClient.SntpServerAdr);
-  sntp_setservername(2, GetSysConf()->sntpClient.SntpServerAdr);
+    sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    sntp_setservername(0, GetSysConf()->sntpClient.SntpServerAdr);
+    sntp_setservername(1, GetSysConf()->sntpClient.SntpServerAdr);
+    sntp_setservername(2, GetSysConf()->sntpClient.SntpServerAdr);
 #endif
 
     sntp_set_sync_interval(6 * 3600 * 1000);
@@ -90,13 +77,13 @@ static void initialize_sntp(void)
 #if ESP_IDF_VERSION_MAJOR >= 5
     esp_sntp_init();
 #else
-  sntp_init();
+    sntp_init();
 #endif
 }
 
 void StartTimeGet(void)
 {
-    xTaskCreate(obtain_time, "ObtainTimeTask", 1024 * 4, (void*) 0, 3, NULL);
+    xTaskCreate(obtain_time, "ObtainTimeTask", 1024 * 4, (void *)0, 3, NULL);
 }
 
 void GetRFC3339Time(char *t)
@@ -105,13 +92,8 @@ void GetRFC3339Time(char *t)
     struct tm timeinfo;
     time(&now);
     localtime_r(&now, &timeinfo);
-    sprintf(t, "%04d-%02d-%02dT%02d:%02d:%02d+00:00",
-            (timeinfo.tm_year) + YEAR_BASE,
-            (timeinfo.tm_mon) + 1,
-            timeinfo.tm_mday,
-            timeinfo.tm_hour,
-            timeinfo.tm_min,
-            timeinfo.tm_sec);
+    sprintf(t, "%04d-%02d-%02dT%02d:%02d:%02d+00:00", (timeinfo.tm_year) + YEAR_BASE, (timeinfo.tm_mon) + 1,
+            timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
 }
 
 void GetISO8601Time(char *t)
@@ -120,13 +102,8 @@ void GetISO8601Time(char *t)
     struct timeval tp;
     gettimeofday(&tp, NULL);
     localtime_r(&tp.tv_sec, &timeinfo);
-    sprintf(t, "%04d-%02d-%02dT%02d:%02d:%02d.%luZ",
-            (timeinfo.tm_year) + YEAR_BASE,
-            (timeinfo.tm_mon) + 1,
-            timeinfo.tm_mday,
-            timeinfo.tm_hour,
-            timeinfo.tm_min,
-            timeinfo.tm_sec, (unsigned long)tp.tv_usec);
+    sprintf(t, "%04d-%02d-%02dT%02d:%02d:%02d.%luZ", (timeinfo.tm_year) + YEAR_BASE, (timeinfo.tm_mon) + 1,
+            timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, (unsigned long)tp.tv_usec);
 }
 
 void StartSystemTimer(void)
@@ -135,18 +112,18 @@ void StartSystemTimer(void)
     ESP_ERROR_CHECK(esp_timer_start_periodic(system_seconds_timer, 1000000));
 }
 
-void SetSystemTime(struct tm *time, const char* source)
+void SetSystemTime(struct tm *time, const char *source)
 {
     time_t t = mktime(time);
-    ESP_LOGI("SNTP","Setting time: %s from the source %s", asctime(time), source);
-    struct timeval now = { .tv_sec = t };
+    ESP_LOGI("SNTP", "Setting time: %s from the source %s", asctime(time), source);
+    struct timeval now = {.tv_sec = t};
     settimeofday(&now, NULL);
     TimeObtainHandler(&now);
 }
 
-void SetSystemTimeVal(struct timeval *tv, const char* source)
+void SetSystemTimeVal(struct timeval *tv, const char *source)
 {
-    ESP_LOGI("SNTP","Setting time: %d from the source %s", (int)(tv->tv_sec), source);
+    ESP_LOGI("SNTP", "Setting time: %d from the source %s", (int)(tv->tv_sec), source);
     settimeofday(tv, NULL);
     TimeObtainHandler(tv);
 }
@@ -156,7 +133,7 @@ void SecondTickSystem(void *param)
     ++UpTime;
     MidnightTimer();
     FileBlockTimeoutCounter();
-	HeartbeatMQTT();
+    HeartbeatMQTT();
 }
 
 uint32_t GetUpTime(void)
